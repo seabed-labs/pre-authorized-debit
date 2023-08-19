@@ -1,3 +1,5 @@
+pub mod state;
+
 use anchor_lang::prelude::*;
 
 declare_id!("3FWaGq3zYcqJq2t4tszrTAwVrLTc1BcAZzVGLAbK7piR");
