@@ -1,13 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { SeabedProgramLibrary } from "../target/types/seabed_program_library";
+import { SmartAccountV1 } from "../target/types/smart_account_v1";
 
-describe("seabed-program-library", () => {
+describe("smart-account-v1", () => {
     // Configure the client to use the local cluster.
     anchor.setProvider(anchor.AnchorProvider.env());
 
-    const program = anchor.workspace
-        .SeabedProgramLibrary as Program<SeabedProgramLibrary>;
+    const program = anchor.workspace.SmartAccountV1 as Program<SmartAccountV1>;
 
     it("Is initialized!", async () => {
         // Add your test here.

@@ -2,7 +2,7 @@
 seeds = false
 skip-lint = false
 [programs.localnet]
-seabed_program_library = "3FWaGq3zYcqJq2t4tszrTAwVrLTc1BcAZzVGLAbK7piR"
+smart_account_v1 = "3FWaGq3zYcqJq2t4tszrTAwVrLTc1BcAZzVGLAbK7piR"
 
 [registry]
 url = "https://api.apr.dev"

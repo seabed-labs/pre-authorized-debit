@@ -1,12 +1,12 @@
 [package]
-name = "seabed-program-library"
+name = "smart-account-v1"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "seabed_program_library"
+name = "smart_account_v1"
 
 [features]
 no-entrypoint = []
