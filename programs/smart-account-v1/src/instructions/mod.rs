@@ -6,6 +6,7 @@ pub mod debit_as_authority;
 pub mod init_one_time_pre_authorization;
 pub mod init_recurring_pre_authorization;
 pub mod init_smart_account;
+pub mod init_smart_account_nonce;
 pub mod start_virtual_debit_against_pad;
 pub mod start_virtual_debit_as_authority;
 
@@ -17,5 +18,6 @@ pub use debit_as_authority::*;
 pub use init_one_time_pre_authorization::*;
 pub use init_recurring_pre_authorization::*;
 pub use init_smart_account::*;
+pub use init_smart_account_nonce::*;
 pub use start_virtual_debit_against_pad::*;
 pub use start_virtual_debit_as_authority::*;
