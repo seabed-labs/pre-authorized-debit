@@ -24,7 +24,7 @@ pub struct InitSmartAccountNonce<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handle(ctx: Context<InitSmartAccountNonce>) -> Result<()> {
+pub fn handle_init_smart_account_nonce(ctx: Context<InitSmartAccountNonce>) -> Result<()> {
     ctx.accounts.smart_account_nonce.nonce = 0;
     ctx.accounts.smart_account_nonce.bump = *ctx
         .bumps

@@ -12,11 +12,11 @@ pub mod smart_account_v1 {
     use super::*;
 
     pub fn init_smart_account_nonce(ctx: Context<InitSmartAccountNonce>) -> Result<()> {
-        init_smart_account_nonce::handle(ctx)
+        handle_init_smart_account_nonce(ctx)
     }
 
     pub fn init_smart_account(ctx: Context<InitSmartAccount>) -> Result<()> {
-        init_smart_account::handle(ctx)
+        handle_init_smart_account(ctx)
     }
 
     pub fn cancel_pre_authorization(_ctx: Context<CancelPreAuthorization>) -> Result<()> {

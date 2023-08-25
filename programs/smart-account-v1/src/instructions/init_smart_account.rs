@@ -35,7 +35,7 @@ pub struct InitSmartAccount<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handle(ctx: Context<InitSmartAccount>) -> Result<()> {
+pub fn handle_init_smart_account(ctx: Context<InitSmartAccount>) -> Result<()> {
     ctx.accounts.smart_account_nonce.nonce += 1;
 
     ctx.accounts.smart_account.authority = ctx.accounts.authority.key();
