@@ -9,63 +9,38 @@ pub struct PreAuthorization {
     pub smart_account: Pubkey,
     // Stores the type of PAD and it's respective metadata.
     // size: unknown (todo: figure out discriminator for enums)
-    pub pad: PreAuthorizedDebit,
-    // size: unknown (todo: figure out discriminator for enums)
-    pub status: PreAuthorizationStatus,
+    pub variant: PreAuthorizationVariant,
+    // size: 32
+    pub mint: Pubkey,
+    // size: 32
+    pub pad_authority: Pubkey,
+    // size: 8
+    pub activation_unix_timestamp: u64,
+    // size: 8
+    pub amount_debited: u64, // direct or indirect
+    pub bump: u8,
 }
 
 #[derive(InitSpace, AnchorSerialize, AnchorDeserialize, Clone)]
-pub enum PreAuthorizationStatus {
-    Active,
-    Cancelled,
-}
-
-impl Default for PreAuthorizationStatus {
-    fn default() -> Self {
-        PreAuthorizationStatus::Active
-    }
-}
-
-#[derive(InitSpace, AnchorSerialize, AnchorDeserialize, Clone)]
-pub enum PreAuthorizedDebit {
+pub enum PreAuthorizationVariant {
     // size: unknown (todo: figure out discriminator for enums)
     OneTime {
-        // size: 32
-        mint: Pubkey,
-        // size: 32
-        pad_authority: Pubkey,
-        // size: 8
-        activation_unix_timestamp: u64,
         // size: 8
         amount_authorized: u64,
-        // size: 8
-        amount_debited: u64, // direct or indirect
     },
     // size: unknown (todo: figure out discriminator for enums)
     Recurring {
-        // size: 32
-        mint: Pubkey,
-        // size: 32
-        pad_authority: Pubkey,
-        // size: 8
-        activation_unix_timestamp: u64,
         // size: 8
         repeat_frequency_seconds: u64,
         // size: 8
         recurring_amount_authorized: u64,
-        // size: 8
-        amount_debited: u64, // direct or indirect
     },
 }
 
-impl Default for PreAuthorizedDebit {
+impl Default for PreAuthorizationVariant {
     fn default() -> Self {
-        PreAuthorizedDebit::OneTime {
-            mint: Default::default(),
-            pad_authority: Default::default(),
-            activation_unix_timestamp: Default::default(),
+        PreAuthorizationVariant::OneTime {
             amount_authorized: Default::default(),
-            amount_debited: Default::default(),
         }
     }
 }

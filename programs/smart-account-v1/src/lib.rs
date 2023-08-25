@@ -19,19 +19,20 @@ pub mod smart_account_v1 {
         handle_init_smart_account(ctx)
     }
 
-    pub fn cancel_pre_authorization(_ctx: Context<CancelPreAuthorization>) -> Result<()> {
-        Ok(())
-    }
-
     pub fn init_one_time_pre_authorization(
-        _ctx: Context<InitOneTimePreAuthorization>,
+        ctx: Context<InitOneTimePreAuthorization>,
+        params: InitOneTimePreAuthorizationParams,
     ) -> Result<()> {
-        Ok(())
+        handle_init_one_time_pre_authorization(ctx, params)
     }
 
     pub fn init_recurring_pre_authorization(
         _ctx: Context<InitRecurringPreAuthorization>,
     ) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn cancel_pre_authorization(_ctx: Context<CancelPreAuthorization>) -> Result<()> {
         Ok(())
     }
 

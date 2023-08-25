@@ -1,7 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
+import { createMint } from "@solana/spl-token";
 import { SmartAccountV1 } from "../target/types/smart_account_v1";
-import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+    Keypair,
+    PublicKey,
+    SystemProgram,
+    Transaction,
+} from "@solana/web3.js";
 import { expect } from "chai";
 
 describe("smart-account-v1", () => {
@@ -75,7 +81,14 @@ describe("smart-account-v1", () => {
                 .rpc();
         });
 
-        it("initializes account correctly", async () => {
+        it("initializes account correctly and increments nonce", async () => {
+            const smartAccountNonceBefore =
+                await program.account.smartAccountNonce.fetch(
+                    smartAccountNoncePubkey
+                );
+
+            expect(smartAccountNonceBefore.nonce.toString()).to.equal("0");
+
             const [smartAccountPubkey, smartAccountBump] =
                 PublicKey.findProgramAddressSync(
                     [
@@ -98,6 +111,13 @@ describe("smart-account-v1", () => {
                 .signers([authorityKeypair])
                 .rpc();
 
+            const smartAccountNonceAfter =
+                await program.account.smartAccountNonce.fetch(
+                    smartAccountNoncePubkey
+                );
+
+            expect(smartAccountNonceAfter.nonce.toString()).to.equal("1");
+
             const smartAccount = await program.account.smartAccount.fetch(
                 smartAccountPubkey
             );
@@ -112,6 +132,148 @@ describe("smart-account-v1", () => {
                 preAuthorizationNonce: "0",
                 bump: smartAccountBump.toString(),
             });
+        });
+    });
+
+    describe("init_one_time_pre_authorization", () => {
+        let smartAccountNoncePubkey: PublicKey;
+        let smartAccountPubkey: PublicKey;
+        let authorityKeypair: Keypair;
+
+        beforeEach(async () => {
+            authorityKeypair = Keypair.generate();
+            [smartAccountNoncePubkey] = PublicKey.findProgramAddressSync(
+                [
+                    Buffer.from("smart-account-nonce"),
+                    authorityKeypair.publicKey.toBuffer(),
+                ],
+                program.programId
+            );
+
+            [smartAccountPubkey] = PublicKey.findProgramAddressSync(
+                [
+                    Buffer.from("smart-account"),
+                    authorityKeypair.publicKey.toBuffer(),
+                    Buffer.from("0"),
+                ],
+                program.programId
+            );
+
+            await program.methods
+                .initSmartAccountNonce()
+                .accounts({
+                    payer: program.provider.publicKey,
+                    authority: authorityKeypair.publicKey,
+                    smartAccountNonce: smartAccountNoncePubkey,
+                    systemProgram: SystemProgram.programId,
+                })
+                .signers([authorityKeypair])
+                .rpc();
+
+            await program.methods
+                .initSmartAccount()
+                .accounts({
+                    payer: program.provider.publicKey,
+                    authority: authorityKeypair.publicKey,
+                    smartAccountNonce: smartAccountNoncePubkey,
+                    smartAccount: smartAccountPubkey,
+                    systemProgram: SystemProgram.programId,
+                })
+                .signers([authorityKeypair])
+                .rpc();
+        });
+
+        it("initializes account correctly and increments nonce", async () => {
+            const mintAuthorityKeypair = Keypair.generate();
+
+            const tx = new Transaction();
+            tx.add(
+                SystemProgram.transfer({
+                    fromPubkey: program.provider.publicKey,
+                    toPubkey: mintAuthorityKeypair.publicKey,
+                    lamports: 1e9,
+                })
+            );
+
+            await program.provider.sendAndConfirm(tx);
+
+            const mint = await createMint(
+                program.provider.connection,
+                mintAuthorityKeypair,
+                mintAuthorityKeypair.publicKey,
+                mintAuthorityKeypair.publicKey,
+                6
+            );
+
+            const padAuthorityPubkey = PublicKey.unique();
+
+            const [preAuthorizationPubkey, preAuthorizationBump] =
+                PublicKey.findProgramAddressSync(
+                    [
+                        Buffer.from("pre-authorization"),
+                        smartAccountPubkey.toBuffer(),
+                        Buffer.from("0"),
+                    ],
+                    program.programId
+                );
+
+            const smartAccountBefore = await program.account.smartAccount.fetch(
+                smartAccountPubkey
+            );
+
+            expect(
+                smartAccountBefore.preAuthorizationNonce.toString()
+            ).to.equal("0");
+
+            const activationUnixTimestamp = new anchor.BN(
+                Math.floor(new Date().getTime() / 1e3) + 10 * 24 * 60 * 60 // now + 10 days
+            );
+
+            await program.methods
+                .initOneTimePreAuthorization({
+                    amountAuthorized: new anchor.BN(1000),
+                    padAuthority: padAuthorityPubkey,
+                    activationUnixTimestamp,
+                })
+                .accounts({
+                    payer: program.provider.publicKey,
+                    authority: authorityKeypair.publicKey,
+                    smartAccount: smartAccountPubkey,
+                    mint,
+                    preAuthorization: preAuthorizationPubkey,
+                    systemProgram: SystemProgram.programId,
+                })
+                .signers([authorityKeypair])
+                .rpc();
+
+            const smartAccountAfter = await program.account.smartAccount.fetch(
+                smartAccountPubkey
+            );
+
+            expect(smartAccountAfter.preAuthorizationNonce.toString()).to.equal(
+                "1"
+            );
+
+            const preAuthorization =
+                await program.account.preAuthorization.fetch(
+                    preAuthorizationPubkey
+                );
+
+            expect(preAuthorization.bump).to.equal(preAuthorizationBump);
+            expect(
+                preAuthorization.activationUnixTimestamp.toString()
+            ).to.equal(activationUnixTimestamp.toString());
+            expect(preAuthorization.amountDebited.toString()).to.equal("0");
+            expect(preAuthorization.mint.toBase58()).to.equal(mint.toBase58());
+            expect(preAuthorization.padAuthority.toBase58()).to.equal(
+                padAuthorityPubkey.toBase58()
+            );
+            expect(preAuthorization.smartAccount.toBase58()).to.equal(
+                smartAccountPubkey.toBase58()
+            );
+            expect(
+                preAuthorization.variant.oneTime.amountAuthorized.toString()
+            ).to.equal("1000");
         });
     });
 });
