@@ -205,7 +205,7 @@ describe("smart-account-v1", () => {
                 6
             );
 
-            const padAuthorityPubkey = PublicKey.unique();
+            const debitAuthorityPubkey = PublicKey.unique();
 
             const [preAuthorizationPubkey, preAuthorizationBump] =
                 PublicKey.findProgramAddressSync(
@@ -231,7 +231,7 @@ describe("smart-account-v1", () => {
 
             await program.methods
                 .initOneTimePreAuthorization({
-                    padAuthority: padAuthorityPubkey,
+                    debitAuthority: debitAuthorityPubkey,
                     activationUnixTimestamp,
                     variant: {
                         oneTime: {
@@ -269,8 +269,8 @@ describe("smart-account-v1", () => {
             ).to.equal(activationUnixTimestamp.toString());
             expect(preAuthorization.amountDebited.toString()).to.equal("0");
             expect(preAuthorization.mint.toBase58()).to.equal(mint.toBase58());
-            expect(preAuthorization.padAuthority.toBase58()).to.equal(
-                padAuthorityPubkey.toBase58()
+            expect(preAuthorization.debitAuthority.toBase58()).to.equal(
+                debitAuthorityPubkey.toBase58()
             );
             expect(preAuthorization.smartAccount.toBase58()).to.equal(
                 smartAccountPubkey.toBase58()
@@ -358,7 +358,7 @@ describe("smart-account-v1", () => {
                 6
             );
 
-            const padAuthorityPubkey = PublicKey.unique();
+            const debitAuthorityPubkey = PublicKey.unique();
 
             [preAuthorizationPubkey] = PublicKey.findProgramAddressSync(
                 [
@@ -375,7 +375,7 @@ describe("smart-account-v1", () => {
 
             await program.methods
                 .initOneTimePreAuthorization({
-                    padAuthority: padAuthorityPubkey,
+                    debitAuthority: debitAuthorityPubkey,
                     activationUnixTimestamp,
                     variant: {
                         oneTime: {

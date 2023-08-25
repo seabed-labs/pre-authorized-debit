@@ -18,7 +18,7 @@ pub struct CancelPreAuthorization<'info> {
         mut,
         close = authority,
         has_one = smart_account,
-        constraint = signer.key.eq(&smart_account.authority) || signer.key.eq(&pre_authorization.pad_authority)
+        constraint = signer.key.eq(&smart_account.authority) || signer.key.eq(&pre_authorization.debit_authority)
     )]
     pub pre_authorization: Account<'info, PreAuthorization>,
 }

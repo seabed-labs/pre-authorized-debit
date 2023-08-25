@@ -41,7 +41,7 @@ pub struct InitPreAuthorization<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct InitPreAuthorizationParams {
     pub variant: PreAuthorizationVariant,
-    pub pad_authority: Pubkey,
+    pub debit_authority: Pubkey,
     pub activation_unix_timestamp: u64,
 }
 
@@ -53,7 +53,7 @@ pub fn handle_init_one_time_pre_authorization(
 
     ctx.accounts.pre_authorization.smart_account = ctx.accounts.smart_account.key();
     ctx.accounts.pre_authorization.mint = ctx.accounts.mint.key();
-    ctx.accounts.pre_authorization.pad_authority = params.pad_authority;
+    ctx.accounts.pre_authorization.debit_authority = params.debit_authority;
     ctx.accounts.pre_authorization.activation_unix_timestamp = params.activation_unix_timestamp;
     ctx.accounts.pre_authorization.amount_debited = 0;
     ctx.accounts.pre_authorization.variant = params.variant;

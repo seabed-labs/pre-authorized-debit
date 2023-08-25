@@ -13,7 +13,7 @@ pub struct PreAuthorization {
     // size: 32
     pub mint: Pubkey,
     // size: 32
-    pub pad_authority: Pubkey,
+    pub debit_authority: Pubkey,
     // size: 8
     pub activation_unix_timestamp: u64,
     // size: 8
