@@ -26,8 +26,8 @@ pub mod smart_account_v1 {
         handle_init_one_time_pre_authorization(ctx, params)
     }
 
-    pub fn cancel_pre_authorization(_ctx: Context<CancelPreAuthorization>) -> Result<()> {
-        Ok(())
+    pub fn cancel_pre_authorization(ctx: Context<CancelPreAuthorization>) -> Result<()> {
+        handle_cancel_pre_authorization(ctx)
     }
 
     pub fn debit_as_authority(_ctx: Context<DebitAsAuthority>) -> Result<()> {

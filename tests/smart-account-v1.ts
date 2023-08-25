@@ -280,4 +280,152 @@ describe("smart-account-v1", () => {
             ).to.equal("1000");
         });
     });
+
+    describe("cancel_pre_authorization", () => {
+        let smartAccountNoncePubkey: PublicKey;
+        let smartAccountPubkey: PublicKey;
+        let authorityKeypair: Keypair;
+        let preAuthorizationPubkey: PublicKey;
+
+        beforeEach(async () => {
+            authorityKeypair = Keypair.generate();
+            [smartAccountNoncePubkey] = PublicKey.findProgramAddressSync(
+                [
+                    Buffer.from("smart-account-nonce"),
+                    authorityKeypair.publicKey.toBuffer(),
+                ],
+                program.programId
+            );
+
+            [smartAccountPubkey] = PublicKey.findProgramAddressSync(
+                [
+                    Buffer.from("smart-account"),
+                    authorityKeypair.publicKey.toBuffer(),
+                    Buffer.from("0"),
+                ],
+                program.programId
+            );
+
+            await program.methods
+                .initSmartAccountNonce()
+                .accounts({
+                    payer: program.provider.publicKey,
+                    authority: authorityKeypair.publicKey,
+                    smartAccountNonce: smartAccountNoncePubkey,
+                    systemProgram: SystemProgram.programId,
+                })
+                .signers([authorityKeypair])
+                .rpc();
+
+            await program.methods
+                .initSmartAccount()
+                .accounts({
+                    payer: program.provider.publicKey,
+                    authority: authorityKeypair.publicKey,
+                    smartAccountNonce: smartAccountNoncePubkey,
+                    smartAccount: smartAccountPubkey,
+                    systemProgram: SystemProgram.programId,
+                })
+                .signers([authorityKeypair])
+                .rpc();
+
+            const mintAuthorityKeypair = Keypair.generate();
+
+            const tx = new Transaction();
+            tx.add(
+                SystemProgram.transfer({
+                    fromPubkey: program.provider.publicKey,
+                    toPubkey: mintAuthorityKeypair.publicKey,
+                    lamports: 1e9,
+                })
+            );
+
+            tx.add(
+                SystemProgram.transfer({
+                    fromPubkey: program.provider.publicKey,
+                    toPubkey: authorityKeypair.publicKey,
+                    lamports: 1e9,
+                })
+            );
+
+            await program.provider.sendAndConfirm(tx);
+
+            const mint = await createMint(
+                program.provider.connection,
+                mintAuthorityKeypair,
+                mintAuthorityKeypair.publicKey,
+                mintAuthorityKeypair.publicKey,
+                6
+            );
+
+            const padAuthorityPubkey = PublicKey.unique();
+
+            [preAuthorizationPubkey] = PublicKey.findProgramAddressSync(
+                [
+                    Buffer.from("pre-authorization"),
+                    smartAccountPubkey.toBuffer(),
+                    Buffer.from("0"),
+                ],
+                program.programId
+            );
+
+            const activationUnixTimestamp = new anchor.BN(
+                Math.floor(new Date().getTime() / 1e3) + 10 * 24 * 60 * 60 // now + 10 days
+            );
+
+            await program.methods
+                .initOneTimePreAuthorization({
+                    padAuthority: padAuthorityPubkey,
+                    activationUnixTimestamp,
+                    variant: {
+                        oneTime: {
+                            amountAuthorized: new anchor.BN(1000),
+                        },
+                    },
+                })
+                .accounts({
+                    payer: program.provider.publicKey,
+                    authority: authorityKeypair.publicKey,
+                    smartAccount: smartAccountPubkey,
+                    mint,
+                    preAuthorization: preAuthorizationPubkey,
+                    systemProgram: SystemProgram.programId,
+                })
+                .signers([authorityKeypair])
+                .rpc();
+        });
+
+        it("closes account and refunds to authority", async () => {
+            const preAuthorization =
+                await program.account.preAuthorization.getAccountInfo(
+                    preAuthorizationPubkey
+                );
+
+            const lamportsToRefund = preAuthorization.lamports;
+            const authorityBefore =
+                await program.provider.connection.getAccountInfo(
+                    authorityKeypair.publicKey
+                );
+
+            await program.methods
+                .cancelPreAuthorization()
+                .accounts({
+                    signer: authorityKeypair.publicKey,
+                    authority: authorityKeypair.publicKey,
+                    smartAccount: smartAccountPubkey,
+                    preAuthorization: preAuthorizationPubkey,
+                })
+                .signers([authorityKeypair])
+                .rpc();
+
+            const authorityAfter =
+                await program.provider.connection.getAccountInfo(
+                    authorityKeypair.publicKey
+                );
+
+            expect(authorityAfter.lamports - authorityBefore.lamports).to.equal(
+                lamportsToRefund
+            );
+        });
+    });
 });
