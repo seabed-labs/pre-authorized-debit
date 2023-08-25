@@ -231,9 +231,13 @@ describe("smart-account-v1", () => {
 
             await program.methods
                 .initOneTimePreAuthorization({
-                    amountAuthorized: new anchor.BN(1000),
                     padAuthority: padAuthorityPubkey,
                     activationUnixTimestamp,
+                    variant: {
+                        oneTime: {
+                            amountAuthorized: new anchor.BN(1000),
+                        },
+                    },
                 })
                 .accounts({
                     payer: program.provider.publicKey,

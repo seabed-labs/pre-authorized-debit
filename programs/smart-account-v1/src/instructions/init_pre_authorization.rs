@@ -7,7 +7,7 @@ use crate::state::{
 };
 
 #[derive(Accounts)]
-pub struct InitOneTimePreAuthorization<'info> {
+pub struct InitPreAuthorization<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -39,15 +39,15 @@ pub struct InitOneTimePreAuthorization<'info> {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct InitOneTimePreAuthorizationParams {
-    pub amount_authorized: u64,
+pub struct InitPreAuthorizationParams {
+    pub variant: PreAuthorizationVariant,
     pub pad_authority: Pubkey,
     pub activation_unix_timestamp: u64,
 }
 
 pub fn handle_init_one_time_pre_authorization(
-    ctx: Context<InitOneTimePreAuthorization>,
-    params: InitOneTimePreAuthorizationParams,
+    ctx: Context<InitPreAuthorization>,
+    params: InitPreAuthorizationParams,
 ) -> Result<()> {
     ctx.accounts.smart_account.pre_authorization_nonce += 1;
 
@@ -56,9 +56,7 @@ pub fn handle_init_one_time_pre_authorization(
     ctx.accounts.pre_authorization.pad_authority = params.pad_authority;
     ctx.accounts.pre_authorization.activation_unix_timestamp = params.activation_unix_timestamp;
     ctx.accounts.pre_authorization.amount_debited = 0;
-    ctx.accounts.pre_authorization.variant = PreAuthorizationVariant::OneTime {
-        amount_authorized: params.amount_authorized,
-    };
+    ctx.accounts.pre_authorization.variant = params.variant;
 
     ctx.accounts.pre_authorization.bump = *ctx
         .bumps
