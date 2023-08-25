@@ -26,6 +26,10 @@ pub struct InitSmartAccountNonce<'info> {
 
 pub fn handle(ctx: Context<InitSmartAccountNonce>) -> Result<()> {
     ctx.accounts.smart_account_nonce.nonce = 0;
+    ctx.accounts.smart_account_nonce.bump = *ctx
+        .bumps
+        .get("smart_account_nonce")
+        .expect("smart_account_nonce bump");
 
     Ok(())
 }

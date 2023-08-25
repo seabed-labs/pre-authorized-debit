@@ -15,8 +15,8 @@ pub mod smart_account_v1 {
         init_smart_account_nonce::handle(ctx)
     }
 
-    pub fn init_smart_account(_ctx: Context<InitSmartAccount>) -> Result<()> {
-        Ok(())
+    pub fn init_smart_account(ctx: Context<InitSmartAccount>) -> Result<()> {
+        init_smart_account::handle(ctx)
     }
 
     pub fn cancel_pre_authorization(_ctx: Context<CancelPreAuthorization>) -> Result<()> {

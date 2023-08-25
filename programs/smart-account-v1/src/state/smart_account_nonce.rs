@@ -8,4 +8,5 @@ pub struct SmartAccountNonce {
     // It is used in the PDA seed for a SmartAccount.
     // size: 16
     pub nonce: u128,
+    pub bump: u8,
 }

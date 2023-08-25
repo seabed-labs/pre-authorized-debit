@@ -12,4 +12,5 @@ pub struct SmartAccount {
     // It is used in the PDA seed for a PreAuthorization account.
     // size: 16
     pub pre_authorization_nonce: u128,
+    pub bump: u8,
 }
