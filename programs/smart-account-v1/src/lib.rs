@@ -11,8 +11,8 @@ declare_id!("3FWaGq3zYcqJq2t4tszrTAwVrLTc1BcAZzVGLAbK7piR");
 pub mod smart_account_v1 {
     use super::*;
 
-    pub fn init_smart_account_nonce(_ctx: Context<InitSmartAccountNonce>) -> Result<()> {
-        Ok(())
+    pub fn init_smart_account_nonce(ctx: Context<InitSmartAccountNonce>) -> Result<()> {
+        init_smart_account_nonce::handle(ctx)
     }
 
     pub fn init_smart_account(_ctx: Context<InitSmartAccount>) -> Result<()> {
