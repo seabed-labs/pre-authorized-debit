@@ -1,20 +1,21 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
+import {AnchorProvider, Program, Provider} from "@coral-xyz/anchor";
 import { createMint } from "@solana/spl-token";
-import { SmartAccountV1 } from "../target/types/smart_account_v1";
+import { SmartAccountV1 } from "../../target/types/smart_account_v1";
 import {
     Keypair,
     PublicKey,
     SystemProgram,
     Transaction,
 } from "@solana/web3.js";
-import { expect } from "chai";
+import { assert, expect } from "chai";
 
 describe("smart-account-v1", () => {
     // Configure the client to use the local cluster.
     anchor.setProvider(anchor.AnchorProvider.env());
 
     const program = anchor.workspace.SmartAccountV1 as Program<SmartAccountV1>;
+    const provider = program.provider as AnchorProvider;
 
     describe("init_smart_account_nonce", () => {
         it("initializes account correctly", async () => {
@@ -189,13 +190,13 @@ describe("smart-account-v1", () => {
             const tx = new Transaction();
             tx.add(
                 SystemProgram.transfer({
-                    fromPubkey: program.provider.publicKey,
+                    fromPubkey: provider.publicKey,
                     toPubkey: mintAuthorityKeypair.publicKey,
                     lamports: 1e9,
                 })
             );
 
-            await program.provider.sendAndConfirm(tx);
+            await provider.sendAndConfirm(tx);
 
             const mint = await createMint(
                 program.provider.connection,
@@ -276,7 +277,7 @@ describe("smart-account-v1", () => {
                 smartAccountPubkey.toBase58()
             );
             expect(
-                preAuthorization.variant.oneTime.amountAuthorized.toString()
+                preAuthorization.variant.oneTime!.amountAuthorized.toString()
             ).to.equal("1000");
         });
     });
@@ -334,7 +335,7 @@ describe("smart-account-v1", () => {
             const tx = new Transaction();
             tx.add(
                 SystemProgram.transfer({
-                    fromPubkey: program.provider.publicKey,
+                    fromPubkey: provider.publicKey,
                     toPubkey: mintAuthorityKeypair.publicKey,
                     lamports: 1e9,
                 })
@@ -342,13 +343,13 @@ describe("smart-account-v1", () => {
 
             tx.add(
                 SystemProgram.transfer({
-                    fromPubkey: program.provider.publicKey,
+                    fromPubkey: provider.publicKey,
                     toPubkey: authorityKeypair.publicKey,
                     lamports: 1e9,
                 })
             );
 
-            await program.provider.sendAndConfirm(tx);
+            await provider.sendAndConfirm(tx);
 
             const mint = await createMint(
                 program.provider.connection,
@@ -400,12 +401,13 @@ describe("smart-account-v1", () => {
                 await program.account.preAuthorization.getAccountInfo(
                     preAuthorizationPubkey
                 );
-
+            assert(preAuthorization);
             const lamportsToRefund = preAuthorization.lamports;
             const authorityBefore =
                 await program.provider.connection.getAccountInfo(
                     authorityKeypair.publicKey
                 );
+            assert(authorityBefore);
 
             await program.methods
                 .cancelPreAuthorization()
@@ -422,7 +424,7 @@ describe("smart-account-v1", () => {
                 await program.provider.connection.getAccountInfo(
                     authorityKeypair.publicKey
                 );
-
+            assert(authorityAfter);
             expect(authorityAfter.lamports - authorityBefore.lamports).to.equal(
                 lamportsToRefund
             );

@@ -1,7 +1,9 @@
 {
     "private": true,
     "workspaces": [
-        "sdk/smart-account-v1"
+        "scripts",
+        "program-tests/**",
+        "sdk/**"
     ],
     "packageManager": "yarn@3.6.0",
     "scripts": {

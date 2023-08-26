@@ -2,7 +2,7 @@
 
 ## Getting Started
 
--   rust 1.74.0
+-   rust 1.72.0
 -   node 18.17.1
 -   yarn 3.6.0
 -   solana 1.16.10
