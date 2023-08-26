@@ -20,4 +20,11 @@ pub mod pre_authorized_debits_v1 {
     pub fn close_smart_delegate(ctx: Context<CloseSmartDelegate>) -> Result<()> {
         handle_close_smart_delegate(ctx)
     }
+
+    pub fn init_pre_authorization(
+        ctx: Context<InitPreAuthorization>,
+        params: InitPreAuthorizationParams,
+    ) -> Result<()> {
+        handle_init_pre_authorization(ctx, params)
+    }
 }

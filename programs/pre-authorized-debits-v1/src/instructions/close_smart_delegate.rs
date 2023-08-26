@@ -9,8 +9,11 @@ pub struct CloseSmartDelegate<'info> {
     #[account(mut)]
     pub receiver: AccountInfo<'info>,
 
+    // Owner of the smart delegate's token account has to sign
     pub owner: Signer<'info>,
 
+    // TODO: Throw custom error on failure
+    #[account(has_one = owner)]
     pub token_account: Account<'info, TokenAccount>,
 
     #[account(

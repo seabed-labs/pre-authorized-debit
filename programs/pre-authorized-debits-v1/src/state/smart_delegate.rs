@@ -5,7 +5,6 @@ use anchor_lang::prelude::*;
 #[derive(Default, InitSpace)]
 pub struct SmartDelegate {
     pub token_account: Pubkey,
-    pub authority: Pubkey,
     pub pre_authorization_nonce: u128,
     pub bump: u8,
 }
