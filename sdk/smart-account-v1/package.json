@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "packageManager": "yarn@3.6.0",
   "scripts": {
-    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+    "build:program": "cd ../../ && anchor build -p smart_account_v1",
+    "build:anchor-client": "yarn run anchor-client-gen ../../target/idl/smart_account_v1.json ./src/anchor-client",
+    "lint:fix": "prettier \"*/**/*{.js,.ts}\" -w",
+    "lint": "prettier \"*/**/*{.js,.ts}\" --check"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
