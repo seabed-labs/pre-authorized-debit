@@ -34,4 +34,15 @@ pub mod pre_authorized_debits_v1 {
     pub fn close_pre_authorization(ctx: Context<ClosePreAuthorization>) -> Result<()> {
         handle_close_pre_authorization(ctx)
     }
+
+    pub fn debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
+        handle_debit(ctx, params)
+    }
+
+    pub fn update_pause_pre_authorization(
+        ctx: Context<UpdatePausePreAuthorization>,
+        params: UpdatePausePreAuthorizationParams,
+    ) -> Result<()> {
+        handle_update_pause_pre_authorization(ctx, params)
+    }
 }

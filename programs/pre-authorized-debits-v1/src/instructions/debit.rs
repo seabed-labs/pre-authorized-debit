@@ -120,6 +120,12 @@ pub fn handle_debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
 
 fn validate_debit(ctx: &Context<Debit>, params: &DebitParams) -> Result<()> {
     let pre_authorization = &ctx.accounts.pre_authorization;
+
+    require!(
+        !pre_authorization.paused,
+        CustomProgramError::PreAuthorizationPaused
+    );
+
     let current_unix_timestamp = Clock::get()?.unix_timestamp;
 
     require!(
@@ -214,6 +220,7 @@ fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitPara
         );
     }
 
+    // could happen if validator has weird timestamps
     require!(
         current_cycle >= last_debited_cycle,
         CustomProgramError::LastDebitedCycleBeforeCurrentCycle

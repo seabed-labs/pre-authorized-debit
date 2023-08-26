@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(Default, InitSpace)]
 pub struct PreAuthorization {
+    pub paused: bool,
     pub smart_delegate: Pubkey,
     pub nonce: u128,
     pub variant: PreAuthorizationVariant,

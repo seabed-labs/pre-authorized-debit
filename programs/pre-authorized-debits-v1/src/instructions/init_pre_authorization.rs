@@ -87,6 +87,7 @@ pub fn handle_init_pre_authorization(
         },
     };
 
+    ctx.accounts.pre_authorization.paused = false;
     ctx.accounts.pre_authorization.debit_authority = params.debit_authority;
     ctx.accounts.pre_authorization.activation_unix_timestamp = params.activation_unix_timestamp;
     ctx.accounts.pre_authorization.bump = *ctx
