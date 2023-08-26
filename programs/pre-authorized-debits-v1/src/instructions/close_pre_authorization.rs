@@ -4,7 +4,7 @@ use anchor_spl::token::TokenAccount;
 use crate::state::{pre_authorization::PreAuthorization, smart_delegate::SmartDelegate};
 
 #[derive(Accounts)]
-pub struct RevokePreAuthorization<'info> {
+pub struct ClosePreAuthorization<'info> {
     /// CHECK: Verified manually
     #[account(
         mut,
@@ -37,7 +37,7 @@ pub struct RevokePreAuthorization<'info> {
         seeds = [
             b"pre-authorization",
             smart_delegate.key().as_ref(),
-            smart_delegate.pre_authorization_nonce.to_string().as_ref(),
+            pre_authorization.nonce.to_string().as_ref(),
         ],
         bump = pre_authorization.bump,
         // TODO: Throw custom error on failure
@@ -46,6 +46,6 @@ pub struct RevokePreAuthorization<'info> {
     pub pre_authorization: Account<'info, PreAuthorization>,
 }
 
-pub fn handle_revoke_pre_authorization(_ctx: Context<RevokePreAuthorization>) -> Result<()> {
+pub fn handle_close_pre_authorization(_ctx: Context<ClosePreAuthorization>) -> Result<()> {
     Ok(())
 }

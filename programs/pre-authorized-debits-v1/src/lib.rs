@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 
+pub mod errors;
 pub mod instructions;
 pub mod state;
 
@@ -30,7 +31,7 @@ pub mod pre_authorized_debits_v1 {
         handle_init_pre_authorization(ctx, params)
     }
 
-    pub fn revoke_pre_authorization(ctx: Context<RevokePreAuthorization>) -> Result<()> {
-        handle_revoke_pre_authorization(ctx)
+    pub fn close_pre_authorization(ctx: Context<ClosePreAuthorization>) -> Result<()> {
+        handle_close_pre_authorization(ctx)
     }
 }

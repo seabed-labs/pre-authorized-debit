@@ -5,10 +5,10 @@ use anchor_lang::prelude::*;
 #[derive(Default, InitSpace)]
 pub struct PreAuthorization {
     pub smart_delegate: Pubkey,
+    pub nonce: u128,
     pub variant: PreAuthorizationVariant,
     pub debit_authority: Pubkey,
-    pub activation_unix_timestamp: u64,
-    pub amount_debited: u64,
+    pub activation_unix_timestamp: i64,
     pub bump: u8,
 }
 
@@ -16,11 +16,15 @@ pub struct PreAuthorization {
 pub enum PreAuthorizationVariant {
     OneTime {
         amount_authorized: u64,
-        expiry_unix_timestamp: u64,
+        expiry_unix_timestamp: i64,
+        amount_debited: u64,
     },
     Recurring {
         repeat_frequency_seconds: u64,
         recurring_amount_authorized: u64,
+        amount_debited_last_cycle: u64,
+        amount_debited_total: u64,
+        last_debited_cycle: u64,
         // None: infinite recurring
         // Some(n): approved for n cycles from activation,
         num_cycles: Option<u64>,
@@ -35,6 +39,7 @@ impl Default for PreAuthorizationVariant {
         PreAuthorizationVariant::OneTime {
             amount_authorized: Default::default(),
             expiry_unix_timestamp: Default::default(),
+            amount_debited: Default::default(),
         }
     }
 }
