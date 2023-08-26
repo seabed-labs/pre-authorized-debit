@@ -1,12 +1,11 @@
 use anchor_lang::prelude::*;
 
-// PDA Seeds: ['pre-authorization', smart_delegate, nonce]
+// PDA Seeds: ['pre-authorization', token_account, debit_authority]
 #[account]
 #[derive(Default, InitSpace)]
 pub struct PreAuthorization {
     pub paused: bool,
-    pub smart_delegate: Pubkey,
-    pub nonce: u128,
+    pub token_account: Pubkey,
     pub variant: PreAuthorizationVariant,
     pub debit_authority: Pubkey,
     pub activation_unix_timestamp: i64,

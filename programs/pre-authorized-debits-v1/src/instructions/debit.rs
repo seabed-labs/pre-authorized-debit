@@ -31,14 +31,14 @@ pub struct Debit<'info> {
         mut,
         seeds = [
             b"pre-authorization",
-            smart_delegate.key().as_ref(),
-            pre_authorization.nonce.to_string().as_ref(),
+            token_account.key().as_ref(),
+            debit_authority.key().as_ref(),
         ],
         bump = pre_authorization.bump,
         // TODO: Throw custom error on failure
         has_one = debit_authority,
         // TODO: Throw custom error on failure
-        has_one = smart_delegate
+        has_one = token_account
     )]
     pub pre_authorization: Account<'info, PreAuthorization>,
 

@@ -7,6 +7,7 @@ use crate::state::{
 };
 
 #[derive(Accounts)]
+#[instruction(params: InitPreAuthorizationParams)]
 pub struct InitPreAuthorization<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -34,8 +35,8 @@ pub struct InitPreAuthorization<'info> {
         space = 8 + PreAuthorization::INIT_SPACE,
         seeds = [
             b"pre-authorization",
-            smart_delegate.key().as_ref(),
-            smart_delegate.pre_authorization_nonce.to_string().as_ref(),
+            token_account.key().as_ref(),
+            params.debit_authority.as_ref(),
         ],
         bump,
         payer = payer,
@@ -56,10 +57,7 @@ pub fn handle_init_pre_authorization(
     ctx: Context<InitPreAuthorization>,
     params: InitPreAuthorizationParams,
 ) -> Result<()> {
-    ctx.accounts.pre_authorization.nonce = ctx.accounts.smart_delegate.pre_authorization_nonce;
-    ctx.accounts.smart_delegate.pre_authorization_nonce += 1;
-
-    ctx.accounts.pre_authorization.smart_delegate = ctx.accounts.smart_delegate.key();
+    ctx.accounts.pre_authorization.token_account = ctx.accounts.token_account.key();
     ctx.accounts.pre_authorization.variant = match params.variant {
         PreAuthorizationVariant::OneTime {
             amount_authorized,

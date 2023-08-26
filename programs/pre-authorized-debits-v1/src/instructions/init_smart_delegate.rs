@@ -32,7 +32,6 @@ pub struct InitSmartDelegate<'info> {
 
 pub fn handle_init_smart_delegate(ctx: Context<InitSmartDelegate>) -> Result<()> {
     ctx.accounts.smart_delegate.token_account = ctx.accounts.token_account.key();
-    ctx.accounts.smart_delegate.pre_authorization_nonce = 0;
     ctx.accounts.smart_delegate.bump = *ctx
         .bumps
         .get("smart_delegate")
