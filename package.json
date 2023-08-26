@@ -8,8 +8,8 @@
     "packageManager": "yarn@3.6.0",
     "scripts": {
         "prepare": "husky install",
-        "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-        "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+        "lint:fix": "prettier \"*/**/*{.js,.ts}\" -w",
+        "lint": "prettier \"*/**/*{.js,.ts}\" --check"
     },
     "devDependencies": {
         "husky": "^8.0.3",

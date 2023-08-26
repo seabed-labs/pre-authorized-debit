@@ -1,8 +1,13 @@
+anchor_version = '0.28.0'
+solana_version = '1.16.10'
+
 [features]
 seeds = false
 skip-lint = false
+
 [programs.localnet]
 smart_account_v1 = "3FWaGq3zYcqJq2t4tszrTAwVrLTc1BcAZzVGLAbK7piR"
+
 
 [registry]
 url = "https://api.apr.dev"
