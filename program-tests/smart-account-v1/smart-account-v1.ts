@@ -1,433 +1,420 @@
 import * as anchor from "@coral-xyz/anchor";
-import {AnchorProvider, Program, Provider} from "@coral-xyz/anchor";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { createMint } from "@solana/spl-token";
 import { SmartAccountV1 } from "../../target/types/smart_account_v1";
 import {
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
 } from "@solana/web3.js";
 import { assert, expect } from "chai";
 
 describe("smart-account-v1", () => {
-    // Configure the client to use the local cluster.
-    anchor.setProvider(anchor.AnchorProvider.env());
+  // Configure the client to use the local cluster.
+  anchor.setProvider(anchor.AnchorProvider.env());
 
-    const program = anchor.workspace.SmartAccountV1 as Program<SmartAccountV1>;
-    const provider = program.provider as AnchorProvider;
+  const program = anchor.workspace.SmartAccountV1 as Program<SmartAccountV1>;
+  const provider = program.provider as AnchorProvider;
 
-    describe("init_smart_account_nonce", () => {
-        it("initializes account correctly", async () => {
-            const authorityKeypair = Keypair.generate();
+  describe("init_smart_account_nonce", () => {
+    it("initializes account correctly", async () => {
+      const authorityKeypair = Keypair.generate();
 
-            const [smartAccountNoncePubkey, smartAccountNonceBump] =
-                PublicKey.findProgramAddressSync(
-                    [
-                        Buffer.from("smart-account-nonce"),
-                        authorityKeypair.publicKey.toBuffer(),
-                    ],
-                    program.programId
-                );
+      const [smartAccountNoncePubkey, smartAccountNonceBump] =
+        PublicKey.findProgramAddressSync(
+          [
+            Buffer.from("smart-account-nonce"),
+            authorityKeypair.publicKey.toBuffer(),
+          ],
+          program.programId
+        );
 
-            await program.methods
-                .initSmartAccountNonce()
-                .accounts({
-                    payer: program.provider.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccountNonce: smartAccountNoncePubkey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([authorityKeypair])
-                .rpc();
+      await program.methods
+        .initSmartAccountNonce()
+        .accounts({
+          payer: program.provider.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccountNonce: smartAccountNoncePubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([authorityKeypair])
+        .rpc();
 
-            const smartAccountNonce =
-                await program.account.smartAccountNonce.fetch(
-                    smartAccountNoncePubkey
-                );
+      const smartAccountNonce = await program.account.smartAccountNonce.fetch(
+        smartAccountNoncePubkey
+      );
 
-            expect({
-                nonce: smartAccountNonce.nonce.toString(),
-                bump: smartAccountNonce.bump.toString(),
-            }).to.deep.equal({
-                nonce: "0",
-                bump: smartAccountNonceBump.toString(),
-            });
-        });
+      expect({
+        nonce: smartAccountNonce.nonce.toString(),
+        bump: smartAccountNonce.bump.toString(),
+      }).to.deep.equal({
+        nonce: "0",
+        bump: smartAccountNonceBump.toString(),
+      });
+    });
+  });
+
+  describe("init_smart_account", () => {
+    let smartAccountNoncePubkey: PublicKey;
+    let authorityKeypair: Keypair;
+
+    beforeEach(async () => {
+      authorityKeypair = Keypair.generate();
+      [smartAccountNoncePubkey] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("smart-account-nonce"),
+          authorityKeypair.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
+      await program.methods
+        .initSmartAccountNonce()
+        .accounts({
+          payer: program.provider.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccountNonce: smartAccountNoncePubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([authorityKeypair])
+        .rpc();
     });
 
-    describe("init_smart_account", () => {
-        let smartAccountNoncePubkey: PublicKey;
-        let authorityKeypair: Keypair;
+    it("initializes account correctly and increments nonce", async () => {
+      const smartAccountNonceBefore =
+        await program.account.smartAccountNonce.fetch(smartAccountNoncePubkey);
 
-        beforeEach(async () => {
-            authorityKeypair = Keypair.generate();
-            [smartAccountNoncePubkey] = PublicKey.findProgramAddressSync(
-                [
-                    Buffer.from("smart-account-nonce"),
-                    authorityKeypair.publicKey.toBuffer(),
-                ],
-                program.programId
-            );
+      expect(smartAccountNonceBefore.nonce.toString()).to.equal("0");
 
-            await program.methods
-                .initSmartAccountNonce()
-                .accounts({
-                    payer: program.provider.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccountNonce: smartAccountNoncePubkey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([authorityKeypair])
-                .rpc();
-        });
+      const [smartAccountPubkey, smartAccountBump] =
+        PublicKey.findProgramAddressSync(
+          [
+            Buffer.from("smart-account"),
+            authorityKeypair.publicKey.toBuffer(),
+            Buffer.from("0"),
+          ],
+          program.programId
+        );
 
-        it("initializes account correctly and increments nonce", async () => {
-            const smartAccountNonceBefore =
-                await program.account.smartAccountNonce.fetch(
-                    smartAccountNoncePubkey
-                );
+      await program.methods
+        .initSmartAccount()
+        .accounts({
+          payer: program.provider.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccountNonce: smartAccountNoncePubkey,
+          smartAccount: smartAccountPubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([authorityKeypair])
+        .rpc();
 
-            expect(smartAccountNonceBefore.nonce.toString()).to.equal("0");
+      const smartAccountNonceAfter =
+        await program.account.smartAccountNonce.fetch(smartAccountNoncePubkey);
 
-            const [smartAccountPubkey, smartAccountBump] =
-                PublicKey.findProgramAddressSync(
-                    [
-                        Buffer.from("smart-account"),
-                        authorityKeypair.publicKey.toBuffer(),
-                        Buffer.from("0"),
-                    ],
-                    program.programId
-                );
+      expect(smartAccountNonceAfter.nonce.toString()).to.equal("1");
 
-            await program.methods
-                .initSmartAccount()
-                .accounts({
-                    payer: program.provider.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccountNonce: smartAccountNoncePubkey,
-                    smartAccount: smartAccountPubkey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([authorityKeypair])
-                .rpc();
+      const smartAccount = await program.account.smartAccount.fetch(
+        smartAccountPubkey
+      );
 
-            const smartAccountNonceAfter =
-                await program.account.smartAccountNonce.fetch(
-                    smartAccountNoncePubkey
-                );
+      expect({
+        authority: smartAccount.authority.toBase58(),
+        preAuthorizationNonce: smartAccount.preAuthorizationNonce.toString(),
+        bump: smartAccount.bump.toString(),
+      }).to.deep.equal({
+        authority: authorityKeypair.publicKey.toBase58(),
+        preAuthorizationNonce: "0",
+        bump: smartAccountBump.toString(),
+      });
+    });
+  });
 
-            expect(smartAccountNonceAfter.nonce.toString()).to.equal("1");
+  describe("init_one_time_pre_authorization", () => {
+    let smartAccountNoncePubkey: PublicKey;
+    let smartAccountPubkey: PublicKey;
+    let authorityKeypair: Keypair;
 
-            const smartAccount = await program.account.smartAccount.fetch(
-                smartAccountPubkey
-            );
+    beforeEach(async () => {
+      authorityKeypair = Keypair.generate();
+      [smartAccountNoncePubkey] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("smart-account-nonce"),
+          authorityKeypair.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
 
-            expect({
-                authority: smartAccount.authority.toBase58(),
-                preAuthorizationNonce:
-                    smartAccount.preAuthorizationNonce.toString(),
-                bump: smartAccount.bump.toString(),
-            }).to.deep.equal({
-                authority: authorityKeypair.publicKey.toBase58(),
-                preAuthorizationNonce: "0",
-                bump: smartAccountBump.toString(),
-            });
-        });
+      [smartAccountPubkey] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("smart-account"),
+          authorityKeypair.publicKey.toBuffer(),
+          Buffer.from("0"),
+        ],
+        program.programId
+      );
+
+      await program.methods
+        .initSmartAccountNonce()
+        .accounts({
+          payer: program.provider.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccountNonce: smartAccountNoncePubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([authorityKeypair])
+        .rpc();
+
+      await program.methods
+        .initSmartAccount()
+        .accounts({
+          payer: program.provider.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccountNonce: smartAccountNoncePubkey,
+          smartAccount: smartAccountPubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([authorityKeypair])
+        .rpc();
     });
 
-    describe("init_one_time_pre_authorization", () => {
-        let smartAccountNoncePubkey: PublicKey;
-        let smartAccountPubkey: PublicKey;
-        let authorityKeypair: Keypair;
+    it("initializes account correctly and increments nonce", async () => {
+      const mintAuthorityKeypair = Keypair.generate();
 
-        beforeEach(async () => {
-            authorityKeypair = Keypair.generate();
-            [smartAccountNoncePubkey] = PublicKey.findProgramAddressSync(
-                [
-                    Buffer.from("smart-account-nonce"),
-                    authorityKeypair.publicKey.toBuffer(),
-                ],
-                program.programId
-            );
+      const tx = new Transaction();
+      tx.add(
+        SystemProgram.transfer({
+          fromPubkey: provider.publicKey,
+          toPubkey: mintAuthorityKeypair.publicKey,
+          lamports: 1e9,
+        })
+      );
 
-            [smartAccountPubkey] = PublicKey.findProgramAddressSync(
-                [
-                    Buffer.from("smart-account"),
-                    authorityKeypair.publicKey.toBuffer(),
-                    Buffer.from("0"),
-                ],
-                program.programId
-            );
+      await provider.sendAndConfirm(tx);
 
-            await program.methods
-                .initSmartAccountNonce()
-                .accounts({
-                    payer: program.provider.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccountNonce: smartAccountNoncePubkey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([authorityKeypair])
-                .rpc();
+      const mint = await createMint(
+        program.provider.connection,
+        mintAuthorityKeypair,
+        mintAuthorityKeypair.publicKey,
+        mintAuthorityKeypair.publicKey,
+        6
+      );
 
-            await program.methods
-                .initSmartAccount()
-                .accounts({
-                    payer: program.provider.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccountNonce: smartAccountNoncePubkey,
-                    smartAccount: smartAccountPubkey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([authorityKeypair])
-                .rpc();
-        });
+      const debitAuthorityPubkey = PublicKey.unique();
 
-        it("initializes account correctly and increments nonce", async () => {
-            const mintAuthorityKeypair = Keypair.generate();
+      const [preAuthorizationPubkey, preAuthorizationBump] =
+        PublicKey.findProgramAddressSync(
+          [
+            Buffer.from("pre-authorization"),
+            smartAccountPubkey.toBuffer(),
+            Buffer.from("0"),
+          ],
+          program.programId
+        );
 
-            const tx = new Transaction();
-            tx.add(
-                SystemProgram.transfer({
-                    fromPubkey: provider.publicKey,
-                    toPubkey: mintAuthorityKeypair.publicKey,
-                    lamports: 1e9,
-                })
-            );
+      const smartAccountBefore = await program.account.smartAccount.fetch(
+        smartAccountPubkey
+      );
 
-            await provider.sendAndConfirm(tx);
+      expect(smartAccountBefore.preAuthorizationNonce.toString()).to.equal("0");
 
-            const mint = await createMint(
-                program.provider.connection,
-                mintAuthorityKeypair,
-                mintAuthorityKeypair.publicKey,
-                mintAuthorityKeypair.publicKey,
-                6
-            );
+      const activationUnixTimestamp = new anchor.BN(
+        Math.floor(new Date().getTime() / 1e3) + 10 * 24 * 60 * 60 // now + 10 days
+      );
 
-            const debitAuthorityPubkey = PublicKey.unique();
+      await program.methods
+        .initOneTimePreAuthorization({
+          debitAuthority: debitAuthorityPubkey,
+          activationUnixTimestamp,
+          variant: {
+            oneTime: {
+              amountAuthorized: new anchor.BN(1000),
+            },
+          },
+        })
+        .accounts({
+          payer: program.provider.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccount: smartAccountPubkey,
+          mint,
+          preAuthorization: preAuthorizationPubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([authorityKeypair])
+        .rpc();
 
-            const [preAuthorizationPubkey, preAuthorizationBump] =
-                PublicKey.findProgramAddressSync(
-                    [
-                        Buffer.from("pre-authorization"),
-                        smartAccountPubkey.toBuffer(),
-                        Buffer.from("0"),
-                    ],
-                    program.programId
-                );
+      const smartAccountAfter = await program.account.smartAccount.fetch(
+        smartAccountPubkey
+      );
 
-            const smartAccountBefore = await program.account.smartAccount.fetch(
-                smartAccountPubkey
-            );
+      expect(smartAccountAfter.preAuthorizationNonce.toString()).to.equal("1");
 
-            expect(
-                smartAccountBefore.preAuthorizationNonce.toString()
-            ).to.equal("0");
+      const preAuthorization = await program.account.preAuthorization.fetch(
+        preAuthorizationPubkey
+      );
 
-            const activationUnixTimestamp = new anchor.BN(
-                Math.floor(new Date().getTime() / 1e3) + 10 * 24 * 60 * 60 // now + 10 days
-            );
+      expect(preAuthorization.bump).to.equal(preAuthorizationBump);
+      expect(preAuthorization.activationUnixTimestamp.toString()).to.equal(
+        activationUnixTimestamp.toString()
+      );
+      expect(preAuthorization.amountDebited.toString()).to.equal("0");
+      expect(preAuthorization.mint.toBase58()).to.equal(mint.toBase58());
+      expect(preAuthorization.debitAuthority.toBase58()).to.equal(
+        debitAuthorityPubkey.toBase58()
+      );
+      expect(preAuthorization.smartAccount.toBase58()).to.equal(
+        smartAccountPubkey.toBase58()
+      );
+      expect(
+        preAuthorization.variant.oneTime!.amountAuthorized.toString()
+      ).to.equal("1000");
+    });
+  });
 
-            await program.methods
-                .initOneTimePreAuthorization({
-                    debitAuthority: debitAuthorityPubkey,
-                    activationUnixTimestamp,
-                    variant: {
-                        oneTime: {
-                            amountAuthorized: new anchor.BN(1000),
-                        },
-                    },
-                })
-                .accounts({
-                    payer: program.provider.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccount: smartAccountPubkey,
-                    mint,
-                    preAuthorization: preAuthorizationPubkey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([authorityKeypair])
-                .rpc();
+  describe("cancel_pre_authorization", () => {
+    let smartAccountNoncePubkey: PublicKey;
+    let smartAccountPubkey: PublicKey;
+    let authorityKeypair: Keypair;
+    let preAuthorizationPubkey: PublicKey;
 
-            const smartAccountAfter = await program.account.smartAccount.fetch(
-                smartAccountPubkey
-            );
+    beforeEach(async () => {
+      authorityKeypair = Keypair.generate();
+      [smartAccountNoncePubkey] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("smart-account-nonce"),
+          authorityKeypair.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
 
-            expect(smartAccountAfter.preAuthorizationNonce.toString()).to.equal(
-                "1"
-            );
+      [smartAccountPubkey] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("smart-account"),
+          authorityKeypair.publicKey.toBuffer(),
+          Buffer.from("0"),
+        ],
+        program.programId
+      );
 
-            const preAuthorization =
-                await program.account.preAuthorization.fetch(
-                    preAuthorizationPubkey
-                );
+      await program.methods
+        .initSmartAccountNonce()
+        .accounts({
+          payer: program.provider.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccountNonce: smartAccountNoncePubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([authorityKeypair])
+        .rpc();
 
-            expect(preAuthorization.bump).to.equal(preAuthorizationBump);
-            expect(
-                preAuthorization.activationUnixTimestamp.toString()
-            ).to.equal(activationUnixTimestamp.toString());
-            expect(preAuthorization.amountDebited.toString()).to.equal("0");
-            expect(preAuthorization.mint.toBase58()).to.equal(mint.toBase58());
-            expect(preAuthorization.debitAuthority.toBase58()).to.equal(
-                debitAuthorityPubkey.toBase58()
-            );
-            expect(preAuthorization.smartAccount.toBase58()).to.equal(
-                smartAccountPubkey.toBase58()
-            );
-            expect(
-                preAuthorization.variant.oneTime!.amountAuthorized.toString()
-            ).to.equal("1000");
-        });
+      await program.methods
+        .initSmartAccount()
+        .accounts({
+          payer: program.provider.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccountNonce: smartAccountNoncePubkey,
+          smartAccount: smartAccountPubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([authorityKeypair])
+        .rpc();
+
+      const mintAuthorityKeypair = Keypair.generate();
+
+      const tx = new Transaction();
+      tx.add(
+        SystemProgram.transfer({
+          fromPubkey: provider.publicKey,
+          toPubkey: mintAuthorityKeypair.publicKey,
+          lamports: 1e9,
+        })
+      );
+
+      tx.add(
+        SystemProgram.transfer({
+          fromPubkey: provider.publicKey,
+          toPubkey: authorityKeypair.publicKey,
+          lamports: 1e9,
+        })
+      );
+
+      await provider.sendAndConfirm(tx);
+
+      const mint = await createMint(
+        program.provider.connection,
+        mintAuthorityKeypair,
+        mintAuthorityKeypair.publicKey,
+        mintAuthorityKeypair.publicKey,
+        6
+      );
+
+      const debitAuthorityPubkey = PublicKey.unique();
+
+      [preAuthorizationPubkey] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("pre-authorization"),
+          smartAccountPubkey.toBuffer(),
+          Buffer.from("0"),
+        ],
+        program.programId
+      );
+
+      const activationUnixTimestamp = new anchor.BN(
+        Math.floor(new Date().getTime() / 1e3) + 10 * 24 * 60 * 60 // now + 10 days
+      );
+
+      await program.methods
+        .initOneTimePreAuthorization({
+          debitAuthority: debitAuthorityPubkey,
+          activationUnixTimestamp,
+          variant: {
+            oneTime: {
+              amountAuthorized: new anchor.BN(1000),
+            },
+          },
+        })
+        .accounts({
+          payer: program.provider.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccount: smartAccountPubkey,
+          mint,
+          preAuthorization: preAuthorizationPubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([authorityKeypair])
+        .rpc();
     });
 
-    describe("cancel_pre_authorization", () => {
-        let smartAccountNoncePubkey: PublicKey;
-        let smartAccountPubkey: PublicKey;
-        let authorityKeypair: Keypair;
-        let preAuthorizationPubkey: PublicKey;
+    it("closes account and refunds to authority", async () => {
+      const preAuthorization =
+        await program.account.preAuthorization.getAccountInfo(
+          preAuthorizationPubkey
+        );
+      assert(preAuthorization);
+      const lamportsToRefund = preAuthorization.lamports;
+      const authorityBefore = await program.provider.connection.getAccountInfo(
+        authorityKeypair.publicKey
+      );
+      assert(authorityBefore);
 
-        beforeEach(async () => {
-            authorityKeypair = Keypair.generate();
-            [smartAccountNoncePubkey] = PublicKey.findProgramAddressSync(
-                [
-                    Buffer.from("smart-account-nonce"),
-                    authorityKeypair.publicKey.toBuffer(),
-                ],
-                program.programId
-            );
+      await program.methods
+        .cancelPreAuthorization()
+        .accounts({
+          signer: authorityKeypair.publicKey,
+          authority: authorityKeypair.publicKey,
+          smartAccount: smartAccountPubkey,
+          preAuthorization: preAuthorizationPubkey,
+        })
+        .signers([authorityKeypair])
+        .rpc();
 
-            [smartAccountPubkey] = PublicKey.findProgramAddressSync(
-                [
-                    Buffer.from("smart-account"),
-                    authorityKeypair.publicKey.toBuffer(),
-                    Buffer.from("0"),
-                ],
-                program.programId
-            );
-
-            await program.methods
-                .initSmartAccountNonce()
-                .accounts({
-                    payer: program.provider.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccountNonce: smartAccountNoncePubkey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([authorityKeypair])
-                .rpc();
-
-            await program.methods
-                .initSmartAccount()
-                .accounts({
-                    payer: program.provider.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccountNonce: smartAccountNoncePubkey,
-                    smartAccount: smartAccountPubkey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([authorityKeypair])
-                .rpc();
-
-            const mintAuthorityKeypair = Keypair.generate();
-
-            const tx = new Transaction();
-            tx.add(
-                SystemProgram.transfer({
-                    fromPubkey: provider.publicKey,
-                    toPubkey: mintAuthorityKeypair.publicKey,
-                    lamports: 1e9,
-                })
-            );
-
-            tx.add(
-                SystemProgram.transfer({
-                    fromPubkey: provider.publicKey,
-                    toPubkey: authorityKeypair.publicKey,
-                    lamports: 1e9,
-                })
-            );
-
-            await provider.sendAndConfirm(tx);
-
-            const mint = await createMint(
-                program.provider.connection,
-                mintAuthorityKeypair,
-                mintAuthorityKeypair.publicKey,
-                mintAuthorityKeypair.publicKey,
-                6
-            );
-
-            const debitAuthorityPubkey = PublicKey.unique();
-
-            [preAuthorizationPubkey] = PublicKey.findProgramAddressSync(
-                [
-                    Buffer.from("pre-authorization"),
-                    smartAccountPubkey.toBuffer(),
-                    Buffer.from("0"),
-                ],
-                program.programId
-            );
-
-            const activationUnixTimestamp = new anchor.BN(
-                Math.floor(new Date().getTime() / 1e3) + 10 * 24 * 60 * 60 // now + 10 days
-            );
-
-            await program.methods
-                .initOneTimePreAuthorization({
-                    debitAuthority: debitAuthorityPubkey,
-                    activationUnixTimestamp,
-                    variant: {
-                        oneTime: {
-                            amountAuthorized: new anchor.BN(1000),
-                        },
-                    },
-                })
-                .accounts({
-                    payer: program.provider.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccount: smartAccountPubkey,
-                    mint,
-                    preAuthorization: preAuthorizationPubkey,
-                    systemProgram: SystemProgram.programId,
-                })
-                .signers([authorityKeypair])
-                .rpc();
-        });
-
-        it("closes account and refunds to authority", async () => {
-            const preAuthorization =
-                await program.account.preAuthorization.getAccountInfo(
-                    preAuthorizationPubkey
-                );
-            assert(preAuthorization);
-            const lamportsToRefund = preAuthorization.lamports;
-            const authorityBefore =
-                await program.provider.connection.getAccountInfo(
-                    authorityKeypair.publicKey
-                );
-            assert(authorityBefore);
-
-            await program.methods
-                .cancelPreAuthorization()
-                .accounts({
-                    signer: authorityKeypair.publicKey,
-                    authority: authorityKeypair.publicKey,
-                    smartAccount: smartAccountPubkey,
-                    preAuthorization: preAuthorizationPubkey,
-                })
-                .signers([authorityKeypair])
-                .rpc();
-
-            const authorityAfter =
-                await program.provider.connection.getAccountInfo(
-                    authorityKeypair.publicKey
-                );
-            assert(authorityAfter);
-            expect(authorityAfter.lamports - authorityBefore.lamports).to.equal(
-                lamportsToRefund
-            );
-        });
+      const authorityAfter = await program.provider.connection.getAccountInfo(
+        authorityKeypair.publicKey
+      );
+      assert(authorityAfter);
+      expect(authorityAfter.lamports - authorityBefore.lamports).to.equal(
+        lamportsToRefund
+      );
     });
+  });
 });
