@@ -6,6 +6,8 @@ pub mod state;
 use instructions::*;
 
 // TODO: Investigate how difficult it is to support Token 2022 (and decide whether it should be v2 or in this)
+//       Seems like there is an `Interface<'info, ...>` type in anchor and ways to verify the token program
+//       Look more into this
 
 declare_id!("HjJXoCqUmn6VQzXLqA1pEvWRZZcEMbD2HGixXKrs7DQj");
 
@@ -26,5 +28,9 @@ pub mod pre_authorized_debits_v1 {
         params: InitPreAuthorizationParams,
     ) -> Result<()> {
         handle_init_pre_authorization(ctx, params)
+    }
+
+    pub fn revoke_pre_authorization(ctx: Context<RevokePreAuthorization>) -> Result<()> {
+        handle_revoke_pre_authorization(ctx)
     }
 }
