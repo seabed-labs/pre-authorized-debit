@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "name": "@dcaf/program-library-scripts",
+  "packageManager": "yarn@3.6.0",
+  "type": "module"
+}
