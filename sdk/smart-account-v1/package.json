@@ -4,7 +4,8 @@
   "packageManager": "yarn@3.6.0",
   "scripts": {
     "build:program": "cd ../../ && anchor build -p smart_account_v1",
-    "build:anchor-client": "yarn run anchor-client-gen ../../target/idl/smart_account_v1.json ./src/anchor-client",
+    "clean:anchor-client": "rm -rf ./src/anchor-client/accounts && rm -rf ./src/anchor-client/errors && rm -rf ./src/anchor-client/instructions && rm -rf ./src/anchor-client/types",
+    "build:anchor-client": "yarn clean:anchor-client && yarn run anchor-client-gen ../../target/idl/smart_account_v1.json ./src/anchor-client",
     "lint:fix": "prettier \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier \"*/**/*{.js,.ts}\" --check"
   },
