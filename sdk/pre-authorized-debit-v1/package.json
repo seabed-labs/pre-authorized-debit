@@ -11,11 +11,13 @@
     },
     "dependencies": {
         "@coral-xyz/anchor": "^0.28.0",
+        "@coral-xyz/borsh": "^0.28.0",
         "@solana/spl-token": "^0.3.8",
-        "@solana/web3.js": "^1.78.4"
+        "@solana/web3.js": "^1.78.4",
+        "bn.js": "^5.2.1"
     },
     "devDependencies": {
-        "@dcaf/anchor-client-gen": "0.28.1-beta.10",
+        "@dcaf/anchor-client-gen": "0.28.1-beta.11",
         "@types/bn.js": "^5.1.0",
         "@types/chai": "^4.3.0",
         "@types/mocha": "^9.0.0",
