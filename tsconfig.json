@@ -1,20 +1,20 @@
 {
-            "compilerOptions": {
-              "types": ["mocha", "chai"],
-              "typeRoots": ["./node_modules/@types"],
-              "lib": ["es2015"],
-              "module": "commonjs",
-              "target": "es6",
-              "esModuleInterop": true,
-              "declaration": true,
-              "declarationMap": true,
-              "sourceMap": true,
-              "strict": true,
-              "noImplicitAny": true,
-              "noUnusedParameters": false,
-              "noUnusedLocals": false,
-              "noImplicitReturns": true,
-              "skipDefaultLibCheck": true,
-              "skipLibCheck": true
-            }
-          }
+  "compilerOptions": {
+    "types": ["mocha", "chai"],
+    "typeRoots": ["./node_modules/@types"],
+    "lib": ["es2015"],
+    "module": "commonjs",
+    "target": "es6",
+    "esModuleInterop": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedParameters": false,
+    "noUnusedLocals": false,
+    "noImplicitReturns": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true
+  }
+}

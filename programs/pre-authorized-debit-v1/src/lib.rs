@@ -13,7 +13,7 @@ use instructions::*;
 declare_id!("HjJXoCqUmn6VQzXLqA1pEvWRZZcEMbD2HGixXKrs7DQj");
 
 #[program]
-pub mod pre_authorized_debits_v1 {
+pub mod pre_authorized_debit_v1 {
     use super::*;
 
     pub fn init_smart_delegate(ctx: Context<InitSmartDelegate>) -> Result<()> {
