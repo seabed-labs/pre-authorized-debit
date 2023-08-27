@@ -1,11 +1,11 @@
 {
   "private": true,
-  "name": "tests",
+  "name": "@dcaf/smart-delegate-v1-tests",
   "packageManager": "yarn@3.6.0",
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "test": "cd ../../ && anchor test smart-account-v1"
+    "test": "cd ../../ && anchor test smart-delegate-v1"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",

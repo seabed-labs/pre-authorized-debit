@@ -1,12 +1,12 @@
 [package]
-name = "smart-account-v1"
+name = "pre-authorized-debit-v1"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "smart_account_v1"
+name = "pre_authorized_debit_v1"
 
 [features]
 no-entrypoint = []

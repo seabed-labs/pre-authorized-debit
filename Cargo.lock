@@ -1415,7 +1415,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
-name = "pre-authorized-debits-v1"
+name = "pre-authorized-debit-v1"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
@@ -1777,11 +1777,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62bb4feee49fdd9f707ef802e22365a35de4b7b299de4763d44bfea899442ff9"
 
 [[package]]
-name = "smart-account-v1"
+name = "smart-delegate-v1"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
- "anchor-spl",
 ]
 
 [[package]]
