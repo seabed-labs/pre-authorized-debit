@@ -48,9 +48,28 @@ pub fn handle_init_smart_delegate(ctx: Context<InitSmartDelegate>) -> Result<()>
         u64::MAX,
     )?;
 
+    emit!(SmartDelegateInitialized {
+        payer: ctx.accounts.payer.key(),
+        owner: ctx.accounts.owner.key(),
+        token_account: ctx.accounts.token_account.key(),
+        mint: ctx.accounts.token_account.mint,
+        token_program: ctx.accounts.token_program.key(),
+        smart_delegate: ctx.accounts.smart_delegate.key(),
+    });
+
     // NOTE: The user can revoke this delegation whenever they want by directly send the revoke IX to the SPL token program.
     //       If they do this, our SDK will expose direct IXs to re-connect the smart-delegate with an approve_checked IX.
     //       Re-connecting does not require an IX in this program as it can be done directly with the SPL token program.
 
     Ok(())
+}
+
+#[event]
+pub struct SmartDelegateInitialized {
+    pub payer: Pubkey,
+    pub owner: Pubkey,
+    pub token_account: Pubkey,
+    pub mint: Pubkey,
+    pub token_program: Pubkey,
+    pub smart_delegate: Pubkey,
 }

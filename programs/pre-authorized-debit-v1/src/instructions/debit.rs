@@ -118,7 +118,41 @@ pub fn handle_debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
         ctx.accounts.mint.decimals,
     )?;
 
+    emit!(DebitEvent {
+        pre_authorization: ctx.accounts.pre_authorization.key(),
+        smart_delegate: ctx.accounts.smart_delegate.key(),
+        token_program: ctx.accounts.token_program.key(),
+        mint: ctx.accounts.token_account.mint,
+        source_token_account_owner: ctx.accounts.token_account.owner,
+        destination_token_account_owner: ctx.accounts.destination_token_account.owner,
+        source_token_account: ctx.accounts.token_account.key(),
+        destination_token_account: ctx.accounts.destination_token_account.key(),
+        debit_authorization_type: match ctx.accounts.pre_authorization.variant {
+            PreAuthorizationVariant::OneTime { .. } => DebitAuthorizationType::OneTime,
+            PreAuthorizationVariant::Recurring { .. } => DebitAuthorizationType::Recurring,
+        }
+    });
+
     Ok(())
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub enum DebitAuthorizationType {
+    OneTime,
+    Recurring,
+}
+
+#[event]
+pub struct DebitEvent {
+    pub pre_authorization: Pubkey,
+    pub smart_delegate: Pubkey,
+    pub mint: Pubkey,
+    pub token_program: Pubkey,
+    pub source_token_account_owner: Pubkey,
+    pub destination_token_account_owner: Pubkey,
+    pub source_token_account: Pubkey,
+    pub destination_token_account: Pubkey,
+    pub debit_authorization_type: DebitAuthorizationType,
 }
 
 fn validate_debit(ctx: &Context<Debit>, params: &DebitParams) -> Result<()> {

@@ -78,5 +78,41 @@ pub fn handle_init_pre_authorization(
         .get("pre_authorization")
         .expect("pre_authorization PDA bump access failed");
 
+    let event_data = PreAuthorizationCreatedEventData {
+        debit_authority: params.debit_authority.key(),
+        owner: ctx.accounts.owner.key(),
+        payer: ctx.accounts.payer.key(),
+        token_account: ctx.accounts.token_account.key(),
+        pre_authorization: ctx.accounts.pre_authorization.key(),
+    };
+
+    match ctx.accounts.pre_authorization.variant {
+        PreAuthorizationVariant::OneTime { .. } => {
+            emit!(OneTimePreAuthorizationCreated { data: event_data })
+        }
+        PreAuthorizationVariant::Recurring { .. } => {
+            emit!(RecurringPreAuthorizationCreated { data: event_data })
+        }
+    }
+
     Ok(())
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct PreAuthorizationCreatedEventData {
+    pub debit_authority: Pubkey,
+    pub owner: Pubkey,
+    pub payer: Pubkey,
+    pub token_account: Pubkey,
+    pub pre_authorization: Pubkey,
+}
+
+#[event]
+pub struct OneTimePreAuthorizationCreated {
+    pub data: PreAuthorizationCreatedEventData,
+}
+
+#[event]
+pub struct RecurringPreAuthorizationCreated {
+    pub data: PreAuthorizationCreatedEventData,
 }

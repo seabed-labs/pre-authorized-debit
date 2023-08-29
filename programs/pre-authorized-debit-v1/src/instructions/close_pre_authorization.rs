@@ -32,6 +32,44 @@ pub struct ClosePreAuthorization<'info> {
     pub pre_authorization: Account<'info, PreAuthorization>,
 }
 
-pub fn handle_close_pre_authorization(_ctx: Context<ClosePreAuthorization>) -> Result<()> {
+pub fn handle_close_pre_authorization(ctx: Context<ClosePreAuthorization>) -> Result<()> {
+    let event_data = PreAuthorizationClosedEventData {
+        debit_authority: ctx.accounts.pre_authorization.debit_authority,
+        closing_authority: ctx.accounts.authority.key(),
+        token_account_owner: ctx.accounts.token_account.owner,
+        receiver: ctx.accounts.receiver.key(),
+        token_account: ctx.accounts.token_account.key(),
+        pre_authorization: ctx.accounts.pre_authorization.key(),
+    };
+
+    match ctx.accounts.pre_authorization.variant {
+        crate::state::pre_authorization::PreAuthorizationVariant::OneTime { .. } => {
+            emit!(OneTimePreAuthorizationClosed { data: event_data })
+        }
+        crate::state::pre_authorization::PreAuthorizationVariant::Recurring { .. } => {
+            emit!(RecurringPreAuthorizationClosed { data: event_data })
+        }
+    }
+
     Ok(())
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct PreAuthorizationClosedEventData {
+    pub debit_authority: Pubkey,
+    pub closing_authority: Pubkey,
+    pub token_account_owner: Pubkey,
+    pub receiver: Pubkey,
+    pub token_account: Pubkey,
+    pub pre_authorization: Pubkey,
+}
+
+#[event]
+pub struct OneTimePreAuthorizationClosed {
+    pub data: PreAuthorizationClosedEventData,
+}
+
+#[event]
+pub struct RecurringPreAuthorizationClosed {
+    pub data: PreAuthorizationClosedEventData,
 }

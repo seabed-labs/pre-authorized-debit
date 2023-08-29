@@ -42,5 +42,22 @@ pub fn handle_close_smart_delegate(ctx: Context<CloseSmartDelegate>) -> Result<(
         },
     ))?;
 
+    emit!(SmartDelegateClosed {
+        receiver: ctx.accounts.receiver.key(),
+        owner: ctx.accounts.owner.key(),
+        smart_delegate: ctx.accounts.smart_delegate.key(),
+        token_account: ctx.accounts.token_account.key(),
+        token_program: ctx.accounts.token_program.key(),
+    });
+
     Ok(())
+}
+
+#[event]
+pub struct SmartDelegateClosed {
+    pub receiver: Pubkey,
+    pub owner: Pubkey,
+    pub smart_delegate: Pubkey,
+    pub token_account: Pubkey,
+    pub token_program: Pubkey,
 }
