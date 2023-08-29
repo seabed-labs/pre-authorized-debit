@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, ApproveChecked, Mint, Token, TokenAccount};
+use anchor_spl::token_interface::{self, Approve, TokenAccount, TokenInterface};
 
 use crate::state::smart_delegate::SmartDelegate;
 
@@ -10,9 +10,7 @@ pub struct InitSmartDelegate<'info> {
 
     pub owner: Signer<'info>,
 
-    pub token_mint: Account<'info, Mint>,
-
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         init,
@@ -26,7 +24,7 @@ pub struct InitSmartDelegate<'info> {
     )]
     pub smart_delegate: Account<'info, SmartDelegate>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -37,20 +35,17 @@ pub fn handle_init_smart_delegate(ctx: Context<InitSmartDelegate>) -> Result<()>
         .get("smart_delegate")
         .expect("smart_delegate PDA bump access failed");
 
-    // ApproveChecked (as opposed to Approve) just makes sure the token account is actually an account for given mint
     // This is idempotent
-    token::approve_checked(
+    token_interface::approve(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
-            ApproveChecked {
+            Approve {
                 to: ctx.accounts.token_account.to_account_info(),
-                mint: ctx.accounts.token_mint.to_account_info(),
                 delegate: ctx.accounts.smart_delegate.to_account_info(),
                 authority: ctx.accounts.owner.to_account_info(),
             },
         ),
         u64::MAX,
-        ctx.accounts.token_mint.decimals,
     )?;
 
     // NOTE: The user can revoke this delegation whenever they want by directly send the revoke IX to the SPL token program.

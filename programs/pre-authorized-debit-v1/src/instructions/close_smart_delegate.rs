@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Revoke, Token, TokenAccount};
+use anchor_spl::token_interface::{self, Revoke, TokenAccount, TokenInterface};
 
 use crate::state::smart_delegate::SmartDelegate;
 
@@ -14,7 +14,7 @@ pub struct CloseSmartDelegate<'info> {
 
     // TODO: Throw custom error on failure
     #[account(has_one = owner)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,
@@ -29,12 +29,12 @@ pub struct CloseSmartDelegate<'info> {
     )]
     pub smart_delegate: Account<'info, SmartDelegate>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 pub fn handle_close_smart_delegate(ctx: Context<CloseSmartDelegate>) -> Result<()> {
     // idempotent
-    token::revoke(CpiContext::new(
+    token_interface::revoke(CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
         Revoke {
             source: ctx.accounts.token_account.to_account_info(),

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
+use anchor_spl::token_interface::TokenAccount;
 
 use crate::state::{pre_authorization::PreAuthorization, smart_delegate::SmartDelegate};
 
@@ -9,7 +9,7 @@ pub struct UpdatePausePreAuthorization<'info> {
 
     // TODO: Throw custom error on failure
     #[account(has_one = owner)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         seeds = [

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
+use anchor_spl::token_interface::TokenAccount;
 
 use crate::state::pre_authorization::PreAuthorization;
 
@@ -15,7 +15,7 @@ pub struct ClosePreAuthorization<'info> {
 
     pub authority: Signer<'info>,
 
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         mut,

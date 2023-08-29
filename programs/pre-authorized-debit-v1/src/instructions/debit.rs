@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 
 use crate::{
     errors::CustomProgramError,
@@ -13,8 +13,9 @@ use crate::{
 pub struct Debit<'info> {
     pub debit_authority: Signer<'info>,
 
-    pub token_account: Account<'info, TokenAccount>,
-    pub destination_token_account: Account<'info, TokenAccount>,
+    pub mint: InterfaceAccount<'info, Mint>,
+    pub token_account: InterfaceAccount<'info, TokenAccount>,
+    pub destination_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         seeds = [
@@ -42,7 +43,7 @@ pub struct Debit<'info> {
     )]
     pub pre_authorization: Account<'info, PreAuthorization>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -98,13 +99,14 @@ pub fn handle_debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
 
     // NOTE: Since this reduces the delegated amount, in theory it is good to refresh the delegated amount of the smart delegate back to u64::MAX
     //       In practice, because we set it to u64::MAX, this is never necessary (unless token is weird)
-    token::transfer(
+    token_interface::transfer_checked(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
-            Transfer {
+            TransferChecked {
                 from: ctx.accounts.token_account.to_account_info(),
                 to: ctx.accounts.destination_token_account.to_account_info(),
                 authority: ctx.accounts.smart_delegate.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
             },
             &[&[
                 b"smart-delegate".as_ref(),
@@ -113,6 +115,7 @@ pub fn handle_debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
             ]],
         ),
         params.amount,
+        ctx.accounts.mint.decimals,
     )?;
 
     Ok(())
