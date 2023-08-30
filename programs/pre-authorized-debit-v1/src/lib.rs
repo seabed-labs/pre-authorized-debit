@@ -6,10 +6,6 @@ pub mod state;
 
 use instructions::*;
 
-// TODO: Investigate how difficult it is to support Token 2022 (and decide whether it should be v2 or in this)
-//       Seems like there is an `Interface<'info, ...>` type in anchor and ways to verify the token program
-//       Look more into this
-
 declare_id!("HjJXoCqUmn6VQzXLqA1pEvWRZZcEMbD2HGixXKrs7DQj");
 
 #[program]
