@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Approve, TokenAccount, TokenInterface};
 
-use crate::state::smart_delegate::SmartDelegate;
+use crate::{errors::CustomProgramError, state::smart_delegate::SmartDelegate};
 
 #[derive(Accounts)]
 pub struct InitSmartDelegate<'info> {
@@ -10,7 +10,10 @@ pub struct InitSmartDelegate<'info> {
 
     pub owner: Signer<'info>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        has_one = owner @ CustomProgramError::InitSmartDelegateUnauthorized
+    )]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(

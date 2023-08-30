@@ -1,18 +1,23 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::TokenAccount;
 
-use crate::state::pre_authorization::PreAuthorization;
+use crate::{errors::CustomProgramError, state::pre_authorization::PreAuthorization};
 
 #[derive(Accounts)]
 pub struct ClosePreAuthorization<'info> {
     /// CHECK: Verified manually
     #[account(
         mut,
-        // TODO: Throw custom error on failure
-        address = token_account.owner,
+        address = token_account.owner @ CustomProgramError::OnlyTokenAccountOwnerCanReceiveClosePreAuthFunds,
     )]
     pub receiver: AccountInfo<'info>,
 
+    #[account(
+        constraint = (
+            authority.key.eq(&token_account.owner) || 
+            authority.key.eq(&pre_authorization.debit_authority)
+        ) @ CustomProgramError::PreAuthorizationCloseUnauthorized
+    )]
     pub authority: Signer<'info>,
 
     pub token_account: InterfaceAccount<'info, TokenAccount>,
@@ -26,8 +31,7 @@ pub struct ClosePreAuthorization<'info> {
             pre_authorization.debit_authority.as_ref(),
         ],
         bump = pre_authorization.bump,
-        // TODO: Throw custom error on failure
-        has_one = token_account,
+        has_one = token_account @ CustomProgramError::PreAuthorizationTokenAccountMismatch,
     )]
     pub pre_authorization: Account<'info, PreAuthorization>,
 }

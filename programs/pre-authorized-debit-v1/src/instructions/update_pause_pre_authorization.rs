@@ -1,14 +1,15 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::TokenAccount;
 
-use crate::state::pre_authorization::PreAuthorization;
+use crate::{errors::CustomProgramError, state::pre_authorization::PreAuthorization};
 
 #[derive(Accounts)]
 pub struct UpdatePausePreAuthorization<'info> {
     pub owner: Signer<'info>,
 
-    // TODO: Throw custom error on failure
-    #[account(has_one = owner)]
+    #[account(
+        has_one = owner @ CustomProgramError::PausePreAuthorizationUnauthorized
+    )]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
@@ -19,8 +20,7 @@ pub struct UpdatePausePreAuthorization<'info> {
             pre_authorization.debit_authority.as_ref(),
         ],
         bump = pre_authorization.bump,
-        // TODO: Throw custom error on failure
-        has_one = token_account,
+        has_one = token_account @ CustomProgramError::PreAuthorizationTokenAccountMismatch,
     )]
     pub pre_authorization: Account<'info, PreAuthorization>,
 }

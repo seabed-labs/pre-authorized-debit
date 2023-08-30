@@ -1,7 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::TokenAccount;
 
-use crate::state::pre_authorization::{PreAuthorization, PreAuthorizationVariant};
+use crate::{
+    errors::CustomProgramError,
+    state::pre_authorization::{PreAuthorization, PreAuthorizationVariant},
+};
 
 #[derive(Accounts)]
 #[instruction(params: InitPreAuthorizationParams)]
@@ -11,8 +14,9 @@ pub struct InitPreAuthorization<'info> {
 
     pub owner: Signer<'info>,
 
-    // TODO: Throw custom error on failure
-    #[account(has_one = owner)]
+    #[account(
+        has_one = owner @ CustomProgramError::InitPreAuthorizationUnauthorized
+    )]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(

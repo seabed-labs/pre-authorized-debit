@@ -23,8 +23,7 @@ pub struct Debit<'info> {
             token_account.key().as_ref(),
         ],
         bump = smart_delegate.bump,
-        // TODO: Throw custom error on failure
-        has_one = token_account
+        has_one = token_account @ CustomProgramError::SmartDelegateTokenAccountMismatch
     )]
     pub smart_delegate: Account<'info, SmartDelegate>,
 
@@ -36,10 +35,8 @@ pub struct Debit<'info> {
             debit_authority.key().as_ref(),
         ],
         bump = pre_authorization.bump,
-        // TODO: Throw custom error on failure
-        has_one = debit_authority,
-        // TODO: Throw custom error on failure
-        has_one = token_account
+        has_one = debit_authority @ CustomProgramError::DebitUnauthorized,
+        has_one = token_account @ CustomProgramError::PreAuthorizationTokenAccountMismatch
     )]
     pub pre_authorization: Account<'info, PreAuthorization>,
 
