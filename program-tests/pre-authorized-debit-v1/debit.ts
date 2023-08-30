@@ -73,8 +73,6 @@ describe("pre-authorized-debit-v1#debit", () => {
                 program.programId
             );
 
-        console.log("Program ID:", program.programId.toBase58());
-
         await program.methods
             .initSmartDelegate()
             .accounts({

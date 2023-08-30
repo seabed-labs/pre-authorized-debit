@@ -10,6 +10,7 @@ pub struct InitSmartDelegate<'info> {
 
     pub owner: Signer<'info>,
 
+    #[account(mut)]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
