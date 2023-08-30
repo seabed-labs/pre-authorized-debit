@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Revoke, TokenAccount, TokenInterface};
 
-use crate::state::smart_delegate::SmartDelegate;
+use crate::{errors::CustomProgramError, state::smart_delegate::SmartDelegate};
 
 #[derive(Accounts)]
 pub struct CloseSmartDelegate<'info> {
@@ -9,11 +9,12 @@ pub struct CloseSmartDelegate<'info> {
     #[account(mut)]
     pub receiver: AccountInfo<'info>,
 
-    // Owner of the smart delegate's token account has to sign
+    // Owner of the smart delegate's token account has to sign (checked below)
     pub owner: Signer<'info>,
 
-    // TODO: Throw custom error on failure
-    #[account(has_one = owner)]
+    #[account(
+        has_one = owner @ CustomProgramError::SmartDelegateCloseUnauthorized
+    )]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
@@ -24,8 +25,7 @@ pub struct CloseSmartDelegate<'info> {
             token_account.key().as_ref(),
         ],
         bump = smart_delegate.bump,
-        // TODO: Throw custom error on failure
-        has_one = token_account,
+        has_one = token_account @ CustomProgramError::SmartDelegateTokenAccountMismatch,
     )]
     pub smart_delegate: Account<'info, SmartDelegate>,
 
