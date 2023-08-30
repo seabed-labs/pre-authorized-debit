@@ -6,7 +6,7 @@ seeds = false
 skip-lint = false
 
 [programs.localnet]
-pre-authorized-debit-v1 = "HjJXoCqUmn6VQzXLqA1pEvWRZZcEMbD2HGixXKrs7DQj"
+pre_authorized_debit_v1 = "HjJXoCqUmn6VQzXLqA1pEvWRZZcEMbD2HGixXKrs7DQj"
 
 [registry]
 url = "https://api.apr.dev"
