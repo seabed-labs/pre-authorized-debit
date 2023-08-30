@@ -19,6 +19,7 @@ export interface DebitArgsJSON {
 
 export interface DebitAccounts {
   debitAuthority: PublicKey;
+  mint: PublicKey;
   tokenAccount: PublicKey;
   destinationTokenAccount: PublicKey;
   smartDelegate: PublicKey;
@@ -28,6 +29,7 @@ export interface DebitAccounts {
 
 export interface DebitAccountsJSON {
   debitAuthority: string;
+  mint: string;
   tokenAccount: string;
   destinationTokenAccount: string;
   smartDelegate: string;
@@ -70,11 +72,12 @@ export class Debit {
   ): Debit {
     const accounts = {
       debitAuthority: flattenedAccounts[0],
-      tokenAccount: flattenedAccounts[1],
-      destinationTokenAccount: flattenedAccounts[2],
-      smartDelegate: flattenedAccounts[3],
-      preAuthorization: flattenedAccounts[4],
-      tokenProgram: flattenedAccounts[5],
+      mint: flattenedAccounts[1],
+      tokenAccount: flattenedAccounts[2],
+      destinationTokenAccount: flattenedAccounts[3],
+      smartDelegate: flattenedAccounts[4],
+      preAuthorization: flattenedAccounts[5],
+      tokenProgram: flattenedAccounts[6],
     };
     return new Debit(programId, { args, accounts });
   }
@@ -96,6 +99,11 @@ export class Debit {
       {
         pubkey: this.instructionData.accounts.debitAuthority,
         isSigner: true,
+        isWritable: false,
+      },
+      {
+        pubkey: this.instructionData.accounts.mint,
+        isSigner: false,
         isWritable: false,
       },
       {
@@ -155,6 +163,7 @@ export class Debit {
   toAccountsJSON(): DebitAccountsJSON {
     return {
       debitAuthority: this.instructionData.accounts.debitAuthority.toString(),
+      mint: this.instructionData.accounts.mint.toString(),
       tokenAccount: this.instructionData.accounts.tokenAccount.toString(),
       destinationTokenAccount:
         this.instructionData.accounts.destinationTokenAccount.toString(),

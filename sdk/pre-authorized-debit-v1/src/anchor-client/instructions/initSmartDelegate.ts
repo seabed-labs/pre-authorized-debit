@@ -12,7 +12,6 @@ import * as types from "../types";
 export interface InitSmartDelegateAccounts {
   payer: PublicKey;
   owner: PublicKey;
-  tokenMint: PublicKey;
   tokenAccount: PublicKey;
   smartDelegate: PublicKey;
   tokenProgram: PublicKey;
@@ -22,7 +21,6 @@ export interface InitSmartDelegateAccounts {
 export interface InitSmartDelegateAccountsJSON {
   payer: string;
   owner: string;
-  tokenMint: string;
   tokenAccount: string;
   smartDelegate: string;
   tokenProgram: string;
@@ -62,11 +60,10 @@ export class InitSmartDelegate {
     const accounts = {
       payer: flattenedAccounts[0],
       owner: flattenedAccounts[1],
-      tokenMint: flattenedAccounts[2],
-      tokenAccount: flattenedAccounts[3],
-      smartDelegate: flattenedAccounts[4],
-      tokenProgram: flattenedAccounts[5],
-      systemProgram: flattenedAccounts[6],
+      tokenAccount: flattenedAccounts[2],
+      smartDelegate: flattenedAccounts[3],
+      tokenProgram: flattenedAccounts[4],
+      systemProgram: flattenedAccounts[5],
     };
     return new InitSmartDelegate(programId, { args: null, accounts });
   }
@@ -88,11 +85,6 @@ export class InitSmartDelegate {
       {
         pubkey: this.instructionData.accounts.owner,
         isSigner: true,
-        isWritable: false,
-      },
-      {
-        pubkey: this.instructionData.accounts.tokenMint,
-        isSigner: false,
         isWritable: false,
       },
       {
@@ -136,7 +128,6 @@ export class InitSmartDelegate {
     return {
       payer: this.instructionData.accounts.payer.toString(),
       owner: this.instructionData.accounts.owner.toString(),
-      tokenMint: this.instructionData.accounts.tokenMint.toString(),
       tokenAccount: this.instructionData.accounts.tokenAccount.toString(),
       smartDelegate: this.instructionData.accounts.smartDelegate.toString(),
       tokenProgram: this.instructionData.accounts.tokenProgram.toString(),

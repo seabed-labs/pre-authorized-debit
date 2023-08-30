@@ -20,14 +20,12 @@ export interface UpdatePausePreAuthorizationArgsJSON {
 export interface UpdatePausePreAuthorizationAccounts {
   owner: PublicKey;
   tokenAccount: PublicKey;
-  smartDelegate: PublicKey;
   preAuthorization: PublicKey;
 }
 
 export interface UpdatePausePreAuthorizationAccountsJSON {
   owner: string;
   tokenAccount: string;
-  smartDelegate: string;
   preAuthorization: string;
 }
 
@@ -69,8 +67,7 @@ export class UpdatePausePreAuthorization {
     const accounts = {
       owner: flattenedAccounts[0],
       tokenAccount: flattenedAccounts[1],
-      smartDelegate: flattenedAccounts[2],
-      preAuthorization: flattenedAccounts[3],
+      preAuthorization: flattenedAccounts[2],
     };
     return new UpdatePausePreAuthorization(programId, { args, accounts });
   }
@@ -96,11 +93,6 @@ export class UpdatePausePreAuthorization {
       },
       {
         pubkey: this.instructionData.accounts.tokenAccount,
-        isSigner: false,
-        isWritable: false,
-      },
-      {
-        pubkey: this.instructionData.accounts.smartDelegate,
         isSigner: false,
         isWritable: false,
       },
@@ -149,7 +141,6 @@ export class UpdatePausePreAuthorization {
     return {
       owner: this.instructionData.accounts.owner.toString(),
       tokenAccount: this.instructionData.accounts.tokenAccount.toString(),
-      smartDelegate: this.instructionData.accounts.smartDelegate.toString(),
       preAuthorization:
         this.instructionData.accounts.preAuthorization.toString(),
     };
