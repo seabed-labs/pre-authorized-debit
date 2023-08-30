@@ -7,7 +7,6 @@ skip-lint = false
 
 [programs.localnet]
 pre-authorized-debit-v1 = "HjJXoCqUmn6VQzXLqA1pEvWRZZcEMbD2HGixXKrs7DQj"
-smart-delegate-v1 = "9H49q8dZ3E9Pb8agwsNoLyEU77G83WwEuYbPUq6ybMHK"
 
 [registry]
 url = "https://api.apr.dev"
