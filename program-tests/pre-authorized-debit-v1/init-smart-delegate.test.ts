@@ -10,7 +10,11 @@ import {
 import { assert, expect } from "chai";
 import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
-import { deriveSmartDelegate, fundAccounts } from "./utils";
+import {
+  deriveInvalidSmartDelegate,
+  deriveSmartDelegate,
+  fundAccounts,
+} from "./utils";
 import {
   createMint,
   TOKEN_PROGRAM_ID,
@@ -152,51 +156,97 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           tokenAccount.toString()
         );
       });
-
-      it("should throw an error if the owner is not the token account owner", async () => {
-        mint = await createMint(
-          provider.connection,
-          mintAuthority,
-          mintAuthority.publicKey,
-          null,
-          6,
-          new Keypair(),
-          {
-            commitment: "confirmed",
-          },
-          tokenProgramId
-        );
-        const tokenAccount = await createAssociatedTokenAccount(
-          provider.connection,
-          payer,
-          mint,
-          payer.publicKey,
-          {
-            commitment: "confirmed",
-          },
-          tokenProgramId
-        );
-        const smartDelegate = deriveSmartDelegate(
-          tokenAccount,
-          program.programId
-        );
-        await expect(
-          program.methods
-            .initSmartDelegate()
-            .accounts({
-              payer: payer.publicKey,
-              owner: owner.publicKey,
-              tokenAccount: tokenAccount,
-              smartDelegate: smartDelegate,
-              tokenProgram: tokenProgramId,
-              systemProgram: SystemProgram.programId,
-            })
-            .signers([payer, owner])
-            .rpc()
-        ).to.eventually.be.rejectedWith(
-          /AnchorError caused by account: token_account. Error Code: InitSmartDelegateUnauthorized. Error Number: 6012. Error Message: Only token account owner can initialize a smart delegate./
-        );
-      });
     });
+  });
+
+  it("should throw an error if the owner is not the token account owner", async () => {
+    mint = await createMint(
+      provider.connection,
+      mintAuthority,
+      mintAuthority.publicKey,
+      null,
+      6,
+      new Keypair(),
+      {
+        commitment: "confirmed",
+      },
+      TOKEN_PROGRAM_ID
+    );
+    const tokenAccount = await createAssociatedTokenAccount(
+      provider.connection,
+      payer,
+      mint,
+      payer.publicKey,
+      {
+        commitment: "confirmed",
+      },
+      TOKEN_PROGRAM_ID
+    );
+    const smartDelegate = deriveSmartDelegate(tokenAccount, program.programId);
+    await expect(
+      program.methods
+        .initSmartDelegate()
+        .accounts({
+          payer: payer.publicKey,
+          owner: owner.publicKey,
+          tokenAccount: tokenAccount,
+          smartDelegate: smartDelegate,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([payer, owner])
+        .rpc()
+    ).to.eventually.be.rejectedWith(
+      /AnchorError caused by account: token_account. Error Code: InitSmartDelegateUnauthorized. Error Number: 6012. Error Message: Only token account owner can initialize a smart delegate./
+    );
+  });
+
+  it("should throw an error with a non-canonical smart delegate", async () => {
+    mint = await createMint(
+      provider.connection,
+      mintAuthority,
+      mintAuthority.publicKey,
+      null,
+      6,
+      new Keypair(),
+      {
+        commitment: "confirmed",
+      },
+      TOKEN_PROGRAM_ID
+    );
+    const tokenAccount = await createAssociatedTokenAccount(
+      provider.connection,
+      payer,
+      mint,
+      owner.publicKey,
+      {
+        commitment: "confirmed",
+      },
+      TOKEN_PROGRAM_ID
+    );
+    const validSmartDelegate = deriveSmartDelegate(
+      tokenAccount,
+      program.programId
+    );
+    const invalidSmartDelegate = deriveInvalidSmartDelegate(
+      tokenAccount,
+      program.programId
+    );
+    await expect(
+      program.methods
+        .initSmartDelegate()
+        .accounts({
+          payer: payer.publicKey,
+          owner: owner.publicKey,
+          tokenAccount: tokenAccount,
+          smartDelegate: invalidSmartDelegate,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([payer, owner])
+        .rpc()
+    ).to.eventually.to.be.rejectedWith(
+      /AnchorError caused by account: smart_delegate. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./
+    );
   });
 });

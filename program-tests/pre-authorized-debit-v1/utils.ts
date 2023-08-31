@@ -1,5 +1,11 @@
 import { AnchorProvider } from "@coral-xyz/anchor";
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  MAX_SEED_LENGTH,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
+import { sha256 } from "@noble/hashes/sha256";
 
 export async function fundAccounts(
   provider: AnchorProvider,
@@ -21,6 +27,12 @@ export async function fundAccounts(
   await provider.sendAndConfirm(fundTx);
 }
 
+/**
+ * Derives the canonical public key for the smart-delegate
+ * @param tokenAccount
+ * @param programId
+ * @returns
+ */
 export function deriveSmartDelegate(
   tokenAccount: PublicKey,
   programId: PublicKey
@@ -32,3 +44,85 @@ export function deriveSmartDelegate(
 
   return pdaPubkey;
 }
+
+/**
+ * Derives the non-canonical public key for the smart-delegate
+ * @param tokenAccount
+ * @param programId
+ * @returns
+ */
+export function deriveInvalidSmartDelegate(
+  tokenAccount: PublicKey,
+  programId: PublicKey
+): PublicKey {
+  const [pdaPubkey] = deriveNthPda(
+    [Buffer.from("smart-delegate"), tokenAccount.toBuffer()],
+    programId,
+    3
+  );
+
+  return pdaPubkey;
+}
+
+function deriveNthPda(
+  seeds: Array<Buffer | Uint8Array>,
+  programId: PublicKey,
+  n: number
+): [PublicKey, number] {
+  let nonce = 255;
+  let numFound = 0;
+  while (nonce != 0) {
+    try {
+      const seedsWithNonce = seeds.concat(Buffer.from([nonce]));
+      const address = createProgramAddressSync(seedsWithNonce, programId);
+      numFound = numFound + 1;
+      if (n === numFound) {
+        return [address, nonce];
+      }
+    } catch (err) {
+      if (err instanceof TypeError) {
+        throw err;
+      }
+    }
+    nonce--;
+    continue;
+  }
+  throw new Error(`Unable to find a viable program address nonce`);
+}
+
+///////////////////////////////
+// The functions below where copied from solana web3.js
+///////////////////////////////
+
+function createProgramAddressSync(
+  seeds: Array<Buffer | Uint8Array>,
+  programId: PublicKey
+): PublicKey {
+  let buffer = Buffer.alloc(0);
+  seeds.forEach(function (seed) {
+    if (seed.length > MAX_SEED_LENGTH) {
+      throw new TypeError(`Max seed length exceeded`);
+    }
+    buffer = Buffer.concat([buffer, toBuffer(seed)]);
+  });
+  buffer = Buffer.concat([
+    buffer,
+    programId.toBuffer(),
+    Buffer.from("ProgramDerivedAddress"),
+  ]);
+  const publicKeyBytes = sha256(buffer);
+  if (PublicKey.isOnCurve(publicKeyBytes)) {
+    throw new Error(`Invalid seeds, address must fall off the curve`);
+  }
+  return new PublicKey(publicKeyBytes);
+}
+
+export const toBuffer = (arr: Buffer | Uint8Array | Array<number>): Buffer => {
+  if (Buffer.isBuffer(arr)) {
+    return arr;
+  } else if (arr instanceof Uint8Array) {
+    return Buffer.from(arr.buffer, arr.byteOffset, arr.byteLength);
+  } else {
+    return Buffer.from(arr);
+  }
+};
