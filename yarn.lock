@@ -272,7 +272,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/chai@npm:^4.3.0":
+"@types/chai-as-promised@npm:^7.1.5":
+  version: 7.1.5
+  resolution: "@types/chai-as-promised@npm:7.1.5"
+  dependencies:
+    "@types/chai": "*"
+  checksum: 7c1345c6e32513d52d8e562ec173c23161648d6b792046525f18803a9932d7b3ad3dca8f0181e3c529ec42b106099f174e34edeb184d61dc93e32c98b5132fd4
+  languageName: node
+  linkType: hard
+
+"@types/chai@npm:*, @types/chai@npm:^4.3.0":
   version: 4.3.5
   resolution: "@types/chai@npm:4.3.5"
   checksum: c8f26a88c6b5b53a3275c7f5ff8f107028e3cbb9ff26795fff5f3d9dea07106a54ce9e2dce5e40347f7c4cc35657900aaf0c83934a25a1ae12e61e0f5516e431
@@ -640,6 +649,17 @@ __metadata:
   version: 7.0.1
   resolution: "camelcase@npm:7.0.1"
   checksum: 86ab8f3ebf08bcdbe605a211a242f00ed30d8bfb77dab4ebb744dd36efbc84432d1c4adb28975ba87a1b8be40a80fbd1e60e2f06565315918fa7350011a26d3d
+  languageName: node
+  linkType: hard
+
+"chai-as-promised@npm:^7.1.1":
+  version: 7.1.1
+  resolution: "chai-as-promised@npm:7.1.1"
+  dependencies:
+    check-error: ^1.0.2
+  peerDependencies:
+    chai: ">= 2.1.2 < 5"
+  checksum: 7262868a5b51a12af4e432838ddf97a893109266a505808e1868ba63a12de7ee1166e9d43b5c501a190c377c1b11ecb9ff8e093c89f097ad96c397e8ec0f8d6a
   languageName: node
   linkType: hard
 
@@ -2055,6 +2075,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
+    "@types/chai-as-promised": ^7.1.5
+    chai-as-promised: ^7.1.1
     husky: ^8.0.3
     prettier: ^2.6.2
     ts-mocha: ^10.0.0

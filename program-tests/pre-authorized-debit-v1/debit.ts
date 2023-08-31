@@ -1,5 +1,8 @@
 import * as anchor from "@coral-xyz/anchor";
-import { expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import { expect, use } from "chai";
+use(chaiAsPromised);
+
 import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 import {
     Keypair,
@@ -105,7 +108,7 @@ describe("pre-authorized-debit-v1#debit", () => {
             .rpc();
     });
 
-    context("one time debits", () => {
+    context("one time pre-authorization", () => {
         beforeEach(async () => {
             const activationUnixTimestamp =
                 Math.floor(new Date().getTime() / 1e3) - 60;
@@ -243,6 +246,44 @@ describe("pre-authorized-debit-v1#debit", () => {
                     },
                 },
             });
+        });
+
+        it("fails if pre_authorization is paused", async () => {
+            await program.methods
+                .updatePausePreAuthorization({
+                    pause: true,
+                })
+                .accounts({
+                    owner: userKeypair.publicKey,
+                    tokenAccount: tokenAccountPubkey,
+                    preAuthorization: preAuthorizationPubkey,
+                })
+                .signers([userKeypair])
+                .rpc();
+
+            const preAuthorizationBefore =
+                await program.account.preAuthorization.fetch(
+                    preAuthorizationPubkey
+                );
+            expect(preAuthorizationBefore.paused).to.equal(true);
+
+            await expect(
+                program.methods
+                    .debit({ amount: new anchor.BN(50e6) })
+                    .accounts({
+                        debitAuthority: debitAuthorityKeypair.publicKey,
+                        mint: mintPubkey,
+                        tokenAccount: tokenAccountPubkey,
+                        destinationTokenAccount: destinationTokenAccountPubkey,
+                        smartDelegate: smartDelegatePubkey,
+                        preAuthorization: preAuthorizationPubkey,
+                        tokenProgram: TOKEN_PROGRAM_ID,
+                    })
+                    .signers([debitAuthorityKeypair])
+                    .rpc()
+            ).to.eventually.be.rejectedWith(
+                /Error Code: PreAuthorizationPaused. Error Number: 6004/
+            );
         });
 
         it.skip("fires the DebitEvent event", async () => {});
