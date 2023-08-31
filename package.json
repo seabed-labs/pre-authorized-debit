@@ -7,7 +7,7 @@
     ],
     "packageManager": "yarn@3.6.0",
     "scripts": {
-        "prepare": "husky install",
+        "postinstall": "husky install",
         "lint:fix": "prettier \"*/**/*{.js,.ts}\" -w",
         "lint": "prettier \"*/**/*{.js,.ts}\" --check"
     },
