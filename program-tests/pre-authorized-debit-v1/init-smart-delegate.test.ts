@@ -20,6 +20,7 @@ import {
   TOKEN_PROGRAM_ID,
   createAssociatedTokenAccount,
   TOKEN_2022_PROGRAM_ID,
+  getAccount,
 } from "@solana/spl-token";
 
 describe("pre-authorized-debit-v1#init-smart-delegate", () => {
@@ -45,7 +46,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
     await fundAccounts(
       provider,
       [payer.publicKey, owner.publicKey, mintAuthority.publicKey],
-      1_000_000_000
+      500_000_000
     );
   });
 
@@ -154,6 +155,20 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
         );
         expect(smartDelegateAccount.tokenAccount.toString()).to.equal(
           tokenAccount.toString()
+        );
+
+        // verify token account delegate
+        const tokenAccountData = await getAccount(
+          provider.connection,
+          tokenAccount,
+          undefined,
+          tokenProgramId
+        );
+        expect(tokenAccountData.delegate!.toString()).to.equal(
+          smartDelegate.toString()
+        );
+        expect(tokenAccountData.delegatedAmount.toString()).to.equal(
+          "18446744073709551615"
         );
       });
     });
