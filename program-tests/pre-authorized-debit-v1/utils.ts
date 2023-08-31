@@ -24,7 +24,7 @@ export async function fundAccounts(
     recentBlockhash: (await provider.connection.getRecentBlockhash()).blockhash,
   }).add(...transfers);
 
-  await provider.sendAndConfirm(fundTx);
+  await provider.sendAndConfirm(fundTx, [], { commitment: "confirmed" });
 }
 
 /**
