@@ -13,6 +13,7 @@ pub struct CloseSmartDelegate<'info> {
     pub owner: Signer<'info>,
 
     #[account(
+        mut,
         has_one = owner @ CustomProgramError::SmartDelegateCloseUnauthorized
     )]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
