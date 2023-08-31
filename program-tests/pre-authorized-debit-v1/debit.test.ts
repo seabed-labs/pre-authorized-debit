@@ -127,9 +127,7 @@ describe("pre-authorized-debit-v1#debit", () => {
       });
 
       context("one time pre-authorization", () => {
-        beforeEach(async () => {
-          const activationUnixTimestamp =
-            Math.floor(new Date().getTime() / 1e3) - 60;
+        async function setupPreAuthorization(activationUnixTimestamp: number) {
           [preAuthorizationPubkey] = PublicKey.findProgramAddressSync(
             [
               Buffer.from("pre-authorization"),
@@ -161,6 +159,13 @@ describe("pre-authorized-debit-v1#debit", () => {
             })
             .signers([userKeypair])
             .rpc();
+        }
+
+        beforeEach(async () => {
+          const activationUnixTimestamp =
+            Math.floor(new Date().getTime() / 1e3) - 60;
+
+          await setupPreAuthorization(activationUnixTimestamp);
         });
 
         it("allows debit_authority to debit funds", async () => {
@@ -291,6 +296,42 @@ describe("pre-authorized-debit-v1#debit", () => {
               .rpc()
           ).to.eventually.be.rejectedWith(
             /Error Code: PreAuthorizationPaused. Error Number: 6004/
+          );
+        });
+
+        it("fails if pre_authorization is not yet active", async () => {
+          await program.methods
+            .closePreAuthorization()
+            .accounts({
+              receiver: userKeypair.publicKey,
+              authority: userKeypair.publicKey,
+              tokenAccount: tokenAccountPubkey,
+              preAuthorization: preAuthorizationPubkey,
+            })
+            .signers([userKeypair])
+            .rpc();
+
+          const activationUnixTimestamp =
+            Math.floor(new Date().getTime() / 1e3) + 24 * 60 * 60; // +1 day
+
+          await setupPreAuthorization(activationUnixTimestamp);
+
+          await expect(
+            program.methods
+              .debit({ amount: new anchor.BN(50e6) })
+              .accounts({
+                debitAuthority: debitAuthorityKeypair.publicKey,
+                mint: mintPubkey,
+                tokenAccount: tokenAccountPubkey,
+                destinationTokenAccount: destinationTokenAccountPubkey,
+                smartDelegate: smartDelegatePubkey,
+                preAuthorization: preAuthorizationPubkey,
+                tokenProgram: tokenProgramId,
+              })
+              .signers([debitAuthorityKeypair])
+              .rpc()
+          ).to.eventually.be.rejectedWith(
+            /Error Code: PreAuthorizationNotActive. Error Number: 6000/
           );
         });
 
