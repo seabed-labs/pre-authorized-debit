@@ -152,6 +152,51 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           tokenAccount.toString()
         );
       });
+
+      it("should throw an error if the owner is not the token account owner", async () => {
+        mint = await createMint(
+          provider.connection,
+          mintAuthority,
+          mintAuthority.publicKey,
+          null,
+          6,
+          new Keypair(),
+          {
+            commitment: "confirmed",
+          },
+          tokenProgramId
+        );
+        const tokenAccount = await createAssociatedTokenAccount(
+          provider.connection,
+          payer,
+          mint,
+          payer.publicKey,
+          {
+            commitment: "confirmed",
+          },
+          tokenProgramId
+        );
+        const smartDelegate = deriveSmartDelegate(
+          tokenAccount,
+          program.programId
+        );
+        await expect(
+          program.methods
+            .initSmartDelegate()
+            .accounts({
+              payer: payer.publicKey,
+              owner: owner.publicKey,
+              tokenAccount: tokenAccount,
+              smartDelegate: smartDelegate,
+              tokenProgram: tokenProgramId,
+              systemProgram: SystemProgram.programId,
+            })
+            .signers([payer, owner])
+            .rpc()
+        ).to.eventually.be.rejectedWith(
+          /AnchorError caused by account: token_account. Error Code: InitSmartDelegateUnauthorized. Error Number: 6012. Error Message: Only token account owner can initialize a smart delegate./
+        );
+      });
     });
   });
 });
