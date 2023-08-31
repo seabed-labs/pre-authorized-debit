@@ -127,7 +127,10 @@ describe("pre-authorized-debit-v1#debit", () => {
       });
 
       context("one time pre-authorization", () => {
-        async function setupPreAuthorization(activationUnixTimestamp: number) {
+        async function setupPreAuthorization(
+          activationUnixTimestamp: number,
+          expirationUnixTimestamp: number
+        ) {
           [preAuthorizationPubkey] = PublicKey.findProgramAddressSync(
             [
               Buffer.from("pre-authorization"),
@@ -142,9 +145,7 @@ describe("pre-authorized-debit-v1#debit", () => {
                 oneTime: {
                   amountAuthorized: new anchor.BN(100e6),
                   amountDebited: new anchor.BN(0),
-                  expiryUnixTimestamp: new anchor.BN(
-                    activationUnixTimestamp + 10 * 24 * 60 * 60
-                  ), // +10 days
+                  expiryUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
                 },
               },
               debitAuthority: debitAuthorityKeypair.publicKey,
@@ -163,9 +164,15 @@ describe("pre-authorized-debit-v1#debit", () => {
 
         beforeEach(async () => {
           const activationUnixTimestamp =
-            Math.floor(new Date().getTime() / 1e3) - 60;
+            Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
 
-          await setupPreAuthorization(activationUnixTimestamp);
+          const expirationUnixTimestamp =
+            activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
+
+          await setupPreAuthorization(
+            activationUnixTimestamp,
+            expirationUnixTimestamp
+          );
         });
 
         it("allows debit_authority to debit funds", async () => {
@@ -312,9 +319,57 @@ describe("pre-authorized-debit-v1#debit", () => {
             .rpc();
 
           const activationUnixTimestamp =
-            Math.floor(new Date().getTime() / 1e3) + 24 * 60 * 60; // +1 day
+            Math.floor(new Date().getTime() / 1e3) + 24 * 60 * 60; // +1 day from now
 
-          await setupPreAuthorization(activationUnixTimestamp);
+          const expirationUnixTimestamp =
+            activationUnixTimestamp + 10 * 24 * 60 * 60; // +11 days from now
+
+          await setupPreAuthorization(
+            activationUnixTimestamp,
+            expirationUnixTimestamp
+          );
+
+          await expect(
+            program.methods
+              .debit({ amount: new anchor.BN(50e6) })
+              .accounts({
+                debitAuthority: debitAuthorityKeypair.publicKey,
+                mint: mintPubkey,
+                tokenAccount: tokenAccountPubkey,
+                destinationTokenAccount: destinationTokenAccountPubkey,
+                smartDelegate: smartDelegatePubkey,
+                preAuthorization: preAuthorizationPubkey,
+                tokenProgram: tokenProgramId,
+              })
+              .signers([debitAuthorityKeypair])
+              .rpc()
+          ).to.eventually.be.rejectedWith(
+            /Error Code: PreAuthorizationNotActive. Error Number: 6000/
+          );
+        });
+
+        it("fails if pre_authorization is already expired", async () => {
+          await program.methods
+            .closePreAuthorization()
+            .accounts({
+              receiver: userKeypair.publicKey,
+              authority: userKeypair.publicKey,
+              tokenAccount: tokenAccountPubkey,
+              preAuthorization: preAuthorizationPubkey,
+            })
+            .signers([userKeypair])
+            .rpc();
+
+          const activationUnixTimestamp =
+            Math.floor(new Date().getTime() / 1e3) - 24 * 60 * 60; // -1 day from now
+
+          const expirationUnixTimestamp =
+            activationUnixTimestamp + 24 * 60 * 60 - 1; // -1 second from now
+
+          await setupPreAuthorization(
+            activationUnixTimestamp,
+            expirationUnixTimestamp
+          );
 
           await expect(
             program.methods
