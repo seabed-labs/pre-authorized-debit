@@ -222,10 +222,6 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID
     );
-    const validSmartDelegate = deriveSmartDelegate(
-      tokenAccount,
-      program.programId
-    );
     const invalidSmartDelegate = deriveInvalidSmartDelegate(
       tokenAccount,
       program.programId
@@ -245,6 +241,88 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
         .rpc()
     ).to.eventually.to.be.rejectedWith(
       /AnchorError caused by account: smart_delegate. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./
+    );
+  });
+
+  it("should throw an error with an invalid token program id", async () => {
+    mint = await createMint(
+      provider.connection,
+      mintAuthority,
+      mintAuthority.publicKey,
+      null,
+      6,
+      new Keypair(),
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
+    const tokenAccount = await createAssociatedTokenAccount(
+      provider.connection,
+      payer,
+      mint,
+      owner.publicKey,
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
+    const validSmartDelegate = deriveSmartDelegate(
+      tokenAccount,
+      program.programId
+    );
+    await expect(
+      program.methods
+        .initSmartDelegate()
+        .accounts({
+          payer: payer.publicKey,
+          owner: owner.publicKey,
+          tokenAccount: tokenAccount,
+          smartDelegate: validSmartDelegate,
+          tokenProgram: SystemProgram.programId,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([payer, owner])
+        .rpc()
+    ).to.eventually.to.be.rejectedWith(
+      /AnchorError caused by account: token_program. Error Code: InvalidProgramId. Error Number: 3008. Error Message: Program ID was not as expected./
+    );
+  });
+
+  it("should throw an error with an invalid system program id", async () => {
+    mint = await createMint(
+      provider.connection,
+      mintAuthority,
+      mintAuthority.publicKey,
+      null,
+      6,
+      new Keypair(),
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
+    const tokenAccount = await createAssociatedTokenAccount(
+      provider.connection,
+      payer,
+      mint,
+      owner.publicKey,
+      undefined,
+      TOKEN_PROGRAM_ID
+    );
+    const validSmartDelegate = deriveSmartDelegate(
+      tokenAccount,
+      program.programId
+    );
+    await expect(
+      program.methods
+        .initSmartDelegate()
+        .accounts({
+          payer: payer.publicKey,
+          owner: owner.publicKey,
+          tokenAccount: tokenAccount,
+          smartDelegate: validSmartDelegate,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: TOKEN_2022_PROGRAM_ID,
+        })
+        .signers([payer, owner])
+        .rpc()
+    ).to.eventually.to.be.rejectedWith(
+      /AnchorError caused by account: system_program. Error Code: InvalidProgramId. Error Number: 3008. Error Message: Program ID was not as expected./
     );
   });
 });
