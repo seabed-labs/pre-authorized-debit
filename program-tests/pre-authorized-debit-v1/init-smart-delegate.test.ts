@@ -14,6 +14,7 @@ import {
   deriveInvalidSmartDelegate,
   deriveSmartDelegate,
   fundAccounts,
+  waitForTxToConfirm,
 } from "./utils";
 import {
   createMint,
@@ -60,9 +61,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           null,
           6,
           new Keypair(),
-          {
-            commitment: "confirmed",
-          },
+          undefined,
           tokenProgramId
         );
         const tokenAccount = await createAssociatedTokenAccount(
@@ -70,9 +69,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           payer,
           mint,
           owner.publicKey,
-          {
-            commitment: "confirmed",
-          },
+          undefined,
           tokenProgramId
         );
         const smartDelegate = deriveSmartDelegate(
@@ -98,14 +95,8 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
             systemProgram: SystemProgram.programId,
           })
           .signers([payer, owner])
-          .rpc({
-            commitment: "confirmed",
-          });
-        const tx = await provider.connection.getTransaction(signature, {
-          commitment: "confirmed",
-          maxSupportedTransactionVersion: 0,
-        });
-        assert(tx);
+          .rpc();
+        const tx = await waitForTxToConfirm(signature, provider.connection);
         assert(tx.meta?.logMessages);
 
         // verify events
@@ -182,9 +173,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       null,
       6,
       new Keypair(),
-      {
-        commitment: "confirmed",
-      },
+      undefined,
       TOKEN_PROGRAM_ID
     );
     const tokenAccount = await createAssociatedTokenAccount(
@@ -192,9 +181,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       payer,
       mint,
       payer.publicKey,
-      {
-        commitment: "confirmed",
-      },
+      undefined,
       TOKEN_PROGRAM_ID
     );
     const smartDelegate = deriveSmartDelegate(tokenAccount, program.programId);
@@ -224,9 +211,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       null,
       6,
       new Keypair(),
-      {
-        commitment: "confirmed",
-      },
+      undefined,
       TOKEN_PROGRAM_ID
     );
     const tokenAccount = await createAssociatedTokenAccount(
@@ -234,9 +219,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       payer,
       mint,
       owner.publicKey,
-      {
-        commitment: "confirmed",
-      },
+      undefined,
       TOKEN_PROGRAM_ID
     );
     const validSmartDelegate = deriveSmartDelegate(

@@ -16,6 +16,7 @@ import {
   getAccount,
   mintTo,
 } from "@solana/spl-token";
+import { waitForTxToConfirm } from "../utils";
 
 const U64_MAX = "18446744073709551615";
 
@@ -456,24 +457,7 @@ export function testRecurringDebit(
         .signers([debitAuthorityKeypair])
         .rpc();
 
-      const blockhashContext =
-        await provider.connection.getLatestBlockhashAndContext({
-          commitment: "confirmed",
-        });
-
-      await provider.connection.confirmTransaction(
-        {
-          signature,
-          lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight,
-          blockhash: blockhashContext.value.blockhash,
-        },
-        "confirmed"
-      );
-
-      const tx = await provider.connection.getTransaction(signature, {
-        commitment: "confirmed",
-        maxSupportedTransactionVersion: 0,
-      });
+      const tx = await waitForTxToConfirm(signature, provider.connection);
 
       assert(tx, "tx undefined");
       assert(tx.meta?.logMessages, "tx.meta?.logMessages undefined");
