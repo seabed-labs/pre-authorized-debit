@@ -54,6 +54,53 @@ export async function fundAccounts(
 }
 
 /**
+ * Derives the canonical public key for the pre authorization
+ * @param tokenAccount
+ * @param debitAuthority
+ * @param programId
+ */
+export function derivePreAuthorization(
+  tokenAccount: PublicKey,
+  debitAuthority: PublicKey,
+  programId: PublicKey
+): PublicKey {
+  const [pdaPubkey] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("pre-authorization"),
+      tokenAccount.toBuffer(),
+      debitAuthority.toBuffer(),
+    ],
+    programId
+  );
+  return pdaPubkey;
+}
+
+/**
+ * Derives the non-canonical public key for the pre-authorization
+ * @param tokenAccount
+ * @param debitAuthority
+ * @param programId
+ * @returns
+ */
+export function deriveInvalidPreAuthorization(
+  tokenAccount: PublicKey,
+  debitAuthority: PublicKey,
+  programId: PublicKey
+): PublicKey {
+  const [pdaPubkey] = deriveNthPda(
+    [
+      Buffer.from("pre-authorization"),
+      tokenAccount.toBuffer(),
+      debitAuthority.toBuffer(),
+    ],
+    programId,
+    3
+  );
+
+  return pdaPubkey;
+}
+
+/**
  * Derives the canonical public key for the smart-delegate
  * @param tokenAccount
  * @param programId
