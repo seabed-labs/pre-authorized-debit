@@ -19,9 +19,9 @@ import {
 import {
   createMint,
   TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccount,
   TOKEN_2022_PROGRAM_ID,
   getAccount,
+  createAccount,
 } from "@solana/spl-token";
 
 describe("pre-authorized-debit-v1#init-smart-delegate", () => {
@@ -53,7 +53,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
 
   [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].forEach((tokenProgramId) => {
     context(`with token program ${tokenProgramId.toString()}`, () => {
-      it(`should create a smart delegate with token account`, async () => {
+      it(`should create a smart delegate`, async () => {
         mint = await createMint(
           provider.connection,
           mintAuthority,
@@ -64,11 +64,12 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           undefined,
           tokenProgramId
         );
-        const tokenAccount = await createAssociatedTokenAccount(
+        const tokenAccount = await createAccount(
           provider.connection,
           payer,
           mint,
           owner.publicKey,
+          new Keypair(),
           undefined,
           tokenProgramId
         );
@@ -176,11 +177,12 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID
     );
-    const tokenAccount = await createAssociatedTokenAccount(
+    const tokenAccount = await createAccount(
       provider.connection,
       payer,
       mint,
       payer.publicKey,
+      new Keypair(),
       undefined,
       TOKEN_PROGRAM_ID
     );
@@ -214,11 +216,12 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID
     );
-    const tokenAccount = await createAssociatedTokenAccount(
+    const tokenAccount = await createAccount(
       provider.connection,
       payer,
       mint,
       owner.publicKey,
+      new Keypair(),
       undefined,
       TOKEN_PROGRAM_ID
     );
@@ -255,11 +258,12 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID
     );
-    const tokenAccount = await createAssociatedTokenAccount(
+    const tokenAccount = await createAccount(
       provider.connection,
       payer,
       mint,
       owner.publicKey,
+      new Keypair(),
       undefined,
       TOKEN_PROGRAM_ID
     );
@@ -296,11 +300,12 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID
     );
-    const tokenAccount = await createAssociatedTokenAccount(
+    const tokenAccount = await createAccount(
       provider.connection,
       payer,
       mint,
       owner.publicKey,
+      new Keypair(),
       undefined,
       TOKEN_PROGRAM_ID
     );
