@@ -11,8 +11,8 @@ import { assert, expect } from "chai";
 import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
+  deriveInvalidPreAuthorization,
   derivePreAuthorization,
-  deriveSmartDelegate,
   fundAccounts,
   waitForTxToConfirm,
 } from "./utils";
@@ -22,12 +22,11 @@ import {
   createAssociatedTokenAccount,
   TOKEN_2022_PROGRAM_ID,
   getAccount,
-  createAccount,
   mintTo,
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
 
-describe.only("pre-authorized-debit-v1#init-pre-authorization", () => {
+describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   const program =
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
   const eventParser = new EventParser(
@@ -61,9 +60,13 @@ describe.only("pre-authorized-debit-v1#init-pre-authorization", () => {
 
   [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].forEach((tokenProgramId) => {
     describe(`with token program ${tokenProgramId.toString()}`, () => {
+      const activationUnixTimestamp =
+        Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
+      const expirationUnixTimestamp =
+        activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
+
       let mint: PublicKey;
       let validTokenAccount: PublicKey;
-      let smartDelegate: PublicKey;
 
       beforeEach(async () => {
         mint = await createMint(
@@ -84,47 +87,28 @@ describe.only("pre-authorized-debit-v1#init-pre-authorization", () => {
           undefined,
           tokenProgramId
         );
-        smartDelegate = deriveSmartDelegate(
+        await mintTo(
+          provider.connection,
+          payer,
+          mint,
           validTokenAccount,
-          program.programId
+          mintAuthority,
+          1_000_000,
+          undefined,
+          undefined,
+          tokenProgramId
         );
-        await Promise.all([
-          mintTo(
-            provider.connection,
-            payer,
-            mint,
-            validTokenAccount,
-            mintAuthority,
-            1_000_000,
-            undefined,
-            undefined,
-            tokenProgramId
-          ),
-          program.methods
-            .initSmartDelegate()
-            .accounts({
-              payer: payer.publicKey,
-              owner: owner.publicKey,
-              tokenAccount: validTokenAccount,
-              smartDelegate: smartDelegate,
-              tokenProgram: tokenProgramId,
-              systemProgram: SystemProgram.programId,
-            })
-            .signers([payer, owner])
-            .rpc(),
-        ]);
       });
 
       ["one time", "recurring"].forEach((preAuthType: string) => {
         context(`with ${preAuthType} variant`, () => {
-          it(`should create a pre authorization for a smart delegate`, async () => {
+          it(`should create a pre authorization`, async () => {
             const tokenAccountDataBefore = await getAccount(
               provider.connection,
               validTokenAccount,
               undefined,
               tokenProgramId
             );
-            expect(tokenAccountDataBefore.delegate).to.not.be.null;
             expect(tokenAccountDataBefore.amount.toString()).to.equal(
               "1000000"
             );
@@ -136,10 +120,6 @@ describe.only("pre-authorized-debit-v1#init-pre-authorization", () => {
               ]);
             assert(payerAccountInfoBefore && ownerAccountInfoBefore);
 
-            const activationUnixTimestamp =
-              Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
-            const expirationUnixTimestamp =
-              activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
             const preAuthorization = derivePreAuthorization(
               validTokenAccount,
               debitAuthority.publicKey,
@@ -250,121 +230,138 @@ describe.only("pre-authorized-debit-v1#init-pre-authorization", () => {
           });
         });
       });
+
+      it("should throw an error if the owner does not sign", async () => {
+        const preAuthorization = derivePreAuthorization(
+          validTokenAccount,
+          debitAuthority.publicKey,
+          program.programId
+        );
+        const preAuthVariant = {
+          oneTime: {
+            amountAuthorized: new anchor.BN(100e6),
+            expiryUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
+          },
+        };
+        await expect(
+          program.methods
+            .initPreAuthorization({
+              variant: preAuthVariant,
+              debitAuthority: debitAuthority.publicKey,
+              activationUnixTimestamp: new anchor.BN(activationUnixTimestamp),
+            })
+            .accounts({
+              payer: payer.publicKey,
+              owner: owner.publicKey,
+              tokenAccount: validTokenAccount,
+              preAuthorization: preAuthorization,
+              systemProgram: SystemProgram.programId,
+            })
+            .signers([payer])
+            .rpc({
+              skipPreflight: true,
+            })
+        ).to.eventually.be.rejectedWith(/Signature verification failed/);
+      });
+
+      it("should throw an error if the owner does not own the token account", async () => {
+        const preAuthorization = derivePreAuthorization(
+          validTokenAccount,
+          debitAuthority.publicKey,
+          program.programId
+        );
+        const preAuthVariant = {
+          oneTime: {
+            amountAuthorized: new anchor.BN(100e6),
+            expiryUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
+          },
+        };
+        await expect(
+          program.methods
+            .initPreAuthorization({
+              variant: preAuthVariant,
+              debitAuthority: debitAuthority.publicKey,
+              activationUnixTimestamp: new anchor.BN(activationUnixTimestamp),
+            })
+            .accounts({
+              payer: payer.publicKey,
+              owner: debitAuthority.publicKey,
+              tokenAccount: validTokenAccount,
+              preAuthorization: preAuthorization,
+              systemProgram: SystemProgram.programId,
+            })
+            .signers([debitAuthority, payer])
+            .rpc()
+        ).to.eventually.be.rejectedWith(
+          /AnchorError caused by account: token_account. Error Code: InitPreAuthorizationUnauthorized. Error Number: 6011. Error Message: Only token account owner can initialize a pre-authorization./
+        );
+      });
+
+      it("should throw an error if the derived pre authorization public key is not the canonical PDA", async () => {
+        const preAuthorization = deriveInvalidPreAuthorization(
+          validTokenAccount,
+          debitAuthority.publicKey,
+          program.programId
+        );
+        const preAuthVariant = {
+          oneTime: {
+            amountAuthorized: new anchor.BN(100e6),
+            expiryUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
+          },
+        };
+        await expect(
+          program.methods
+            .initPreAuthorization({
+              variant: preAuthVariant,
+              debitAuthority: debitAuthority.publicKey,
+              activationUnixTimestamp: new anchor.BN(activationUnixTimestamp),
+            })
+            .accounts({
+              payer: payer.publicKey,
+              owner: owner.publicKey,
+              tokenAccount: validTokenAccount,
+              preAuthorization: preAuthorization,
+              systemProgram: SystemProgram.programId,
+            })
+            .signers([owner, payer])
+            .rpc()
+        ).to.eventually.be.rejectedWith(
+          /AnchorError caused by account: pre_authorization. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./
+        );
+      });
+
+      it("should throw an error if the system program is not valid", async () => {
+        const preAuthorization = derivePreAuthorization(
+          validTokenAccount,
+          debitAuthority.publicKey,
+          program.programId
+        );
+        const preAuthVariant = {
+          oneTime: {
+            amountAuthorized: new anchor.BN(100e6),
+            expiryUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
+          },
+        };
+        await expect(
+          program.methods
+            .initPreAuthorization({
+              variant: preAuthVariant,
+              debitAuthority: debitAuthority.publicKey,
+              activationUnixTimestamp: new anchor.BN(activationUnixTimestamp),
+            })
+            .accounts({
+              payer: payer.publicKey,
+              owner: owner.publicKey,
+              tokenAccount: validTokenAccount,
+              preAuthorization: preAuthorization,
+              systemProgram: tokenProgramId,
+            })
+            .signers([owner, payer])
+            .rpc()
+        ).to.eventually.be.rejectedWith(
+          /AnchorError caused by account: system_program. Error Code: InvalidProgramId. Error Number: 3008. Error Message: Program ID was not as expected./
+        );
+      });
     });
   });
-  // it("should throw an error if the owner is not the token account owner", async () => {
-  //   const mint = await createMint(
-  //     provider.connection,
-  //     mintAuthority,
-  //     mintAuthority.publicKey,
-  //     null,
-  //     6,
-  //     new Keypair(),
-  //     undefined,
-  //     TOKEN_PROGRAM_ID
-  //   );
-  //   const tokenAccount = await createAssociatedTokenAccount(
-  //     provider.connection,
-  //     payer,
-  //     mint,
-  //     owner.publicKey,
-  //     undefined,
-  //     TOKEN_PROGRAM_ID
-  //   );
-  //   const smartDelegate = deriveSmartDelegate(tokenAccount, program.programId);
-  //   await program.methods
-  //     .initSmartDelegate()
-  //     .accounts({
-  //       payer: payer.publicKey,
-  //       owner: owner.publicKey,
-  //       tokenAccount: tokenAccount,
-  //       smartDelegate: smartDelegate,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       systemProgram: SystemProgram.programId,
-  //     })
-  //     .signers([payer, owner])
-  //     .rpc();
-  //
-  //   await expect(
-  //     program.methods
-  //       .closeSmartDelegate()
-  //       .accounts({
-  //         // swap receiver and owner
-  //         receiver: owner.publicKey,
-  //         owner: payer.publicKey,
-  //         tokenAccount: tokenAccount,
-  //         smartDelegate: smartDelegate,
-  //         tokenProgram: TOKEN_PROGRAM_ID,
-  //       })
-  //       .signers([payer])
-  //       .rpc()
-  //   ).to.eventually.be.rejectedWith(
-  //     /AnchorError caused by account: token_account. Error Code: SmartDelegateCloseUnauthorized. Error Number: 6008. Error Message: Smart delegate can only be closed by token account owner./
-  //   );
-  // });
-  //
-  // it("should throw an error if the wrong token account is used", async () => {
-  //   const mint = await createMint(
-  //     provider.connection,
-  //     mintAuthority,
-  //     mintAuthority.publicKey,
-  //     null,
-  //     6,
-  //     new Keypair(),
-  //     undefined,
-  //     TOKEN_PROGRAM_ID
-  //   );
-  //   const [validTokenAccount, invalidTokenAccount] = await Promise.all([
-  //     createAccount(
-  //       provider.connection,
-  //       payer,
-  //       mint,
-  //       owner.publicKey,
-  //       new Keypair(),
-  //       undefined,
-  //       TOKEN_PROGRAM_ID
-  //     ),
-  //     createAccount(
-  //       provider.connection,
-  //       payer,
-  //       mint,
-  //       owner.publicKey,
-  //       new Keypair(),
-  //       undefined,
-  //       TOKEN_PROGRAM_ID
-  //     ),
-  //   ]);
-  //   const smartDelegate = deriveSmartDelegate(
-  //     validTokenAccount,
-  //     program.programId
-  //   );
-  //   await program.methods
-  //     .initSmartDelegate()
-  //     .accounts({
-  //       payer: payer.publicKey,
-  //       owner: owner.publicKey,
-  //       tokenAccount: validTokenAccount,
-  //       smartDelegate: smartDelegate,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       systemProgram: SystemProgram.programId,
-  //     })
-  //     .signers([payer, owner])
-  //     .rpc();
-  //
-  //   await expect(
-  //     program.methods
-  //       .closeSmartDelegate()
-  //       .accounts({
-  //         receiver: payer.publicKey,
-  //         owner: owner.publicKey,
-  //         tokenAccount: invalidTokenAccount,
-  //         smartDelegate: smartDelegate,
-  //         tokenProgram: TOKEN_PROGRAM_ID,
-  //       })
-  //       .signers([owner])
-  //       .rpc()
-  //   ).to.eventually.be.rejectedWith(
-  //     /AnchorError caused by account: smart_delegate. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./
-  //   );
-  // });
 });
