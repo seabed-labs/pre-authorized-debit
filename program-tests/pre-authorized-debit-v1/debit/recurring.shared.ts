@@ -1,7 +1,6 @@
+import "../setup";
 import * as anchor from "@coral-xyz/anchor";
-import chaiAsPromised from "chai-as-promised";
 import { assert, expect, use } from "chai";
-use(chaiAsPromised);
 
 import { PreAuthorizedDebitV1 } from "../../../target/types/pre_authorized_debit_v1";
 import {
@@ -27,9 +26,6 @@ export function testRecurringDebit(
   testSuffix: string
 ) {
   describe.skip(`pre-authorized-debit-v1#debit (recurring) ${testSuffix}`, () => {
-    // Configure the client to use the local cluster.
-    anchor.setProvider(anchor.AnchorProvider.env());
-
     const provider = anchor.getProvider();
 
     const program = anchor.workspace
@@ -71,9 +67,6 @@ export function testRecurringDebit(
               recurringAmountAuthorized: new anchor.BN(10e6),
               numCycles: null,
               resetEveryCycle: false,
-              amountDebitedLastCycle: new anchor.BN(0),
-              lastDebitedCycle: new anchor.BN(0),
-              amountDebitedTotal: new anchor.BN(0),
             },
           },
           debitAuthority: debitAuthorityKeypair.publicKey,
