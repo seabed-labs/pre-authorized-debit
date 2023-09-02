@@ -14,7 +14,7 @@ pub struct ClosePreAuthorization<'info> {
 
     #[account(
         constraint = (
-            authority.key.eq(&token_account.owner) || 
+            authority.key.eq(&token_account.owner) ||
             authority.key.eq(&pre_authorization.debit_authority)
         ) @ CustomProgramError::PreAuthorizationCloseUnauthorized
     )]

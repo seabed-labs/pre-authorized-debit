@@ -19,10 +19,10 @@ import {
 import {
   createMint,
   TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccount,
   TOKEN_2022_PROGRAM_ID,
   getAccount,
   mintTo,
+  createAccount,
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
 
@@ -59,7 +59,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   });
 
   [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].forEach((tokenProgramId) => {
-    describe(`with token program ${tokenProgramId.toString()}`, () => {
+    context(`with token program ${tokenProgramId.toString()}`, () => {
       const activationUnixTimestamp =
         Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
       const expirationUnixTimestamp =
@@ -79,11 +79,12 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           undefined,
           tokenProgramId
         );
-        validTokenAccount = await createAssociatedTokenAccount(
+        validTokenAccount = await createAccount(
           provider.connection,
           payer,
           mint,
           owner.publicKey,
+          new Keypair(),
           undefined,
           tokenProgramId
         );

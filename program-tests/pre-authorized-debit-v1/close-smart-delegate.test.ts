@@ -14,7 +14,6 @@ import { deriveSmartDelegate, fundAccounts, waitForTxToConfirm } from "./utils";
 import {
   createMint,
   TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccount,
   TOKEN_2022_PROGRAM_ID,
   getAccount,
   createAccount,
@@ -62,11 +61,12 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           undefined,
           tokenProgramId
         );
-        validTokenAccount = await createAssociatedTokenAccount(
+        validTokenAccount = await createAccount(
           provider.connection,
           receiver,
           mint,
           owner.publicKey,
+          new Keypair(),
           undefined,
           tokenProgramId
         );
@@ -189,11 +189,12 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID
     );
-    const tokenAccount = await createAssociatedTokenAccount(
+    const tokenAccount = await createAccount(
       provider.connection,
       receiver,
       mint,
       owner.publicKey,
+      new Keypair(),
       undefined,
       TOKEN_PROGRAM_ID
     );
