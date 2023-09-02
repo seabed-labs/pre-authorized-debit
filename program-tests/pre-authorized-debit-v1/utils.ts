@@ -1,11 +1,37 @@
 import { AnchorProvider } from "@coral-xyz/anchor";
 import {
+  Connection,
   MAX_SEED_LENGTH,
   PublicKey,
   SystemProgram,
   Transaction,
+  VersionedTransactionResponse,
 } from "@solana/web3.js";
 import { sha256 } from "@noble/hashes/sha256";
+import { assert } from "chai";
+
+export async function waitForTxToConfirm(
+  signature: string,
+  connection: Connection
+): Promise<VersionedTransactionResponse> {
+  const blockhashContext = await connection.getLatestBlockhashAndContext({
+    commitment: "confirmed",
+  });
+  await connection.confirmTransaction(
+    {
+      signature,
+      lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight,
+      blockhash: blockhashContext.value.blockhash,
+    },
+    "confirmed"
+  );
+  const tx = await connection.getTransaction(signature, {
+    commitment: "confirmed",
+    maxSupportedTransactionVersion: 0,
+  });
+  assert(tx);
+  return tx;
+}
 
 export async function fundAccounts(
   provider: AnchorProvider,

@@ -10,7 +10,7 @@ import {
 import { assert, expect } from "chai";
 import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
-import { deriveSmartDelegate, fundAccounts } from "./utils";
+import { deriveSmartDelegate, fundAccounts, waitForTxToConfirm } from "./utils";
 import {
   createMint,
   TOKEN_PROGRAM_ID,
@@ -116,12 +116,8 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
             tokenProgram: tokenProgramId,
           })
           .signers([owner])
-          .rpc({ commitment: "confirmed" });
-        const tx = await provider.connection.getTransaction(signature, {
-          commitment: "confirmed",
-          maxSupportedTransactionVersion: 0,
-        });
-        assert(tx);
+          .rpc();
+        const tx = await waitForTxToConfirm(signature, provider.connection);
         assert(tx.meta?.logMessages);
 
         // verify events
