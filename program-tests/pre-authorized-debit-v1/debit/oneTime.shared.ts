@@ -16,6 +16,7 @@ import {
   mintTo,
 } from "@solana/spl-token";
 import {
+  deriveInvalidSmartDelegate,
   derivePreAuthorization,
   deriveSmartDelegate,
   fundAccounts,
@@ -444,6 +445,68 @@ export function testOneTimeDebit(
         })
         .signers([debitAuthorityKeypair])
         .rpc();
+    });
+
+    it("fails if smart_delegate doesn't match with token account", async () => {
+      const newUserKeypair = Keypair.generate();
+      const newTokenAccountPubkey = await createAssociatedTokenAccount(
+        provider.connection,
+        fundedKeypair,
+        mintPubkey,
+        newUserKeypair.publicKey,
+        undefined,
+        tokenProgramId,
+      );
+
+      await mintTo(
+        provider.connection,
+        fundedKeypair,
+        mintPubkey,
+        newTokenAccountPubkey,
+        mintAuthorityKeypair,
+        1000e6,
+        undefined,
+        undefined,
+        tokenProgramId,
+      );
+
+      const newSmartDelegatePubkey = deriveSmartDelegate(
+        newTokenAccountPubkey,
+        program.programId,
+      );
+
+      await program.methods
+        .initSmartDelegate()
+        .accounts({
+          payer: provider.publicKey,
+          owner: newUserKeypair.publicKey,
+          tokenAccount: newTokenAccountPubkey,
+          smartDelegate: newSmartDelegatePubkey,
+          tokenProgram: tokenProgramId,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([newUserKeypair])
+        .rpc();
+
+      // we don't see the actual validation error because the PDA error is hit first
+      // it is redundant but we'll leave it in there
+      await expect(
+        program.methods
+          .debit({ amount: new anchor.BN(50e6) })
+          .accounts({
+            debitAuthority: debitAuthorityKeypair.publicKey,
+            mint: mintPubkey,
+            tokenAccount: tokenAccountPubkey,
+            destinationTokenAccount: destinationTokenAccountPubkey,
+            smartDelegate: newSmartDelegatePubkey,
+            preAuthorization: preAuthorizationPubkey,
+            tokenProgram: tokenProgramId,
+          })
+          .signers([debitAuthorityKeypair])
+          .rpc(),
+      ).to.eventually.be.rejectedWith(
+        /AnchorError caused by account: smart_delegate\. Error Code: ConstraintSeeds\. Error Number: 2006\. Error Message: A seeds constraint was violated\./,
+      );
     });
 
     it("fires the DebitEvent event", async () => {
