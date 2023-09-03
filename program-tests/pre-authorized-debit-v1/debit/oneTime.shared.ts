@@ -20,6 +20,7 @@ import {
   derivePreAuthorization,
   deriveSmartDelegate,
   fundAccounts,
+  getCurrentUnixTimestamp,
   waitForTxToConfirm,
 } from "../utils";
 
@@ -54,8 +55,8 @@ export function testOneTimeDebit(
     async function setupPreAuthorization(
       activationUnixTimestamp: number,
       expirationUnixTimestamp: number,
-    ) {
-      preAuthorizationPubkey = derivePreAuthorization(
+    ): Promise<PublicKey> {
+      const preAuthorizationPubkey = derivePreAuthorization(
         tokenAccountPubkey,
         debitAuthorityKeypair.publicKey,
         program.programId,
@@ -81,6 +82,8 @@ export function testOneTimeDebit(
         })
         .signers([userKeypair])
         .rpc();
+
+      return preAuthorizationPubkey;
     }
 
     beforeEach(async () => {
@@ -157,7 +160,7 @@ export function testOneTimeDebit(
       const expirationUnixTimestamp =
         activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
 
-      await setupPreAuthorization(
+      preAuthorizationPubkey = await setupPreAuthorization(
         activationUnixTimestamp,
         expirationUnixTimestamp,
       );
@@ -447,7 +450,7 @@ export function testOneTimeDebit(
         .rpc();
     });
 
-    it("fails if smart_delegate doesn't match with token account", async () => {
+    it("fails if smart_delegate doesn't match with token_account", async () => {
       const newUserKeypair = Keypair.generate();
       const newTokenAccountPubkey = await createAssociatedTokenAccount(
         provider.connection,
@@ -506,6 +509,81 @@ export function testOneTimeDebit(
           .rpc(),
       ).to.eventually.be.rejectedWith(
         /AnchorError caused by account: smart_delegate\. Error Code: ConstraintSeeds\. Error Number: 2006\. Error Message: A seeds constraint was violated\./,
+      );
+    });
+
+    it("fails if pre_authorization doesn't match with token_account", async () => {
+      const newUserKeypair = Keypair.generate();
+      const newTokenAccountPubkey = await createAssociatedTokenAccount(
+        provider.connection,
+        fundedKeypair,
+        mintPubkey,
+        newUserKeypair.publicKey,
+        undefined,
+        tokenProgramId,
+      );
+
+      await mintTo(
+        provider.connection,
+        fundedKeypair,
+        mintPubkey,
+        newTokenAccountPubkey,
+        mintAuthorityKeypair,
+        1000e6,
+        undefined,
+        undefined,
+        tokenProgramId,
+      );
+
+      const activationUnixTimestamp = getCurrentUnixTimestamp() - 24 * 60 * 60; // now - 1 day
+      const expirationUnixTimestamp =
+        activationUnixTimestamp + 10 * 24 * 60 * 60; // now + 10 days
+
+      const newPreAuthorizationPubkey = derivePreAuthorization(
+        newTokenAccountPubkey,
+        debitAuthorityKeypair.publicKey,
+        program.programId,
+      );
+
+      await program.methods
+        .initPreAuthorization({
+          variant: {
+            oneTime: {
+              amountAuthorized: new anchor.BN(100e6),
+              expiryUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
+            },
+          },
+          debitAuthority: debitAuthorityKeypair.publicKey,
+          activationUnixTimestamp: new anchor.BN(activationUnixTimestamp),
+        })
+        .accounts({
+          payer: provider.publicKey,
+          owner: newUserKeypair.publicKey,
+          tokenAccount: newTokenAccountPubkey,
+          preAuthorization: newPreAuthorizationPubkey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([newUserKeypair])
+        .rpc();
+
+      // we don't see the actual validation error because the PDA error is hit first
+      // it is redundant but we'll leave it in there
+      await expect(
+        program.methods
+          .debit({ amount: new anchor.BN(50e6) })
+          .accounts({
+            debitAuthority: debitAuthorityKeypair.publicKey,
+            mint: mintPubkey,
+            tokenAccount: tokenAccountPubkey,
+            destinationTokenAccount: destinationTokenAccountPubkey,
+            smartDelegate: smartDelegatePubkey,
+            preAuthorization: newPreAuthorizationPubkey,
+            tokenProgram: tokenProgramId,
+          })
+          .signers([debitAuthorityKeypair])
+          .rpc(),
+      ).to.eventually.be.rejectedWith(
+        /AnchorError caused by account: pre_authorization\. Error Code: ConstraintSeeds\. Error Number: 2006\. Error Message: A seeds constraint was violated\./,
       );
     });
 

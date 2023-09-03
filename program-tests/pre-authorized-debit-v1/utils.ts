@@ -199,3 +199,7 @@ export const toBuffer = (arr: Buffer | Uint8Array | Array<number>): Buffer => {
     return Buffer.from(arr);
   }
 };
+
+export function getCurrentUnixTimestamp(): number {
+  return Math.floor(new Date().getTime() / 1e3);
+}
