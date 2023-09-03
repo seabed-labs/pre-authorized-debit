@@ -72,7 +72,7 @@ export function testOneTimeDebit(
           activationUnixTimestamp: new anchor.BN(activationUnixTimestamp),
         })
         .accounts({
-          payer: provider.publicKey!,
+          payer: provider.publicKey,
           owner: userKeypair.publicKey,
           tokenAccount: tokenAccountPubkey,
           preAuthorization: preAuthorizationPubkey,
@@ -400,7 +400,7 @@ export function testOneTimeDebit(
 
     it("fails if attempting to debit more than pre_authorization's remaining available amount", async () => {
       await program.methods
-        .debit({ amount: new anchor.BN(100e6) })
+        .debit({ amount: new anchor.BN(95e6) })
         .accounts({
           debitAuthority: debitAuthorityKeypair.publicKey,
           mint: mintPubkey,
@@ -415,7 +415,7 @@ export function testOneTimeDebit(
 
       await expect(
         program.methods
-          .debit({ amount: new anchor.BN(1) })
+          .debit({ amount: new anchor.BN(5e6 + 1) })
           .accounts({
             debitAuthority: debitAuthorityKeypair.publicKey,
             mint: mintPubkey,
@@ -430,6 +430,20 @@ export function testOneTimeDebit(
       ).to.eventually.be.rejectedWith(
         /Error Code: CannotDebitMoreThanAvailable. Error Number: 6001/,
       );
+
+      await program.methods
+        .debit({ amount: new anchor.BN(5e6) })
+        .accounts({
+          debitAuthority: debitAuthorityKeypair.publicKey,
+          mint: mintPubkey,
+          tokenAccount: tokenAccountPubkey,
+          destinationTokenAccount: destinationTokenAccountPubkey,
+          smartDelegate: smartDelegatePubkey,
+          preAuthorization: preAuthorizationPubkey,
+          tokenProgram: tokenProgramId,
+        })
+        .signers([debitAuthorityKeypair])
+        .rpc();
     });
 
     it("fires the DebitEvent event", async () => {
@@ -446,9 +460,8 @@ export function testOneTimeDebit(
         })
         .signers([debitAuthorityKeypair])
         .rpc();
-      const tx = await waitForTxToConfirm(signature, provider.connection);
 
-      assert(tx, "tx undefined");
+      const tx = await waitForTxToConfirm(signature, provider.connection);
       assert(tx.meta?.logMessages, "tx.meta?.logMessages undefined");
 
       const eventGenerator = eventParser.parseLogs(tx.meta.logMessages);
