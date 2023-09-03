@@ -587,6 +587,30 @@ export function testOneTimeDebit(
       );
     });
 
+    it("fails if debit_authority doesn't match", async () => {
+      const newDebitAuthorityKeypair = Keypair.generate();
+
+      // we don't see the actual validation error because the PDA error is hit first
+      // it is redundant but we'll leave it in there
+      await expect(
+        program.methods
+          .debit({ amount: new anchor.BN(50e6) })
+          .accounts({
+            debitAuthority: newDebitAuthorityKeypair.publicKey,
+            mint: mintPubkey,
+            tokenAccount: tokenAccountPubkey,
+            destinationTokenAccount: destinationTokenAccountPubkey,
+            smartDelegate: smartDelegatePubkey,
+            preAuthorization: preAuthorizationPubkey,
+            tokenProgram: tokenProgramId,
+          })
+          .signers([newDebitAuthorityKeypair])
+          .rpc(),
+      ).to.eventually.be.rejectedWith(
+        /AnchorError caused by account: pre_authorization\. Error Code: ConstraintSeeds\. Error Number: 2006\. Error Message: A seeds constraint was violated\./,
+      );
+    });
+
     it("fires the DebitEvent event", async () => {
       const signature = await program.methods
         .debit({ amount: new anchor.BN(50e6) })
