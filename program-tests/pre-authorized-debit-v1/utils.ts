@@ -1,4 +1,4 @@
-import { AnchorProvider } from "@coral-xyz/anchor";
+import { AnchorProvider, Provider } from "@coral-xyz/anchor";
 import {
   Connection,
   MAX_SEED_LENGTH,
@@ -45,12 +45,12 @@ export async function fundAccounts(
       lamports: amount,
     }),
   );
-  const fundTx = new Transaction({
-    feePayer: provider.publicKey,
-    recentBlockhash: (await provider.connection.getRecentBlockhash()).blockhash,
-  }).add(...transfers);
 
-  await provider.sendAndConfirm(fundTx, [], { commitment: "confirmed" });
+  const blockhashInfo = await provider.connection.getLatestBlockhash();
+  const fundTx = new Transaction({ ...blockhashInfo });
+  fundTx.add(...transfers);
+
+  await provider.sendAndConfirm(fundTx);
 }
 
 /**

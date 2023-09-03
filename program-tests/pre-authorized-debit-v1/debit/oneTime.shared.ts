@@ -15,7 +15,12 @@ import {
   getAccount,
   mintTo,
 } from "@solana/spl-token";
-import { waitForTxToConfirm } from "../utils";
+import {
+  derivePreAuthorization,
+  deriveSmartDelegate,
+  fundAccounts,
+  waitForTxToConfirm,
+} from "../utils";
 
 const U64_MAX = "18446744073709551615";
 
@@ -24,7 +29,7 @@ export function testOneTimeDebit(
   testSuffix: string,
 ) {
   describe(`pre-authorized-debit-v1#debit (one-time) ${testSuffix}`, () => {
-    const provider = anchor.getProvider();
+    const provider = anchor.getProvider() as anchor.AnchorProvider;
 
     const program = anchor.workspace
       .PreAuthorizedDebitV1 as anchor.Program<PreAuthorizedDebitV1>;
@@ -49,14 +54,12 @@ export function testOneTimeDebit(
       activationUnixTimestamp: number,
       expirationUnixTimestamp: number,
     ) {
-      [preAuthorizationPubkey] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("pre-authorization"),
-          tokenAccountPubkey.toBuffer(),
-          debitAuthorityKeypair.publicKey.toBuffer(),
-        ],
+      preAuthorizationPubkey = derivePreAuthorization(
+        tokenAccountPubkey,
+        debitAuthorityKeypair.publicKey,
         program.programId,
       );
+
       await program.methods
         .initPreAuthorization({
           variant: {
@@ -86,16 +89,7 @@ export function testOneTimeDebit(
       userKeypair = Keypair.generate();
       destinationTokenAccountOwnerPubkey = Keypair.generate().publicKey;
 
-      const fundSolIx = SystemProgram.transfer({
-        fromPubkey: provider.publicKey!,
-        toPubkey: fundedKeypair.publicKey,
-        lamports: 10e9,
-      });
-
-      const tx = new Transaction();
-      tx.add(fundSolIx);
-
-      await provider.sendAndConfirm!(tx);
+      await fundAccounts(provider, [fundedKeypair.publicKey], 10e9);
 
       mintPubkey = await createMint(
         provider.connection,
@@ -138,8 +132,8 @@ export function testOneTimeDebit(
         tokenProgramId,
       );
 
-      [smartDelegatePubkey] = PublicKey.findProgramAddressSync(
-        [Buffer.from("smart-delegate"), tokenAccountPubkey.toBuffer()],
+      smartDelegatePubkey = deriveSmartDelegate(
+        tokenAccountPubkey,
         program.programId,
       );
 
@@ -175,14 +169,17 @@ export function testOneTimeDebit(
         undefined,
         tokenProgramId,
       );
+
       const destinationTokenAccountBefore = await getAccount(
         provider.connection,
         destinationTokenAccountPubkey,
         undefined,
         tokenProgramId,
       );
+
       const preAuthorizationBefore =
         await program.account.preAuthorization.fetch(preAuthorizationPubkey);
+
       expect(destinationTokenAccountBefore.amount.toString()).to.equal("0");
       expect(sourceTokenAccountBefore.amount.toString()).to.equal(
         (1000e6).toString(),
@@ -196,6 +193,7 @@ export function testOneTimeDebit(
       expect(
         preAuthorizationBefore.variant.oneTime?.amountDebited.toString(),
       ).to.equal("0");
+
       await program.methods
         .debit({ amount: new anchor.BN(50e6) })
         .accounts({
@@ -209,6 +207,7 @@ export function testOneTimeDebit(
         })
         .signers([debitAuthorityKeypair])
         .rpc();
+
       const destinationTokenAccountAfter = await getAccount(
         provider.connection,
         destinationTokenAccountPubkey,
@@ -221,8 +220,10 @@ export function testOneTimeDebit(
         undefined,
         tokenProgramId,
       );
+
       const preAuthorizationAfter =
         await program.account.preAuthorization.fetch(preAuthorizationPubkey);
+
       expect(destinationTokenAccountAfter.amount.toString()).to.equal(
         (50e6).toString(),
       );
