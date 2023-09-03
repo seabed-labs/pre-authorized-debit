@@ -1,4 +1,27 @@
-# seabed-program-library
+# Pre Authorized Debit
+
+The Pre Authorized Debit (PAD) program is a Solana primitive to extend functionality of a token account
+with pre-authorized debits (an advanced form of a multi-delegate).
+The PAD program supports both spl token program and token program 22.
+
+User funds remain non-custodial in their own token accounts, adding a `smart-delegate` account as their delegate.
+
+Users and protocols agree on and create a `pre-authorization` account to track the pre-authorized debit state.
+Pre-authorized debits can be one-time or recurring.
+
+Pre-authorized debt authorities can debit from a users token account using their pre-authorization
+and the smart-delegate. Debt authorities can debit from a token account as long as:
+- The pre-authorized debit is ready for debiting
+- The token account has the necessary funds needed for the debit
+- The smart-delegate remains the delegate of the token-account
+
+Users at any time withdraw from their token-account as the `owner` or pause a pre-authorized debit.
+
+## Planned Future Work
+
+To prevent accidental removals of the token-account delegate, an ancillary program is
+planned for future development, mimicking a similar feature set as the associated token program.
+
 
 ## Docs
 
