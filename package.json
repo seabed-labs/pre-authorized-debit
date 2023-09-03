@@ -9,8 +9,8 @@
     "packageManager": "yarn@3.6.0",
     "scripts": {
         "postinstall": "husky install",
-        "lint:fix": "prettier \"*/**/*{.js,.ts}\" -w",
-        "lint": "prettier \"*/**/*{.js,.ts}\" --check"
+        "lint:fix": "yarn workspaces foreach run lint:fix",
+        "lint": "yarn workspaces foreach run lint"
     },
     "devDependencies": {
         "husky": "^8.0.3",

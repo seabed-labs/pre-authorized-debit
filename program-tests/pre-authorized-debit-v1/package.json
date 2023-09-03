@@ -3,8 +3,8 @@
   "packageManager": "yarn@3.6.0",
   "private": true,
   "scripts": {
-    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
-    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "lint:fix": "prettier \"*/**/*{.js,.ts}\" -w",
+    "lint": "prettier \"*/**/*{.js,.ts}\" --check",
     "test": "cd ../../ && anchor test pre-authorized-debit-v1"
   },
   "dependencies": {
