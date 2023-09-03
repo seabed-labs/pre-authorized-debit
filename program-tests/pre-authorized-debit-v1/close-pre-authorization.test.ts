@@ -1,5 +1,3 @@
-import "./setup";
-
 import {
   AnchorProvider,
   BorshCoder,
@@ -8,13 +6,7 @@ import {
   workspace,
 } from "@coral-xyz/anchor";
 import { assert, expect } from "chai";
-import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
-import {
-  derivePreAuthorization,
-  fundAccounts,
-  waitForTxToConfirm,
-} from "./utils";
 import {
   createMint,
   TOKEN_PROGRAM_ID,
@@ -24,6 +16,14 @@ import {
   createAccount,
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
+import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
+
+import "./setup";
+import {
+  derivePreAuthorization,
+  fundAccounts,
+  waitForTxToConfirm,
+} from "./utils";
 
 // TODO(Mocha): Split this test file into multiple test files to take
 // advantage of parallel test execution
