@@ -1,7 +1,7 @@
 {
     "name": "@dcaf/pre-authorized-debit-v1",
-    "version": "0.1.0",
     "packageManager": "yarn@3.6.0",
+    "version": "0.1.0",
     "scripts": {
         "build:program": "cd ../../ && anchor build -p pre_authorized_debit_v1",
         "clean:anchor-client": "rm -rf ./src/anchor-client/accounts && rm -rf ./src/anchor-client/errors && rm -rf ./src/anchor-client/instructions && rm -rf ./src/anchor-client/types",
