@@ -37,7 +37,7 @@ export class LastDebitedCycleBeforeCurrentCycle extends Error {
 
   constructor(readonly logs?: string[]) {
     super(
-      "6002: Last debited cycle is after current debited cycle (invalid state)"
+      "6002: Last debited cycle is after current debited cycle (invalid state)",
     );
   }
 }

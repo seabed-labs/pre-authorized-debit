@@ -46,7 +46,7 @@ export class InitSmartDelegate {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: InitSmartDelegateInstruction
+    readonly instructionData: InitSmartDelegateInstruction,
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -55,7 +55,7 @@ export class InitSmartDelegate {
 
   static fromDecoded(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): InitSmartDelegate {
     const accounts = {
       payer: flattenedAccounts[0],
@@ -70,7 +70,7 @@ export class InitSmartDelegate {
 
   static decode(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): InitSmartDelegate {
     return InitSmartDelegate.fromDecoded(programId, flattenedAccounts);
   }

@@ -31,7 +31,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
   const eventParser = new EventParser(
     program.programId,
-    new BorshCoder(program.idl)
+    new BorshCoder(program.idl),
   );
   const provider = program.provider as AnchorProvider;
 
@@ -54,7 +54,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
         mintAuthority.publicKey,
         debitAuthority.publicKey,
       ],
-      500_000_000
+      500_000_000,
     );
   });
 
@@ -77,7 +77,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           6,
           new Keypair(),
           undefined,
-          tokenProgramId
+          tokenProgramId,
         );
         validTokenAccount = await createAccount(
           provider.connection,
@@ -86,7 +86,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           owner.publicKey,
           new Keypair(),
           undefined,
-          tokenProgramId
+          tokenProgramId,
         );
         await mintTo(
           provider.connection,
@@ -97,7 +97,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           1_000_000,
           undefined,
           undefined,
-          tokenProgramId
+          tokenProgramId,
         );
       });
 
@@ -108,10 +108,10 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               provider.connection,
               validTokenAccount,
               undefined,
-              tokenProgramId
+              tokenProgramId,
             );
             expect(tokenAccountDataBefore.amount.toString()).to.equal(
-              "1000000"
+              "1000000",
             );
 
             const [payerAccountInfoBefore, ownerAccountInfoBefore] =
@@ -124,7 +124,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             const preAuthorization = derivePreAuthorization(
               validTokenAccount,
               debitAuthority.publicKey,
-              program.programId
+              program.programId,
             );
             const preAuthVariant =
               preAuthType === "one time"
@@ -132,7 +132,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
                     oneTime: {
                       amountAuthorized: new anchor.BN(100e6),
                       expiryUnixTimestamp: new anchor.BN(
-                        expirationUnixTimestamp
+                        expirationUnixTimestamp,
                       ),
                     },
                   }
@@ -171,11 +171,11 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             expect(initPreAuthEvent).to.not.be.null;
             if (preAuthType === "one time") {
               expect(initPreAuthEvent.name).to.equal(
-                "OneTimePreAuthorizationCreated"
+                "OneTimePreAuthorizationCreated",
               );
             } else {
               expect(initPreAuthEvent.name).to.equal(
-                "RecurringPreAuthorizationCreated"
+                "RecurringPreAuthorizationCreated",
               );
             }
             expect(Object.keys(initPreAuthEvent.data).length).to.equal(1);
@@ -183,20 +183,20 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             expect(Object.keys(initPreAuthEventData).length).to.equal(5);
 
             expect(initPreAuthEventData.debitAuthority!.toString()).to.equal(
-              debitAuthority.publicKey.toString()
+              debitAuthority.publicKey.toString(),
             );
             expect(initPreAuthEventData.owner!.toString()).to.equal(
-              owner.publicKey.toString()
+              owner.publicKey.toString(),
             );
             expect(initPreAuthEventData.payer!.toString()).to.equal(
-              payer.publicKey.toString()
+              payer.publicKey.toString(),
             );
 
             expect(initPreAuthEventData.tokenAccount!.toString()).to.equal(
-              validTokenAccount.toString()
+              validTokenAccount.toString(),
             );
             expect(initPreAuthEventData.preAuthorization!.toString()).to.equal(
-              preAuthorization.toString()
+              preAuthorization.toString(),
             );
 
             // verify sol balances
@@ -207,11 +207,11 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               ]);
             assert(payerAccountInfoAfter && ownerAccountInfoAfter);
             expect(ownerAccountInfoBefore.lamports).to.equal(
-              ownerAccountInfoAfter.lamports
+              ownerAccountInfoAfter.lamports,
             );
             // should use payers sol to create the account
             expect(payerAccountInfoAfter.lamports).to.be.lessThan(
-              payerAccountInfoBefore.lamports
+              payerAccountInfoBefore.lamports,
             );
 
             // verify smart delegate account closed
@@ -225,7 +225,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               provider.connection,
               validTokenAccount,
               undefined,
-              tokenProgramId
+              tokenProgramId,
             );
             expect(tokenAccountDataAfter.amount.toString()).to.equal("1000000");
           });
@@ -236,7 +236,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
         const preAuthorization = derivePreAuthorization(
           validTokenAccount,
           debitAuthority.publicKey,
-          program.programId
+          program.programId,
         );
         const preAuthVariant = {
           oneTime: {
@@ -261,7 +261,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             .signers([payer])
             .rpc({
               skipPreflight: true,
-            })
+            }),
         ).to.eventually.be.rejectedWith(/Signature verification failed/);
       });
 
@@ -269,7 +269,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
         const preAuthorization = derivePreAuthorization(
           validTokenAccount,
           debitAuthority.publicKey,
-          program.programId
+          program.programId,
         );
         const preAuthVariant = {
           oneTime: {
@@ -292,9 +292,9 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               systemProgram: SystemProgram.programId,
             })
             .signers([debitAuthority, payer])
-            .rpc()
+            .rpc(),
         ).to.eventually.be.rejectedWith(
-          /AnchorError caused by account: token_account. Error Code: InitPreAuthorizationUnauthorized. Error Number: 6011. Error Message: Only token account owner can initialize a pre-authorization./
+          /AnchorError caused by account: token_account. Error Code: InitPreAuthorizationUnauthorized. Error Number: 6011. Error Message: Only token account owner can initialize a pre-authorization./,
         );
       });
 
@@ -302,7 +302,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
         const preAuthorization = deriveInvalidPreAuthorization(
           validTokenAccount,
           debitAuthority.publicKey,
-          program.programId
+          program.programId,
         );
         const preAuthVariant = {
           oneTime: {
@@ -325,9 +325,9 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               systemProgram: SystemProgram.programId,
             })
             .signers([owner, payer])
-            .rpc()
+            .rpc(),
         ).to.eventually.be.rejectedWith(
-          /AnchorError caused by account: pre_authorization. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./
+          /AnchorError caused by account: pre_authorization. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./,
         );
       });
 
@@ -335,7 +335,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
         const preAuthorization = derivePreAuthorization(
           validTokenAccount,
           debitAuthority.publicKey,
-          program.programId
+          program.programId,
         );
         const preAuthVariant = {
           oneTime: {
@@ -358,9 +358,9 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               systemProgram: tokenProgramId,
             })
             .signers([owner, payer])
-            .rpc()
+            .rpc(),
         ).to.eventually.be.rejectedWith(
-          /AnchorError caused by account: system_program. Error Code: InvalidProgramId. Error Number: 3008. Error Message: Program ID was not as expected./
+          /AnchorError caused by account: system_program. Error Code: InvalidProgramId. Error Number: 3008. Error Message: Program ID was not as expected./,
         );
       });
     });

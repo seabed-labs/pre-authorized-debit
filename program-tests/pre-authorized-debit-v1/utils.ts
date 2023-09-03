@@ -12,7 +12,7 @@ import { assert } from "chai";
 
 export async function waitForTxToConfirm(
   signature: string,
-  connection: Connection
+  connection: Connection,
 ): Promise<VersionedTransactionResponse> {
   const blockhashContext = await connection.getLatestBlockhashAndContext({
     commitment: "confirmed",
@@ -23,7 +23,7 @@ export async function waitForTxToConfirm(
       lastValidBlockHeight: blockhashContext.value.lastValidBlockHeight,
       blockhash: blockhashContext.value.blockhash,
     },
-    "confirmed"
+    "confirmed",
   );
   const tx = await connection.getTransaction(signature, {
     commitment: "confirmed",
@@ -36,14 +36,14 @@ export async function waitForTxToConfirm(
 export async function fundAccounts(
   provider: AnchorProvider,
   addresses: PublicKey[],
-  amount: number | bigint
+  amount: number | bigint,
 ): Promise<void> {
   const transfers = addresses.map((address) =>
     SystemProgram.transfer({
       fromPubkey: provider.publicKey,
       toPubkey: address,
       lamports: amount,
-    })
+    }),
   );
   const fundTx = new Transaction({
     feePayer: provider.publicKey,
@@ -62,7 +62,7 @@ export async function fundAccounts(
 export function derivePreAuthorization(
   tokenAccount: PublicKey,
   debitAuthority: PublicKey,
-  programId: PublicKey
+  programId: PublicKey,
 ): PublicKey {
   const [pdaPubkey] = PublicKey.findProgramAddressSync(
     [
@@ -70,7 +70,7 @@ export function derivePreAuthorization(
       tokenAccount.toBuffer(),
       debitAuthority.toBuffer(),
     ],
-    programId
+    programId,
   );
   return pdaPubkey;
 }
@@ -85,7 +85,7 @@ export function derivePreAuthorization(
 export function deriveInvalidPreAuthorization(
   tokenAccount: PublicKey,
   debitAuthority: PublicKey,
-  programId: PublicKey
+  programId: PublicKey,
 ): PublicKey {
   const [pdaPubkey] = deriveNthPda(
     [
@@ -94,7 +94,7 @@ export function deriveInvalidPreAuthorization(
       debitAuthority.toBuffer(),
     ],
     programId,
-    3
+    3,
   );
 
   return pdaPubkey;
@@ -108,11 +108,11 @@ export function deriveInvalidPreAuthorization(
  */
 export function deriveSmartDelegate(
   tokenAccount: PublicKey,
-  programId: PublicKey
+  programId: PublicKey,
 ): PublicKey {
   const [pdaPubkey] = PublicKey.findProgramAddressSync(
     [Buffer.from("smart-delegate"), tokenAccount.toBuffer()],
-    programId
+    programId,
   );
 
   return pdaPubkey;
@@ -126,12 +126,12 @@ export function deriveSmartDelegate(
  */
 export function deriveInvalidSmartDelegate(
   tokenAccount: PublicKey,
-  programId: PublicKey
+  programId: PublicKey,
 ): PublicKey {
   const [pdaPubkey] = deriveNthPda(
     [Buffer.from("smart-delegate"), tokenAccount.toBuffer()],
     programId,
-    3
+    3,
   );
 
   return pdaPubkey;
@@ -140,7 +140,7 @@ export function deriveInvalidSmartDelegate(
 function deriveNthPda(
   seeds: Array<Buffer | Uint8Array>,
   programId: PublicKey,
-  n: number
+  n: number,
 ): [PublicKey, number] {
   let nonce = 255;
   let numFound = 0;
@@ -169,7 +169,7 @@ function deriveNthPda(
 
 function createProgramAddressSync(
   seeds: Array<Buffer | Uint8Array>,
-  programId: PublicKey
+  programId: PublicKey,
 ): PublicKey {
   let buffer = Buffer.alloc(0);
   seeds.forEach(function (seed) {

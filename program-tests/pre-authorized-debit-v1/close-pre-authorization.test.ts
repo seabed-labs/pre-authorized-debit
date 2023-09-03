@@ -32,7 +32,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
   const eventParser = new EventParser(
     program.programId,
-    new BorshCoder(program.idl)
+    new BorshCoder(program.idl),
   );
   const provider = program.provider as AnchorProvider;
 
@@ -50,7 +50,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
     await fundAccounts(
       provider,
       [owner.publicKey, mintAuthority.publicKey, debitAuthority.publicKey],
-      500_000_000
+      500_000_000,
     );
   });
 
@@ -72,7 +72,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               6,
               new Keypair(),
               undefined,
-              tokenProgramId
+              tokenProgramId,
             );
             tokenAccount = await createAccount(
               provider.connection,
@@ -81,7 +81,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               owner.publicKey,
               new Keypair(),
               undefined,
-              tokenProgramId
+              tokenProgramId,
             );
             await mintTo(
               provider.connection,
@@ -92,12 +92,12 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               1_000_000,
               undefined,
               undefined,
-              tokenProgramId
+              tokenProgramId,
             );
             preAuthorization = derivePreAuthorization(
               tokenAccount,
               debitAuthority.publicKey,
-              program.programId
+              program.programId,
             );
             const preAuthVariant =
               preAuthType === "one time"
@@ -105,7 +105,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                     oneTime: {
                       amountAuthorized: new anchor.BN(100e6),
                       expiryUnixTimestamp: new anchor.BN(
-                        expirationUnixTimestamp
+                        expirationUnixTimestamp,
                       ),
                     },
                   }
@@ -144,10 +144,10 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   provider.connection,
                   tokenAccount,
                   undefined,
-                  tokenProgramId
+                  tokenProgramId,
                 );
                 expect(tokenAccountDataBefore.amount.toString()).to.equal(
-                  "1000000"
+                  "1000000",
                 );
 
                 const ownerAccountInfoBefore =
@@ -166,13 +166,13 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   .rpc();
                 const tx = await waitForTxToConfirm(
                   signature,
-                  provider.connection
+                  provider.connection,
                 );
                 assert(tx.meta?.logMessages);
 
                 // verify events
                 const eventGenerator = eventParser.parseLogs(
-                  tx.meta.logMessages
+                  tx.meta.logMessages,
                 );
                 const events = [...eventGenerator];
                 expect(events.length).to.equal(1);
@@ -180,11 +180,11 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                 expect(closePreAuthEvent).to.not.be.null;
                 if (preAuthType === "one time") {
                   expect(closePreAuthEvent.name).to.equal(
-                    "OneTimePreAuthorizationClosed"
+                    "OneTimePreAuthorizationClosed",
                   );
                 } else {
                   expect(closePreAuthEvent.name).to.equal(
-                    "RecurringPreAuthorizationClosed"
+                    "RecurringPreAuthorizationClosed",
                   );
                 }
                 expect(Object.keys(closePreAuthEvent.data).length).to.equal(1);
@@ -193,22 +193,22 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                 expect(Object.keys(closePreAuthEventData).length).to.equal(6);
 
                 expect(
-                  closePreAuthEventData.debitAuthority!.toString()
+                  closePreAuthEventData.debitAuthority!.toString(),
                 ).to.equal(debitAuthority.publicKey.toString());
                 expect(
-                  closePreAuthEventData.closingAuthority!.toString()
+                  closePreAuthEventData.closingAuthority!.toString(),
                 ).to.equal(closeAuthorityKeypair.publicKey.toString());
                 expect(
-                  closePreAuthEventData.tokenAccountOwner!.toString()
+                  closePreAuthEventData.tokenAccountOwner!.toString(),
                 ).to.equal(owner.publicKey.toString());
                 expect(closePreAuthEventData.receiver!.toString()).to.equal(
-                  owner.publicKey.toString()
+                  owner.publicKey.toString(),
                 );
                 expect(closePreAuthEventData.tokenAccount!.toString()).to.equal(
-                  tokenAccount.toString()
+                  tokenAccount.toString(),
                 );
                 expect(
-                  closePreAuthEventData.preAuthorization!.toString()
+                  closePreAuthEventData.preAuthorization!.toString(),
                 ).to.equal(preAuthorization.toString());
 
                 // verify sol balances
@@ -217,7 +217,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                 assert(ownerAccountInfoAfter);
                 // should refund the owner
                 expect(ownerAccountInfoAfter.lamports).to.be.greaterThan(
-                  ownerAccountInfoBefore.lamports
+                  ownerAccountInfoBefore.lamports,
                 );
 
                 // verify token account balance is unchanged
@@ -225,10 +225,10 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   provider.connection,
                   tokenAccount,
                   undefined,
-                  tokenProgramId
+                  tokenProgramId,
                 );
                 expect(tokenAccountDataAfter.amount.toString()).to.equal(
-                  "1000000"
+                  "1000000",
                 );
               });
             });
@@ -242,7 +242,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               owner.publicKey,
               new Keypair(),
               undefined,
-              tokenProgramId
+              tokenProgramId,
             );
             await expect(
               program.methods
@@ -254,9 +254,9 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   preAuthorization: preAuthorization,
                 })
                 .signers([owner])
-                .rpc()
+                .rpc(),
             ).to.eventually.be.rejectedWith(
-              /AnchorError caused by account: pre_authorization. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./
+              /AnchorError caused by account: pre_authorization. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./,
             );
           });
 
@@ -271,9 +271,9 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   preAuthorization: preAuthorization,
                 })
                 .signers([mintAuthority])
-                .rpc()
+                .rpc(),
             ).to.eventually.be.rejectedWith(
-              /AnchorError caused by account: authority. Error Code: PreAuthorizationCloseUnauthorized. Error Number: 6007. Error Message: Pre-authorization can only be closed by debit_authority or token_account.owner./
+              /AnchorError caused by account: authority. Error Code: PreAuthorizationCloseUnauthorized. Error Number: 6007. Error Message: Pre-authorization can only be closed by debit_authority or token_account.owner./,
             );
           });
 
@@ -288,9 +288,9 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   preAuthorization: preAuthorization,
                 })
                 .signers([mintAuthority])
-                .rpc()
+                .rpc(),
             ).to.eventually.be.rejectedWith(
-              /AnchorError caused by account: receiver. Error Code: OnlyTokenAccountOwnerCanReceiveClosePreAuthFunds. Error Number: 6005. Error Message: Only token account owner can receive funds from closing pre-authorization account./
+              /AnchorError caused by account: receiver. Error Code: OnlyTokenAccountOwnerCanReceiveClosePreAuthFunds. Error Number: 6005. Error Message: Only token account owner can receive funds from closing pre-authorization account./,
             );
           });
         });

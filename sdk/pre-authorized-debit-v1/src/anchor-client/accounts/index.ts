@@ -20,7 +20,7 @@ export interface AccountHandler<T> {
 
 export async function processAccount<T>(
   accountData: Uint8Array,
-  accountHandler: AccountHandler<T>
+  accountHandler: AccountHandler<T>,
 ): Promise<T | undefined> {
   const accountDataBuff = Buffer.from(accountData);
   if (PreAuthorization.isDiscriminatorEqual(accountDataBuff)) {

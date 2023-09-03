@@ -67,7 +67,7 @@ export function fromDecoded(obj: any): types.DebitAuthorizationTypeKind {
 }
 
 export function fromJSON(
-  obj: types.DebitAuthorizationTypeJSON
+  obj: types.DebitAuthorizationTypeJSON,
 ): types.DebitAuthorizationTypeKind {
   switch (obj.kind) {
     case "OneTime": {

@@ -35,7 +35,7 @@ export class InitPreAuthorizationParams {
         borsh.publicKey("debitAuthority"),
         borsh.i64("activationUnixTimestamp"),
       ],
-      property
+      property,
     );
   }
 
@@ -52,7 +52,7 @@ export class InitPreAuthorizationParams {
       variant: fields.variant.toEncodable(),
       debitAuthority: fields.debitAuthority,
       activationUnixTimestamp: new BN(
-        fields.activationUnixTimestamp.toString()
+        fields.activationUnixTimestamp.toString(),
       ),
     };
   }
@@ -70,7 +70,7 @@ export class InitPreAuthorizationParams {
   }
 
   static fromJSON(
-    obj: InitPreAuthorizationParamsJSON
+    obj: InitPreAuthorizationParamsJSON,
   ): InitPreAuthorizationParams {
     return new InitPreAuthorizationParams({
       variant: types.PreAuthorizationVariant.fromJSON(obj.variant),

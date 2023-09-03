@@ -21,7 +21,7 @@ const U64_MAX = "18446744073709551615";
 
 export function testOneTimeDebit(
   tokenProgramId: PublicKey,
-  testSuffix: string
+  testSuffix: string,
 ) {
   describe(`pre-authorized-debit-v1#debit (one-time) ${testSuffix}`, () => {
     const provider = anchor.getProvider();
@@ -31,7 +31,7 @@ export function testOneTimeDebit(
 
     const eventParser = new anchor.EventParser(
       program.programId,
-      new anchor.BorshCoder(program.idl)
+      new anchor.BorshCoder(program.idl),
     );
 
     let fundedKeypair: Keypair;
@@ -47,7 +47,7 @@ export function testOneTimeDebit(
 
     async function setupPreAuthorization(
       activationUnixTimestamp: number,
-      expirationUnixTimestamp: number
+      expirationUnixTimestamp: number,
     ) {
       [preAuthorizationPubkey] = PublicKey.findProgramAddressSync(
         [
@@ -55,7 +55,7 @@ export function testOneTimeDebit(
           tokenAccountPubkey.toBuffer(),
           debitAuthorityKeypair.publicKey.toBuffer(),
         ],
-        program.programId
+        program.programId,
       );
       await program.methods
         .initPreAuthorization({
@@ -105,7 +105,7 @@ export function testOneTimeDebit(
         6,
         undefined,
         undefined,
-        tokenProgramId
+        tokenProgramId,
       );
 
       tokenAccountPubkey = await createAssociatedTokenAccount(
@@ -114,7 +114,7 @@ export function testOneTimeDebit(
         mintPubkey,
         userKeypair.publicKey,
         undefined,
-        tokenProgramId
+        tokenProgramId,
       );
 
       destinationTokenAccountPubkey = await createAssociatedTokenAccount(
@@ -123,7 +123,7 @@ export function testOneTimeDebit(
         mintPubkey,
         destinationTokenAccountOwnerPubkey,
         undefined,
-        tokenProgramId
+        tokenProgramId,
       );
 
       await mintTo(
@@ -135,12 +135,12 @@ export function testOneTimeDebit(
         1000e6,
         undefined,
         undefined,
-        tokenProgramId
+        tokenProgramId,
       );
 
       [smartDelegatePubkey] = PublicKey.findProgramAddressSync(
         [Buffer.from("smart-delegate"), tokenAccountPubkey.toBuffer()],
-        program.programId
+        program.programId,
       );
 
       await program.methods
@@ -164,7 +164,7 @@ export function testOneTimeDebit(
 
       await setupPreAuthorization(
         activationUnixTimestamp,
-        expirationUnixTimestamp
+        expirationUnixTimestamp,
       );
     });
 
@@ -173,28 +173,28 @@ export function testOneTimeDebit(
         provider.connection,
         tokenAccountPubkey,
         undefined,
-        tokenProgramId
+        tokenProgramId,
       );
       const destinationTokenAccountBefore = await getAccount(
         provider.connection,
         destinationTokenAccountPubkey,
         undefined,
-        tokenProgramId
+        tokenProgramId,
       );
       const preAuthorizationBefore =
         await program.account.preAuthorization.fetch(preAuthorizationPubkey);
       expect(destinationTokenAccountBefore.amount.toString()).to.equal("0");
       expect(sourceTokenAccountBefore.amount.toString()).to.equal(
-        (1000e6).toString()
+        (1000e6).toString(),
       );
       expect(sourceTokenAccountBefore.delegate?.toBase58()).to.equal(
-        smartDelegatePubkey.toBase58()
+        smartDelegatePubkey.toBase58(),
       );
       expect(sourceTokenAccountBefore.delegatedAmount.toString()).to.equal(
-        U64_MAX
+        U64_MAX,
       );
       expect(
-        preAuthorizationBefore.variant.oneTime?.amountDebited.toString()
+        preAuthorizationBefore.variant.oneTime?.amountDebited.toString(),
       ).to.equal("0");
       await program.methods
         .debit({ amount: new anchor.BN(50e6) })
@@ -213,30 +213,30 @@ export function testOneTimeDebit(
         provider.connection,
         destinationTokenAccountPubkey,
         undefined,
-        tokenProgramId
+        tokenProgramId,
       );
       const sourceTokenAccountAfter = await getAccount(
         provider.connection,
         tokenAccountPubkey,
         undefined,
-        tokenProgramId
+        tokenProgramId,
       );
       const preAuthorizationAfter =
         await program.account.preAuthorization.fetch(preAuthorizationPubkey);
       expect(destinationTokenAccountAfter.amount.toString()).to.equal(
-        (50e6).toString()
+        (50e6).toString(),
       );
       expect(sourceTokenAccountAfter.amount.toString()).to.equal(
-        (950e6).toString()
+        (950e6).toString(),
       );
       expect(sourceTokenAccountAfter.delegate?.toBase58()).to.equal(
-        smartDelegatePubkey.toBase58()
+        smartDelegatePubkey.toBase58(),
       );
       expect(sourceTokenAccountAfter.delegatedAmount.toString()).to.equal(
-        (BigInt(U64_MAX) - BigInt(50e6)).toString()
+        (BigInt(U64_MAX) - BigInt(50e6)).toString(),
       );
       expect(
-        preAuthorizationAfter.variant.oneTime?.amountDebited.toString()
+        preAuthorizationAfter.variant.oneTime?.amountDebited.toString(),
       ).to.equal((50e6).toString());
       expect({
         ...preAuthorizationBefore,
@@ -287,9 +287,9 @@ export function testOneTimeDebit(
             tokenProgram: tokenProgramId,
           })
           .signers([debitAuthorityKeypair])
-          .rpc()
+          .rpc(),
       ).to.eventually.be.rejectedWith(
-        /Error Code: PreAuthorizationPaused. Error Number: 6004/
+        /Error Code: PreAuthorizationPaused. Error Number: 6004/,
       );
     });
 
@@ -313,7 +313,7 @@ export function testOneTimeDebit(
 
       await setupPreAuthorization(
         activationUnixTimestamp,
-        expirationUnixTimestamp
+        expirationUnixTimestamp,
       );
 
       await expect(
@@ -329,9 +329,9 @@ export function testOneTimeDebit(
             tokenProgram: tokenProgramId,
           })
           .signers([debitAuthorityKeypair])
-          .rpc()
+          .rpc(),
       ).to.eventually.be.rejectedWith(
-        /Error Code: PreAuthorizationNotActive. Error Number: 6000/
+        /Error Code: PreAuthorizationNotActive. Error Number: 6000/,
       );
     });
 
@@ -355,7 +355,7 @@ export function testOneTimeDebit(
 
       await setupPreAuthorization(
         activationUnixTimestamp,
-        expirationUnixTimestamp
+        expirationUnixTimestamp,
       );
 
       await expect(
@@ -371,9 +371,9 @@ export function testOneTimeDebit(
             tokenProgram: tokenProgramId,
           })
           .signers([debitAuthorityKeypair])
-          .rpc()
+          .rpc(),
       ).to.eventually.be.rejectedWith(
-        /Error Code: PreAuthorizationNotActive. Error Number: 6000/
+        /Error Code: PreAuthorizationNotActive. Error Number: 6000/,
       );
     });
 
@@ -391,9 +391,9 @@ export function testOneTimeDebit(
             tokenProgram: tokenProgramId,
           })
           .signers([debitAuthorityKeypair])
-          .rpc()
+          .rpc(),
       ).to.eventually.be.rejectedWith(
-        /Error Code: CannotDebitMoreThanAvailable. Error Number: 6001/
+        /Error Code: CannotDebitMoreThanAvailable. Error Number: 6001/,
       );
     });
 
@@ -425,9 +425,9 @@ export function testOneTimeDebit(
             tokenProgram: tokenProgramId,
           })
           .signers([debitAuthorityKeypair])
-          .rpc()
+          .rpc(),
       ).to.eventually.be.rejectedWith(
-        /Error Code: CannotDebitMoreThanAvailable. Error Number: 6001/
+        /Error Code: CannotDebitMoreThanAvailable. Error Number: 6001/,
       );
     });
 
@@ -457,29 +457,29 @@ export function testOneTimeDebit(
       expect(debitEvent.name).to.equal("DebitEvent");
       expect(Object.keys(debitEvent.data).length).to.equal(9);
       expect(debitEvent.data.preAuthorization!.toString()).to.equal(
-        preAuthorizationPubkey.toBase58()
+        preAuthorizationPubkey.toBase58(),
       );
       expect(debitEvent.data.smartDelegate!.toString()).to.equal(
-        smartDelegatePubkey.toBase58()
+        smartDelegatePubkey.toBase58(),
       );
       expect(debitEvent.data.mint!.toString()).to.equal(mintPubkey.toBase58());
       expect(debitEvent.data.tokenProgram!.toString()).to.equal(
-        tokenProgramId.toBase58()
+        tokenProgramId.toBase58(),
       );
       expect(debitEvent.data.sourceTokenAccountOwner!.toString()).to.equal(
-        userKeypair.publicKey.toBase58()
+        userKeypair.publicKey.toBase58(),
       );
       expect(debitEvent.data.destinationTokenAccountOwner!.toString()).to.equal(
-        destinationTokenAccountOwnerPubkey.toBase58()
+        destinationTokenAccountOwnerPubkey.toBase58(),
       );
       expect(debitEvent.data.sourceTokenAccount!.toString()).to.equal(
-        tokenAccountPubkey.toBase58()
+        tokenAccountPubkey.toBase58(),
       );
       expect(debitEvent.data.destinationTokenAccount!.toString()).to.equal(
-        destinationTokenAccountPubkey.toBase58()
+        destinationTokenAccountPubkey.toBase58(),
       );
       expect(
-        (debitEvent.data.debitAuthorizationType as any).oneTime
+        (debitEvent.data.debitAuthorizationType as any).oneTime,
       ).to.deep.equal({});
     });
   });

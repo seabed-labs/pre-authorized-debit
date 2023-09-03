@@ -24,7 +24,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
   const eventParser = new EventParser(
     program.programId,
-    new BorshCoder(program.idl)
+    new BorshCoder(program.idl),
   );
   const provider = program.provider as AnchorProvider;
 
@@ -40,7 +40,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
     await fundAccounts(
       provider,
       [receiver.publicKey, owner.publicKey, mintAuthority.publicKey],
-      500_000_000
+      500_000_000,
     );
   });
 
@@ -59,7 +59,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           6,
           new Keypair(),
           undefined,
-          tokenProgramId
+          tokenProgramId,
         );
         validTokenAccount = await createAccount(
           provider.connection,
@@ -68,11 +68,11 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           owner.publicKey,
           new Keypair(),
           undefined,
-          tokenProgramId
+          tokenProgramId,
         );
         smartDelegate = deriveSmartDelegate(
           validTokenAccount,
-          program.programId
+          program.programId,
         );
         await program.methods
           .initSmartDelegate()
@@ -93,11 +93,11 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           provider.connection,
           validTokenAccount,
           undefined,
-          tokenProgramId
+          tokenProgramId,
         );
         expect(tokenAccountDataBefore.delegate).to.not.be.null;
         expect(tokenAccountDataBefore.delegatedAmount.toString()).to.not.equal(
-          "0"
+          "0",
         );
 
         const [receiverAccountInfoBefore, ownerAccountInfoBefore] =
@@ -129,19 +129,19 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         expect(smartDelegateEvent.name).to.equal("SmartDelegateClosed");
         expect(Object.keys(smartDelegateEvent.data).length).to.equal(5);
         expect(smartDelegateEvent.data.receiver!.toString()).to.equal(
-          receiver.publicKey.toString()
+          receiver.publicKey.toString(),
         );
         expect(smartDelegateEvent.data.owner!.toString()).to.equal(
-          owner.publicKey.toString()
+          owner.publicKey.toString(),
         );
         expect(smartDelegateEvent.data.smartDelegate!.toString()).to.equal(
-          smartDelegate.toString()
+          smartDelegate.toString(),
         );
         expect(smartDelegateEvent.data.tokenAccount!.toString()).to.equal(
-          validTokenAccount.toString()
+          validTokenAccount.toString(),
         );
         expect(smartDelegateEvent.data.tokenProgram!.toString()).to.equal(
-          tokenProgramId.toString()
+          tokenProgramId.toString(),
         );
 
         // verify sol balances
@@ -152,17 +152,16 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           ]);
         assert(receiverAccountInfoAfter && ownerAccountInfoAfter);
         expect(ownerAccountInfoBefore.lamports).to.equal(
-          ownerAccountInfoAfter.lamports
+          ownerAccountInfoAfter.lamports,
         );
         // should refund sol to receiver
         expect(receiverAccountInfoAfter.lamports).to.be.greaterThan(
-          receiverAccountInfoBefore.lamports
+          receiverAccountInfoBefore.lamports,
         );
 
         // verify smart delegate account closed
-        const smartDelegateAccount = await provider.connection.getAccountInfo(
-          smartDelegate
-        );
+        const smartDelegateAccount =
+          await provider.connection.getAccountInfo(smartDelegate);
         expect(smartDelegateAccount).to.be.null;
 
         // verify revoke
@@ -170,7 +169,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           provider.connection,
           validTokenAccount,
           undefined,
-          tokenProgramId
+          tokenProgramId,
         );
         expect(tokenAccountDataAfter.delegate).to.be.null;
         expect(tokenAccountDataAfter.delegatedAmount.toString()).to.equal("0");
@@ -187,7 +186,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
       6,
       new Keypair(),
       undefined,
-      TOKEN_PROGRAM_ID
+      TOKEN_PROGRAM_ID,
     );
     const tokenAccount = await createAccount(
       provider.connection,
@@ -196,7 +195,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
       owner.publicKey,
       new Keypair(),
       undefined,
-      TOKEN_PROGRAM_ID
+      TOKEN_PROGRAM_ID,
     );
     const smartDelegate = deriveSmartDelegate(tokenAccount, program.programId);
     await program.methods
@@ -224,9 +223,9 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([receiver])
-        .rpc()
+        .rpc(),
     ).to.eventually.be.rejectedWith(
-      /AnchorError caused by account: token_account. Error Code: SmartDelegateCloseUnauthorized. Error Number: 6008. Error Message: Smart delegate can only be closed by token account owner./
+      /AnchorError caused by account: token_account. Error Code: SmartDelegateCloseUnauthorized. Error Number: 6008. Error Message: Smart delegate can only be closed by token account owner./,
     );
   });
 
@@ -239,7 +238,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
       6,
       new Keypair(),
       undefined,
-      TOKEN_PROGRAM_ID
+      TOKEN_PROGRAM_ID,
     );
     const [validTokenAccount, invalidTokenAccount] = await Promise.all([
       createAccount(
@@ -249,7 +248,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         owner.publicKey,
         new Keypair(),
         undefined,
-        TOKEN_PROGRAM_ID
+        TOKEN_PROGRAM_ID,
       ),
       createAccount(
         provider.connection,
@@ -258,12 +257,12 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         owner.publicKey,
         new Keypair(),
         undefined,
-        TOKEN_PROGRAM_ID
+        TOKEN_PROGRAM_ID,
       ),
     ]);
     const smartDelegate = deriveSmartDelegate(
       validTokenAccount,
-      program.programId
+      program.programId,
     );
     await program.methods
       .initSmartDelegate()
@@ -289,9 +288,9 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([owner])
-        .rpc()
+        .rpc(),
     ).to.eventually.be.rejectedWith(
-      /AnchorError caused by account: smart_delegate. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./
+      /AnchorError caused by account: smart_delegate. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated./,
     );
   });
 });
