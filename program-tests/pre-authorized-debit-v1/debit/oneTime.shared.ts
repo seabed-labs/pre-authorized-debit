@@ -642,7 +642,7 @@ export function testOneTimeDebit(
       expect(debitEvent.data.smartDelegate.toString()).to.equal(
         smartDelegatePubkey.toBase58(),
       );
-      expect(debitEvent.data.mint!.toString()).to.equal(mintPubkey.toBase58());
+      expect(debitEvent.data.mint.toString()).to.equal(mintPubkey.toBase58());
       expect(debitEvent.data.tokenProgram.toString()).to.equal(
         tokenProgramId.toBase58(),
       );
