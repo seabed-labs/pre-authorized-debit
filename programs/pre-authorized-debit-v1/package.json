@@ -1,7 +1,8 @@
 {
   "name": "@dcaf/pre-authorized-debit-v1-program",
-  "private": true,
+  "packageManager": "yarn@3.6.0",
   "version": "1.0.0",
+  "private": true,
   "description": "Pre Authorized Debit Program",
   "scripts": {
     "build": "cd ../../ && anchor build -p pre_authorized_debit_v1",
