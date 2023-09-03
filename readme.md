@@ -11,7 +11,9 @@ Developer docs and integration guides are viewable at our [gitbook](https://docs
 ## Developers
 
 All anchor integration tests live under `program-tests`.
+
 All anchor programs live under `programs`.
+
 All SDK's live under `sdk`, and their tests live in their nested sdk folder (`sdk/<name>/tests`).
 
 ```bash
