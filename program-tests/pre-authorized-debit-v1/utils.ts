@@ -1,4 +1,4 @@
-import { AnchorProvider, Provider } from "@coral-xyz/anchor";
+import { AnchorProvider, Provider, Event, Program } from "@coral-xyz/anchor";
 import {
   Connection,
   MAX_SEED_LENGTH,
@@ -9,6 +9,7 @@ import {
 } from "@solana/web3.js";
 import { sha256 } from "@noble/hashes/sha256";
 import { assert } from "chai";
+import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 
 export async function waitForTxToConfirm(
   signature: string,
@@ -203,3 +204,7 @@ export const toBuffer = (arr: Buffer | Uint8Array | Array<number>): Buffer => {
 export function getCurrentUnixTimestamp(): number {
   return Math.floor(new Date().getTime() / 1e3);
 }
+
+export type DebitEvent = Event<
+  Program<PreAuthorizedDebitV1>["idl"]["events"]["3"]
+>;

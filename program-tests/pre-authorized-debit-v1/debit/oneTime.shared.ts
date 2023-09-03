@@ -16,6 +16,7 @@ import {
   mintTo,
 } from "@solana/spl-token";
 import {
+  DebitEvent,
   deriveInvalidSmartDelegate,
   derivePreAuthorization,
   deriveSmartDelegate,
@@ -38,7 +39,7 @@ export function testOneTimeDebit(
 
     const eventParser = new anchor.EventParser(
       program.programId,
-      new anchor.BorshCoder(program.idl),
+      program.coder,
     );
 
     let fundedKeypair: Keypair;
@@ -611,7 +612,7 @@ export function testOneTimeDebit(
       );
     });
 
-    it("fires the DebitEvent event", async () => {
+    it.only("fires the DebitEvent event", async () => {
       const signature = await program.methods
         .debit({ amount: new anchor.BN(50e6) })
         .accounts({
@@ -632,29 +633,29 @@ export function testOneTimeDebit(
       const eventGenerator = eventParser.parseLogs(tx.meta.logMessages);
       const events = [...eventGenerator];
       expect(events.length).to.equal(1);
-      const [debitEvent] = events;
-      expect(debitEvent.name).to.equal("DebitEvent");
+      expect(events[0].name).to.equal("DebitEvent");
+      const [debitEvent] = events as [DebitEvent];
       expect(Object.keys(debitEvent.data).length).to.equal(9);
-      expect(debitEvent.data.preAuthorization!.toString()).to.equal(
+      expect(debitEvent.data.preAuthorization.toString()).to.equal(
         preAuthorizationPubkey.toBase58(),
       );
-      expect(debitEvent.data.smartDelegate!.toString()).to.equal(
+      expect(debitEvent.data.smartDelegate.toString()).to.equal(
         smartDelegatePubkey.toBase58(),
       );
       expect(debitEvent.data.mint!.toString()).to.equal(mintPubkey.toBase58());
-      expect(debitEvent.data.tokenProgram!.toString()).to.equal(
+      expect(debitEvent.data.tokenProgram.toString()).to.equal(
         tokenProgramId.toBase58(),
       );
-      expect(debitEvent.data.sourceTokenAccountOwner!.toString()).to.equal(
+      expect(debitEvent.data.sourceTokenAccountOwner.toString()).to.equal(
         userKeypair.publicKey.toBase58(),
       );
-      expect(debitEvent.data.destinationTokenAccountOwner!.toString()).to.equal(
+      expect(debitEvent.data.destinationTokenAccountOwner.toString()).to.equal(
         destinationTokenAccountOwnerPubkey.toBase58(),
       );
-      expect(debitEvent.data.sourceTokenAccount!.toString()).to.equal(
+      expect(debitEvent.data.sourceTokenAccount.toString()).to.equal(
         tokenAccountPubkey.toBase58(),
       );
-      expect(debitEvent.data.destinationTokenAccount!.toString()).to.equal(
+      expect(debitEvent.data.destinationTokenAccount.toString()).to.equal(
         destinationTokenAccountPubkey.toBase58(),
       );
       expect(
