@@ -283,7 +283,5 @@ fn compute_current_cycle(
 ) -> u64 {
     let seconds_since_activation = (current_unix_timestamp - activation_unix_timestamp) as u64;
 
-    let current_cycle = 1 + (seconds_since_activation / repeat_frequency_seconds);
-
-    current_cycle
+    1 + (seconds_since_activation / repeat_frequency_seconds)
 }

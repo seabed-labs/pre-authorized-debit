@@ -44,20 +44,20 @@ pub struct InitPreAuthorizationParams {
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub enum InitPreAuthorizationVariant {
-  OneTime {
-    amount_authorized: u64,
-    expiry_unix_timestamp: i64,
-  },
-  Recurring {
-    repeat_frequency_seconds: u64,
-    recurring_amount_authorized: u64,
-    // None: infinite recurring
-    // Some(n): approved for n cycles from activation,
-    num_cycles: Option<u64>,
-    // true: amount authorized is reset to "recurring_amount_authorized" each cycle
-    // false: unused amounts from prev. cycles carries forward to new cycles
-    reset_every_cycle: bool,
-  },
+    OneTime {
+        amount_authorized: u64,
+        expiry_unix_timestamp: i64,
+    },
+    Recurring {
+        repeat_frequency_seconds: u64,
+        recurring_amount_authorized: u64,
+        // None: infinite recurring
+        // Some(n): approved for n cycles from activation,
+        num_cycles: Option<u64>,
+        // true: amount authorized is reset to "recurring_amount_authorized" each cycle
+        // false: unused amounts from prev. cycles carries forward to new cycles
+        reset_every_cycle: bool,
+    },
 }
 
 pub fn handle_init_pre_authorization(
@@ -66,7 +66,7 @@ pub fn handle_init_pre_authorization(
 ) -> Result<()> {
     ctx.accounts.pre_authorization.token_account = ctx.accounts.token_account.key();
     ctx.accounts.pre_authorization.variant = match params.variant {
-      InitPreAuthorizationVariant::OneTime {
+        InitPreAuthorizationVariant::OneTime {
             amount_authorized,
             expiry_unix_timestamp,
         } => PreAuthorizationVariant::OneTime {
@@ -74,7 +74,7 @@ pub fn handle_init_pre_authorization(
             expiry_unix_timestamp,
             amount_debited: 0,
         },
-      InitPreAuthorizationVariant::Recurring {
+        InitPreAuthorizationVariant::Recurring {
             repeat_frequency_seconds,
             recurring_amount_authorized,
             num_cycles,

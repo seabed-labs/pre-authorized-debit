@@ -69,6 +69,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@dcaf/pre-authorized-debit-v1-program@workspace:programs/pre-authorized-debit-v1":
+  version: 0.0.0-use.local
+  resolution: "@dcaf/pre-authorized-debit-v1-program@workspace:programs/pre-authorized-debit-v1"
+  languageName: unknown
+  linkType: soft
+
 "@dcaf/pre-authorized-debit-v1-tests@workspace:program-tests/pre-authorized-debit-v1":
   version: 0.0.0-use.local
   resolution: "@dcaf/pre-authorized-debit-v1-tests@workspace:program-tests/pre-authorized-debit-v1"
