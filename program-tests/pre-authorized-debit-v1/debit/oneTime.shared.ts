@@ -52,7 +52,7 @@ export function testOneTimeDebit(
     let destinationTokenAccountOwnerPubkey: PublicKey;
     let destinationTokenAccountPubkey: PublicKey;
 
-    async function setupPreAuthorization(
+    async function setupOneTimePreAuthorization(
       activationUnixTimestamp: number,
       expirationUnixTimestamp: number,
     ): Promise<PublicKey> {
@@ -160,7 +160,7 @@ export function testOneTimeDebit(
       const expirationUnixTimestamp =
         activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
 
-      preAuthorizationPubkey = await setupPreAuthorization(
+      preAuthorizationPubkey = await setupOneTimePreAuthorization(
         activationUnixTimestamp,
         expirationUnixTimestamp,
       );
@@ -316,7 +316,7 @@ export function testOneTimeDebit(
       const expirationUnixTimestamp =
         activationUnixTimestamp + 10 * 24 * 60 * 60; // +11 days from now
 
-      await setupPreAuthorization(
+      await setupOneTimePreAuthorization(
         activationUnixTimestamp,
         expirationUnixTimestamp,
       );
@@ -358,7 +358,7 @@ export function testOneTimeDebit(
       const expirationUnixTimestamp =
         activationUnixTimestamp + 24 * 60 * 60 - 1; // -1 second from now
 
-      await setupPreAuthorization(
+      await setupOneTimePreAuthorization(
         activationUnixTimestamp,
         expirationUnixTimestamp,
       );
