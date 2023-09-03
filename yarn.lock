@@ -679,6 +679,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"chai@npm:^4.3.8":
+  version: 4.3.8
+  resolution: "chai@npm:4.3.8"
+  dependencies:
+    assertion-error: ^1.1.0
+    check-error: ^1.0.2
+    deep-eql: ^4.1.2
+    get-func-name: ^2.0.0
+    loupe: ^2.3.1
+    pathval: ^1.1.1
+    type-detect: ^4.0.5
+  checksum: 29e0984ed13308319cadc35437c8ef0a3e271544d226c991bf7e3b6d771bf89707321669e11d05e362bc0ad0bd26585079b989d1032f3c106e3bb95d7f079cce
+  languageName: node
+  linkType: hard
+
 "chalk@npm:^4.1.0":
   version: 4.1.2
   resolution: "chalk@npm:4.1.2"
@@ -2095,6 +2110,7 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     "@types/chai-as-promised": ^7.1.5
+    chai: ^4.3.8
     chai-as-promised: ^7.1.1
     husky: ^8.0.3
     mocha: ^10.2.0
