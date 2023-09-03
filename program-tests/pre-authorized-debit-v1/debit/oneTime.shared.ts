@@ -612,7 +612,7 @@ export function testOneTimeDebit(
       );
     });
 
-    it.only("fires the DebitEvent event", async () => {
+    it("fires the DebitEvent event", async () => {
       const signature = await program.methods
         .debit({ amount: new anchor.BN(50e6) })
         .accounts({
