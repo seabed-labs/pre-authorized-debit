@@ -208,3 +208,5 @@ export function getCurrentUnixTimestamp(): number {
 export type DebitEvent = Event<
   Program<PreAuthorizedDebitV1>["idl"]["events"]["3"]
 >;
+
+export const U64_MAX = (BigInt(2) ** BigInt(64) - BigInt(1)).toString();

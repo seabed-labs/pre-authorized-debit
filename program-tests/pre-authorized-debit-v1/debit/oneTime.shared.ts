@@ -12,14 +12,13 @@ import {
 } from "@solana/spl-token";
 import {
   DebitEvent,
+  U64_MAX,
   derivePreAuthorization,
   deriveSmartDelegate,
   fundAccounts,
   getCurrentUnixTimestamp,
   waitForTxToConfirm,
 } from "../utils";
-
-const U64_MAX = "18446744073709551615";
 
 export function testOneTimeDebit(
   tokenProgramId: PublicKey,
