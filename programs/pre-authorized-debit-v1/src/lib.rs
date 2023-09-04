@@ -30,12 +30,12 @@ pub mod pre_authorized_debit_v1 {
     The `token_program` MUST be either the token program or token 22 program.
 
     Accounts expected by this instruction:
-      0. `[writable]` payer: The payer for the `smart_delegate`.
-      1. `[]`         owner: The new accounts owner.
-      2. `[writable]` token_account: The `token_account` this `smart_delegate` will sign for as the `token_account.delegate`.
-      3. `[writable]` smart_delegate: The `smart_delegate` is the new account being initialized.
-      4. `[]`         token_program.
-      5. `[]`         system_program.
+      0. `[writable]` payer
+      1. `[]`         owner
+      2. `[writable]` token_account
+      3. `[writable]` smart_delegate
+      4. `[]`         token_program
+      5. `[]`         system_program
     */
     pub fn init_smart_delegate(ctx: Context<InitSmartDelegate>) -> Result<()> {
         handle_init_smart_delegate(ctx)
@@ -57,10 +57,10 @@ pub mod pre_authorized_debit_v1 {
 
     Accounts expected by this instruction:
       0. `[writable]` receiver: The receiver of the `smart_delegate` lamports.
-      1. `[]`         owner: The `token_account.owner`.
-      2. `[writable]` token_account: The `token_account` associated to the `smart_delegate` being closed.
-      3. `[writable]` smart_delegate.
-      4. `[]`         token_program.
+      1. `[]`         owner
+      2. `[writable]` token_account
+      3. `[writable]` smart_delegate
+      4. `[]`         token_program
     */
     pub fn close_smart_delegate(ctx: Context<CloseSmartDelegate>) -> Result<()> {
         handle_close_smart_delegate(ctx)
@@ -87,11 +87,11 @@ pub mod pre_authorized_debit_v1 {
     The `pre_authorization.token_account` must be the same as `token_account`.
 
     Accounts expected by this instruction:
-      0. `[writable]` payer: The payer for the `pre_authorization` account.
-      1. `[]`         owner: The `token_account.owner`.
-      2. `[writable]` token_account: The `token_account` associated to the `pre_authorization` being created.
-      3. `[writable]` pre_authorization: The `pre_authorization` is the new account being initialized.
-      4. `[]`         system_program.
+      0. `[writable]` payer
+      1. `[]`         owner
+      2. `[writable]` token_account
+      3. `[writable]` pre_authorization
+      4. `[]`         system_program
     */
     pub fn init_pre_authorization(
         ctx: Context<InitPreAuthorization>,
@@ -115,10 +115,10 @@ pub mod pre_authorized_debit_v1 {
     The `pre_authorization.token_account` must be the same as `token_account`.
 
     Accounts expected by this instruction:
-      0. `[writable]` receiver: The payer receiver of the `pre_authorization` lamports.
-      1. `[]`         authority: The `token_account.owner` or `pre_authorization.debit_authority`.
-      2. `[]`         token_account: The `token_account` associated to the `pre_authorization` being closed.
-      3. `[writable]` pre_authorization: The account being closed.
+      0. `[writable]` receiver
+      1. `[]`         authority
+      2. `[]`         token_account
+      3. `[writable]` pre_authorization
     */
     pub fn close_pre_authorization(ctx: Context<ClosePreAuthorization>) -> Result<()> {
         handle_close_pre_authorization(ctx)
@@ -133,6 +133,7 @@ pub mod pre_authorized_debit_v1 {
       - PA = pre_authorization
 
     Common Rules:
+    - The `pre_authorization` MUST not be paused.
     - The amount being requested to debit must be less than or equal to the available amount for the current_cycle
     - The current timestamp must be less than the `PA.expiry_unix_timestamp`
     - If the PA has a `num_cycles` defined, the `current_cycle` must be less than or equal to `PA.num_cycles`
@@ -169,6 +170,20 @@ pub mod pre_authorized_debit_v1 {
         handle_debit(ctx, params)
     }
 
+    /**
+    The `UpdatePausePreAuthorization` instruction allows a `token_account.owner` to pause a
+    `pre_authorization`.
+
+    The `owner` MUST sign the transaction.
+    The `owner` MUST equal the `token_account.owner`.
+    The `token_account.owner` MUST equal the `owner`.
+    The `pre_authorization.token_account` MUST equal the `token_account`.
+
+    Accounts expected by this instruction:
+      0. `[writable]` owner
+      2. `[]`         token_account
+      3. `[writable]` pre_authorization
+    */
     pub fn update_pause_pre_authorization(
         ctx: Context<UpdatePausePreAuthorization>,
         params: UpdatePausePreAuthorizationParams,
