@@ -33,6 +33,26 @@ export interface ClosePreAuthorizationInstructionJSON {
   accounts: ClosePreAuthorizationAccountsJSON;
 }
 
+/**
+ * The `ClosePreAuthorization` instruction will close a `pre_authorization` account.
+ *
+ *     Closes an existing `pre_authorization` account and refunds the lamports
+ *     to the `token_account.owner` (`receiver`).
+ *
+ *     The `receiver` will receive all lamports from the closed account.
+ *     The `receiver` MUST be the `token_account.owner`.
+ *     The `authority` MUST sign for the instruction.
+ *     The `authority` MUST be either the `token_account.owner` or the `pre_authorization.debit_authority`.
+ *     The `owner` MUST be the `token_account.owner`.
+ *     The `token_account.owner` MUST be the `owner`.
+ *     The `pre_authorization.token_account` must be the same as `token_account`.
+ *
+ *     Accounts expected by this instruction:
+ *       0. `[writable]` receiver: The payer receiver of the `pre_authorization` lamports.
+ *       1. `[]`         authority: The `token_account.owner` or `pre_authorization.debit_authority`.
+ *       2. `[]`         token_account: The `token_account` associated to the `pre_authorization` being closed.
+ *       3. `[writable]` pre_authorization: The account being closed.
+ */
 export class ClosePreAuthorization {
   static readonly ixName = "closePreAuthorization";
   readonly ixName = ClosePreAuthorization.ixName;
@@ -42,7 +62,7 @@ export class ClosePreAuthorization {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: ClosePreAuthorizationInstruction
+    readonly instructionData: ClosePreAuthorizationInstruction,
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -51,7 +71,7 @@ export class ClosePreAuthorization {
 
   static fromDecoded(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): ClosePreAuthorization {
     const accounts = {
       receiver: flattenedAccounts[0],
@@ -64,7 +84,7 @@ export class ClosePreAuthorization {
 
   static decode(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): ClosePreAuthorization {
     return ClosePreAuthorization.fromDecoded(programId, flattenedAccounts);
   }

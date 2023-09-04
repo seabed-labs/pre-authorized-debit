@@ -41,9 +41,10 @@ export interface CloseSmartDelegateInstructionJSON {
  *     Closes an existing `smart_delegate` account.
  *     The token program `revoke` instruction will be called on the `token_account`.
  *
- *     The `CloseSmartDelegate` instruction requires the `owner` to sign the transaction.
- *     The `receiver` and `owner` may be the same account.
+ *     The `receiver` can be any account.
+ *     The `owner` MUST sign the transaction.
  *     The `owner` MUST be the `token_account.owner`.
+ *     The `receiver` and `owner` may be the same account.
  *     The `token_account.owner` MUST be the `owner`.
  *     The `smart_delegate.token_account` must be the same as `token_account`.
  *     The `token_program` MUST be either the token program or token 22 program.
