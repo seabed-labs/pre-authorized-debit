@@ -38,7 +38,7 @@ export interface InitSmartDelegateInstructionJSON {
 }
 
 /**
- * The `init_smart_delegate` instruction will create a `smart_delegate` account.
+ * The `InitSmartDelegate` instruction will create a `smart_delegate` account.
  *
  *     Initializes a new account (`smart_delegate`).
  *     The `token_account.delegate` is set to the newly created `smart_delegate` account.
@@ -53,7 +53,7 @@ export interface InitSmartDelegateInstructionJSON {
  *     The `token_program` MUST be either the token program or token 22 program.
  *     The `system_program` MUST be the system program.
  *
- *       Accounts expected by this instruction:
+ *     Accounts expected by this instruction:
  *       0. `[writable]` payer: The payer for the `smart_delegate`.
  *       1. `[]`         owner: The new accounts owner.
  *       2. `[writable]` token_account: The `token_account` this `smart_delegate` will sign for as the `token_account.delegate`.
@@ -70,7 +70,7 @@ export class InitSmartDelegate {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: InitSmartDelegateInstruction
+    readonly instructionData: InitSmartDelegateInstruction,
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -79,7 +79,7 @@ export class InitSmartDelegate {
 
   static fromDecoded(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): InitSmartDelegate {
     const accounts = {
       payer: flattenedAccounts[0],
@@ -94,7 +94,7 @@ export class InitSmartDelegate {
 
   static decode(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): InitSmartDelegate {
     return InitSmartDelegate.fromDecoded(programId, flattenedAccounts);
   }
