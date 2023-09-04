@@ -68,11 +68,11 @@ const layout = borsh.struct([
  *     The `pre_authorization.token_account` must be the same as `token_account`.
  *
  *     Accounts expected by this instruction:
- *       0. `[writable]` payer: The payer for the `pre_authorization` account.
- *       1. `[]`         owner: The `token_account.owner`.
- *       2. `[writable]` token_account: The `token_account` associated to the `pre_authorization` being created.
- *       3. `[writable]` pre_authorization: The `pre_authorization` is the new account being initialized.
- *       4. `[]`         system_program.
+ *       0. `[writable]` payer
+ *       1. `[]`         owner
+ *       2. `[writable]` token_account
+ *       3. `[writable]` pre_authorization
+ *       4. `[]`         system_program
  */
 export class InitPreAuthorization {
   static readonly ixName = "initPreAuthorization";

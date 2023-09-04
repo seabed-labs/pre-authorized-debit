@@ -58,6 +58,7 @@ const layout = borsh.struct([types.DebitParams.layout("params")]);
  *       - PA = pre_authorization
  *
  *     Common Rules:
+ *     - The `pre_authorization` MUST not be paused.
  *     - The amount being requested to debit must be less than or equal to the available amount for the current_cycle
  *     - The current timestamp must be less than the `PA.expiry_unix_timestamp`
  *     - If the PA has a `num_cycles` defined, the `current_cycle` must be less than or equal to `PA.num_cycles`

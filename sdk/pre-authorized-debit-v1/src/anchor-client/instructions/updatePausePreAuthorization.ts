@@ -43,6 +43,20 @@ const layout = borsh.struct([
   types.UpdatePausePreAuthorizationParams.layout("params"),
 ]);
 
+/**
+ * The `UpdatePausePreAuthorization` instruction allows a `token_account.owner` to pause a
+ *     `pre_authorization`.
+ *
+ *     The `owner` MUST sign the transaction.
+ *     The `owner` MUST equal the `token_account.owner`.
+ *     The `token_account.owner` MUST equal the `owner`.
+ *     The `pre_authorization.token_account` MUST equal the `token_account`.
+ *
+ *     Accounts expected by this instruction:
+ *       0. `[writable]` owner
+ *       2. `[]`         token_account
+ *       3. `[writable]` pre_authorization
+ */
 export class UpdatePausePreAuthorization {
   static readonly ixName = "updatePausePreAuthorization";
   readonly ixName = UpdatePausePreAuthorization.ixName;
@@ -52,7 +66,7 @@ export class UpdatePausePreAuthorization {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: UpdatePausePreAuthorizationInstruction
+    readonly instructionData: UpdatePausePreAuthorizationInstruction,
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -62,7 +76,7 @@ export class UpdatePausePreAuthorization {
   static fromDecoded(
     programId: PublicKey,
     args: UpdatePausePreAuthorizationArgs,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): UpdatePausePreAuthorization {
     const accounts = {
       owner: flattenedAccounts[0],
@@ -75,12 +89,12 @@ export class UpdatePausePreAuthorization {
   static decode(
     programId: PublicKey,
     ixData: Uint8Array,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): UpdatePausePreAuthorization {
     return UpdatePausePreAuthorization.fromDecoded(
       programId,
       layout.decode(ixData, UpdatePausePreAuthorization.identifier.length),
-      flattenedAccounts
+      flattenedAccounts,
     );
   }
 
@@ -109,10 +123,10 @@ export class UpdatePausePreAuthorization {
     const len = layout.encode(
       {
         params: types.UpdatePausePreAuthorizationParams.toEncodable(
-          this.instructionData.args.params
+          this.instructionData.args.params,
         ),
       },
-      buffer
+      buffer,
     );
     const data = Buffer.concat([
       UpdatePausePreAuthorization.identifier,

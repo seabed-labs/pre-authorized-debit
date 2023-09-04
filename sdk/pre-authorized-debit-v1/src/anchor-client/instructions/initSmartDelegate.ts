@@ -55,12 +55,12 @@ export interface InitSmartDelegateInstructionJSON {
  *     The `token_program` MUST be either the token program or token 22 program.
  *
  *     Accounts expected by this instruction:
- *       0. `[writable]` payer: The payer for the `smart_delegate`.
- *       1. `[]`         owner: The new accounts owner.
- *       2. `[writable]` token_account: The `token_account` this `smart_delegate` will sign for as the `token_account.delegate`.
- *       3. `[writable]` smart_delegate: The `smart_delegate` is the new account being initialized.
- *       4. `[]`         token_program.
- *       5. `[]`         system_program.
+ *       0. `[writable]` payer
+ *       1. `[]`         owner
+ *       2. `[writable]` token_account
+ *       3. `[writable]` smart_delegate
+ *       4. `[]`         token_program
+ *       5. `[]`         system_program
  */
 export class InitSmartDelegate {
   static readonly ixName = "initSmartDelegate";

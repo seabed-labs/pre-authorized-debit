@@ -51,10 +51,10 @@ export interface CloseSmartDelegateInstructionJSON {
  *
  *     Accounts expected by this instruction:
  *       0. `[writable]` receiver: The receiver of the `smart_delegate` lamports.
- *       1. `[]`         owner: The `token_account.owner`.
- *       2. `[writable]` token_account: The `token_account` associated to the `smart_delegate` being closed.
- *       3. `[writable]` smart_delegate.
- *       4. `[]`         token_program.
+ *       1. `[]`         owner
+ *       2. `[writable]` token_account
+ *       3. `[writable]` smart_delegate
+ *       4. `[]`         token_program
  */
 export class CloseSmartDelegate {
   static readonly ixName = "closeSmartDelegate";
