@@ -22,7 +22,9 @@ pub mod pre_authorized_debit_v1 {
     The `smart_delegate` PDA is used by the `pre_authorized_debit` program to sign for
     valid pre-authorized debits to transfer funds from the token account.
 
-    The `InitSmartDelegate` instruction requires the `payer` and `owner` to sign the transaction.
+    The `payer` MUST sign the transaction.
+    The `payer` MUST have enough lamports to pay for the `smart_delegate` account.
+    The `owner` MUST sign the transaction.
     The `owner` MUST be the `token_account.owner`.
     The `payer` and `owner` may be the same account.
     The `token_program` MUST be either the token program or token 22 program.
@@ -45,9 +47,10 @@ pub mod pre_authorized_debit_v1 {
     Closes an existing `smart_delegate` account.
     The token program `revoke` instruction will be called on the `token_account`.
 
-    The `CloseSmartDelegate` instruction requires the `owner` to sign the transaction.
-    The `receiver` and `owner` may be the same account.
+    The `receiver` can be any account.
+    The `owner` MUST sign the transaction.
     The `owner` MUST be the `token_account.owner`.
+    The `receiver` and `owner` may be the same account.
     The `token_account.owner` MUST be the `owner`.
     The `smart_delegate.token_account` must be the same as `token_account`.
     The `token_program` MUST be either the token program or token 22 program.
@@ -75,8 +78,9 @@ pub mod pre_authorized_debit_v1 {
     For a pair of `debit_authority` and `token_account`, only a single `pre_authorization` account can exist.
     To create another `pre_authorization` for the same `token_account`, another `debit_authority` must be used.
 
-    The `InitPreAuthorization` instruction requires the `payer` and `owner` to sign the transaction.
-    The `payer` MUST sign for the instruction and have enough lamports to pay for the `pre_authorization` account.
+    The `payer` MUST sign the transaction.
+    The `payer` MUST have enough lamports to pay for the `pre_authorization` account.
+    The `owner` MUST sign the transaction.
     The `owner` MUST be the `token_account.owner`.
     The `payer` and `owner` may be the same account.
     The `token_account.owner` MUST be the `owner`.
@@ -96,6 +100,26 @@ pub mod pre_authorized_debit_v1 {
         handle_init_pre_authorization(ctx, params)
     }
 
+    /**
+    The `ClosePreAuthorization` instruction will close a `pre_authorization` account.
+
+    Closes an existing `pre_authorization` account and refunds the lamports
+    to the `token_account.owner` (`receiver`).
+
+    The `receiver` will receive all lamports from the closed account.
+    The `receiver` MUST be the `token_account.owner`.
+    The `authority` MUST sign for the instruction.
+    The `authority` MUST be either the `token_account.owner` or the `pre_authorization.debit_authority`.
+    The `owner` MUST be the `token_account.owner`.
+    The `token_account.owner` MUST be the `owner`.
+    The `pre_authorization.token_account` must be the same as `token_account`.
+
+    Accounts expected by this instruction:
+      0. `[writable]` receiver: The payer receiver of the `pre_authorization` lamports.
+      1. `[]`         authority: The `token_account.owner` or `pre_authorization.debit_authority`.
+      2. `[]`         token_account: The `token_account` associated to the `pre_authorization` being closed.
+      3. `[writable]` pre_authorization: The account being closed.
+    */
     pub fn close_pre_authorization(ctx: Context<ClosePreAuthorization>) -> Result<()> {
         handle_close_pre_authorization(ctx)
     }
