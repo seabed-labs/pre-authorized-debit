@@ -124,6 +124,47 @@ pub mod pre_authorized_debit_v1 {
         handle_close_pre_authorization(ctx)
     }
 
+    /**
+    The `Debit` instruction allows a `pre_authorization.debit_authority` to debit from the
+    `pre_authorization.token_account` via the `smart_delegate` PDA. To successfully debit from
+    the `token_account`, the constraints for the `pre_authorization` must be met.
+
+    Definitions:
+      - PA = pre_authorization
+
+    Common Rules:
+    - The amount being requested to debit must be less than or equal to the available amount for the current_cycle
+    - The current timestamp must be less than the `PA.expiry_unix_timestamp`
+    - If the PA has a `num_cycles` defined, the `current_cycle` must be less than or equal to `PA.num_cycles`
+
+    For a recurring pre-authorization:
+    - The debit_authority must not have already done a debit in the current cycle
+
+    For a one-time pre-authorization:
+    - the validator time must be greater than or equal to the `pre_authorization.activation_unix_timestamp`
+
+    For a more in-depth understanding around the constraints in a debit, it is recomended to read through
+    the validation done for a `debit` instruction.
+
+    The `debit_authority` MUST sign the transaction.
+    The `debit_authority` MUST equal the `pre_authorization.debit_authority`.
+    The `mint` MUST equal `token_account.mint` and `destination_token_account.mint`.
+    The `token_account.delegate` MUST equal the `smart_delegate`.
+    The `token_account.mint` MUST equal the `mint`.
+    The `destination_token_account.mint` MUST equal `mint`.
+    The `smart_delegate.token_account` MUST equal `token_account`.
+    The `pre_authorization.token_account` MUST equal the `token_account`.
+    The `token_program` MUST equal the token program matching the `token_account`.
+
+    Accounts expected by this instruction:
+      0. `[]`         debit_authority
+      1. `[]`         mint
+      2. `[writable]` token_account
+      3. `[writable]` destination_token_account
+      4. `[]`         smart_delegate
+      5. `[writable]` pre_authorization
+      6. `[]`         token_program
+    */
     pub fn debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
         handle_debit(ctx, params)
     }

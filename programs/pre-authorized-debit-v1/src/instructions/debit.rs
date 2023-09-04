@@ -14,8 +14,10 @@ pub struct Debit<'info> {
     pub debit_authority: Signer<'info>,
 
     pub mint: InterfaceAccount<'info, Mint>,
+
     #[account(mut)]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
+
     #[account(mut)]
     pub destination_token_account: InterfaceAccount<'info, TokenAccount>,
 
