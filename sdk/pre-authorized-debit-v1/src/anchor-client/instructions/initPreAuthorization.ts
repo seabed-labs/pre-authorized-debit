@@ -47,6 +47,32 @@ const layout = borsh.struct([
   types.InitPreAuthorizationParams.layout("params"),
 ]);
 
+/**
+ * The `InitPreAuthorization` instruction will create a `pre_authorization` account.
+ *
+ *     Initializes a new account (`pre_authorization`).
+ *     The `pre_authorization` defines a set of rules.
+ *     The `pre_authorization` rules/constraints are verified during a `debit` instruction.
+ *     The `pre_authorization` in conjunction with a `smart_delegate` for the same `token_account`
+ *     can allow the `pre_authorization.debit_authority` to do a one-time or recurring debit from the
+ *     `token_account.
+ *     For a pair of `debit_authority` and `token_account`, only a single `pre_authorization` account can exist.
+ *     To create another `pre_authorization` for the same `token_account`, another `debit_authority` must be used.
+ *
+ *     The `InitPreAuthorization` instruction requires the `payer` and `owner` to sign the transaction.
+ *     The `payer` MUST sign for the instruction and have enough lamports to pay for the `pre_authorization` account.
+ *     The `owner` MUST be the `token_account.owner`.
+ *     The `payer` and `owner` may be the same account.
+ *     The `token_account.owner` MUST be the `owner`.
+ *     The `pre_authorization.token_account` must be the same as `token_account`.
+ *
+ *     Accounts expected by this instruction:
+ *       0. `[writable]` payer: The payer for the `pre_authorization` account.
+ *       1. `[]`         owner: The `token_account.owner`.
+ *       2. `[writable]` token_account: The `token_account` associated to the `pre_authorization` being created.
+ *       3. `[writable]` pre_authorization: The `pre_authorization` is the new account being initialized.
+ *       4. `[]`         system_program.
+ */
 export class InitPreAuthorization {
   static readonly ixName = "initPreAuthorization";
   readonly ixName = InitPreAuthorization.ixName;
@@ -56,7 +82,7 @@ export class InitPreAuthorization {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: InitPreAuthorizationInstruction
+    readonly instructionData: InitPreAuthorizationInstruction,
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -66,7 +92,7 @@ export class InitPreAuthorization {
   static fromDecoded(
     programId: PublicKey,
     args: InitPreAuthorizationArgs,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): InitPreAuthorization {
     const accounts = {
       payer: flattenedAccounts[0],
@@ -81,12 +107,12 @@ export class InitPreAuthorization {
   static decode(
     programId: PublicKey,
     ixData: Uint8Array,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): InitPreAuthorization {
     return InitPreAuthorization.fromDecoded(
       programId,
       layout.decode(ixData, InitPreAuthorization.identifier.length),
-      flattenedAccounts
+      flattenedAccounts,
     );
   }
 
@@ -125,14 +151,14 @@ export class InitPreAuthorization {
     const len = layout.encode(
       {
         params: types.InitPreAuthorizationParams.toEncodable(
-          this.instructionData.args.params
+          this.instructionData.args.params,
         ),
       },
-      buffer
+      buffer,
     );
     const data = Buffer.concat([InitPreAuthorization.identifier, buffer]).slice(
       0,
-      8 + len
+      8 + len,
     );
     const ix = new TransactionInstruction({
       keys: this.toAccountMetas(),

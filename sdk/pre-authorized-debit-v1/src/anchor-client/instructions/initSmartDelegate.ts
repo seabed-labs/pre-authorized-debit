@@ -51,7 +51,6 @@ export interface InitSmartDelegateInstructionJSON {
  *     The `owner` MUST be the `token_account.owner`.
  *     The `payer` and `owner` may be the same account.
  *     The `token_program` MUST be either the token program or token 22 program.
- *     The `system_program` MUST be the system program.
  *
  *     Accounts expected by this instruction:
  *       0. `[writable]` payer: The payer for the `smart_delegate`.
