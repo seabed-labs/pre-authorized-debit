@@ -7,7 +7,7 @@ export * as CustomErrors from "./custom";
 
 export function fromCode(
   code: number,
-  logs?: string[],
+  logs?: string[]
 ): custom.CustomError | anchor.AnchorError | null {
   return code >= 6000
     ? custom.fromCode(code, logs)
@@ -16,7 +16,7 @@ export function fromCode(
 
 function hasOwnProperty<X extends object, Y extends PropertyKey>(
   obj: X,
-  prop: Y,
+  prop: Y
 ): obj is X & Record<Y, unknown> {
   return Object.hasOwnProperty.call(obj, prop);
 }
@@ -25,7 +25,7 @@ const errorRe = /Program (\w+) failed: custom program error: (\w+)/;
 
 export function fromTxError(
   err: unknown,
-  programId: PublicKey,
+  programId: PublicKey
 ): custom.CustomError | anchor.AnchorError | null {
   if (
     typeof err !== "object" ||

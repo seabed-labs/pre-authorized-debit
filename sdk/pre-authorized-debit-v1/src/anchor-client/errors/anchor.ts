@@ -119,7 +119,7 @@ export class IdlInstructionInvalidProgram extends Error {
 
   constructor(readonly logs?: string[]) {
     super(
-      "1001: The transaction was given an invalid program for the IDL instruction",
+      "1001: The transaction was given an invalid program for the IDL instruction"
     );
   }
 }
@@ -518,7 +518,7 @@ export class AccountOwnedByWrongProgram extends Error {
 
   constructor(readonly logs?: string[]) {
     super(
-      "3007: The given account is owned by a different program than expected",
+      "3007: The given account is owned by a different program than expected"
     );
   }
 }
@@ -620,7 +620,7 @@ export class AccountReallocExceedsLimit extends Error {
 
   constructor(readonly logs?: string[]) {
     super(
-      "3016: The account reallocation exceeds the MAX_PERMITTED_DATA_INCREASE limit",
+      "3016: The account reallocation exceeds the MAX_PERMITTED_DATA_INCREASE limit"
     );
   }
 }
@@ -656,7 +656,7 @@ export class Deprecated extends Error {
 
   constructor(readonly logs?: string[]) {
     super(
-      "5000: The API being used is deprecated and should no longer be used",
+      "5000: The API being used is deprecated and should no longer be used"
     );
   }
 }

@@ -81,7 +81,7 @@ export class SmartDelegate {
     c: Connection,
     address: PublicKey,
     programId: PublicKey,
-    getAccountInfoConfig?: GetAccountInfoConfig,
+    getAccountInfoConfig?: GetAccountInfoConfig
   ): Promise<SmartDelegate | null> {
     const info = await c.getAccountInfo(address, getAccountInfoConfig);
     if (info === null) {
@@ -98,13 +98,13 @@ export class SmartDelegate {
     address: PublicKey,
     programId: PublicKey,
     getAccountInfoConfig?: GetAccountInfoConfig,
-    notFoundError: Error = new Error("Account with address not found."),
+    notFoundError: Error = new Error("Account with address not found.")
   ): Promise<SmartDelegate> {
     const account = await SmartDelegate.fetch(
       c,
       address,
       programId,
-      getAccountInfoConfig,
+      getAccountInfoConfig
     );
     if (!account) {
       throw notFoundError;
@@ -117,14 +117,14 @@ export class SmartDelegate {
     address: PublicKey,
     programId: PublicKey,
     getAccountInfoConfig?: GetAccountInfoConfig,
-    notFoundError: Error = new Error("Account with address not found."),
+    notFoundError: Error = new Error("Account with address not found.")
   ): Promise<SmartDelegateAccount | null> {
     return await SmartDelegate.fetchNonNullable(
       c,
       address,
       programId,
       getAccountInfoConfig,
-      notFoundError,
+      notFoundError
     ).then((a) => a?.data);
   }
 
@@ -133,14 +133,14 @@ export class SmartDelegate {
     address: PublicKey,
     programId: PublicKey,
     getAccountInfoConfig?: GetAccountInfoConfig,
-    notFoundError: Error = new Error("Account with address not found."),
+    notFoundError: Error = new Error("Account with address not found.")
   ): Promise<SmartDelegateAccount> {
     return await SmartDelegate.fetchNonNullable(
       c,
       address,
       programId,
       getAccountInfoConfig,
-      notFoundError,
+      notFoundError
     ).then((a) => a.data);
   }
 

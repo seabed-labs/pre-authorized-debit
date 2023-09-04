@@ -37,6 +37,30 @@ export interface InitSmartDelegateInstructionJSON {
   accounts: InitSmartDelegateAccountsJSON;
 }
 
+/**
+ * The `init_smart_delegate` instruction will create a `smart_delegate` account.
+ *
+ *     Initializes a new account (`smart_delegate`).
+ *     The `token_account.delegate` is set to the newly created `smart_delegate` account.
+ *     The `token_account.delegated_amount` is set to `u64::MAX`.
+ *     The `token_account.owner` remains un-changed.
+ *     The `smart_delegate` PDA is used by the `pre_authorized_debit` program to sign for
+ *     valid pre-authorized debits to transfer funds from the token account.
+ *
+ *     The `InitSmartDelegate` instruction requires the `payer` and `owner` to sign the transaction.
+ *     The `owner` MUST be the `token_account.owner`.
+ *     The `payer` and `owner` may be the same account.
+ *     The `token_program` MUST be either the token program or token 22 program.
+ *     The `system_program` MUST be the system program.
+ *
+ *       Accounts expected by this instruction:
+ *       0. `[writable]` payer: The payer for the `smart_delegate`.
+ *       1. `[]`         owner: The new accounts owner.
+ *       2. `[writable]` token_account: The `token_account` this `smart_delegate` will sign for as the `token_account.delegate`.
+ *       3. `[writable]` smart_delegate: The `smart_delegate` is the new account being initialized.
+ *       4. `[]`         token_program.
+ *       5. `[]`         system_program.
+ */
 export class InitSmartDelegate {
   static readonly ixName = "initSmartDelegate";
   readonly ixName = InitSmartDelegate.ixName;
@@ -46,7 +70,7 @@ export class InitSmartDelegate {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: InitSmartDelegateInstruction,
+    readonly instructionData: InitSmartDelegateInstruction
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -55,7 +79,7 @@ export class InitSmartDelegate {
 
   static fromDecoded(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[],
+    flattenedAccounts: PublicKey[]
   ): InitSmartDelegate {
     const accounts = {
       payer: flattenedAccounts[0],
@@ -70,7 +94,7 @@ export class InitSmartDelegate {
 
   static decode(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[],
+    flattenedAccounts: PublicKey[]
   ): InitSmartDelegate {
     return InitSmartDelegate.fromDecoded(programId, flattenedAccounts);
   }

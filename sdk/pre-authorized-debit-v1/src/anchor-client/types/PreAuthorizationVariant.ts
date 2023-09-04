@@ -56,7 +56,7 @@ export class OneTime {
       OneTime: {
         amount_authorized: new BN(this.value.amountAuthorized.toString()),
         expiry_unix_timestamp: new BN(
-          this.value.expiryUnixTimestamp.toString(),
+          this.value.expiryUnixTimestamp.toString()
         ),
         amount_debited: new BN(this.value.amountDebited.toString()),
       },
@@ -136,13 +136,13 @@ export class Recurring {
     return {
       Recurring: {
         repeat_frequency_seconds: new BN(
-          this.value.repeatFrequencySeconds.toString(),
+          this.value.repeatFrequencySeconds.toString()
         ),
         recurring_amount_authorized: new BN(
-          this.value.recurringAmountAuthorized.toString(),
+          this.value.recurringAmountAuthorized.toString()
         ),
         amount_debited_last_cycle: new BN(
-          this.value.amountDebitedLastCycle.toString(),
+          this.value.amountDebitedLastCycle.toString()
         ),
         amount_debited_total: new BN(this.value.amountDebitedTotal.toString()),
         last_debited_cycle: new BN(this.value.lastDebitedCycle.toString()),
@@ -185,7 +185,7 @@ export function fromDecoded(obj: any): types.PreAuthorizationVariantKind {
 }
 
 export function fromJSON(
-  obj: types.PreAuthorizationVariantJSON,
+  obj: types.PreAuthorizationVariantJSON
 ): types.PreAuthorizationVariantKind {
   switch (obj.kind) {
     case "OneTime": {
@@ -217,7 +217,7 @@ export function layout(property?: string) {
         borsh.i64("expiry_unix_timestamp"),
         borsh.u64("amount_debited"),
       ],
-      "OneTime",
+      "OneTime"
     ),
     borsh.struct(
       [
@@ -229,7 +229,7 @@ export function layout(property?: string) {
         borsh.option(borsh.u64(), "num_cycles"),
         borsh.bool("reset_every_cycle"),
       ],
-      "Recurring",
+      "Recurring"
     ),
   ]);
   if (property !== undefined) {

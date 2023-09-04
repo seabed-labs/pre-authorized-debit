@@ -47,7 +47,7 @@ export class UpdatePausePreAuthorizationParams {
   }
 
   static fromJSON(
-    obj: UpdatePausePreAuthorizationParamsJSON,
+    obj: UpdatePausePreAuthorizationParamsJSON
   ): UpdatePausePreAuthorizationParams {
     return new UpdatePausePreAuthorizationParams({
       pause: obj.pause,
