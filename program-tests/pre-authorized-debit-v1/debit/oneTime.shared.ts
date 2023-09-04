@@ -1,14 +1,9 @@
 import "../setup";
 import * as anchor from "@coral-xyz/anchor";
-import { assert, expect, use } from "chai";
+import { assert, expect } from "chai";
 
 import { PreAuthorizedDebitV1 } from "../../../target/types/pre_authorized_debit_v1";
-import {
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from "@solana/web3.js";
+import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
@@ -17,7 +12,6 @@ import {
 } from "@solana/spl-token";
 import {
   DebitEvent,
-  deriveInvalidSmartDelegate,
   derivePreAuthorization,
   deriveSmartDelegate,
   fundAccounts,
