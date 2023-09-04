@@ -59,8 +59,9 @@ const layout = borsh.struct([
  *     For a pair of `debit_authority` and `token_account`, only a single `pre_authorization` account can exist.
  *     To create another `pre_authorization` for the same `token_account`, another `debit_authority` must be used.
  *
- *     The `InitPreAuthorization` instruction requires the `payer` and `owner` to sign the transaction.
- *     The `payer` MUST sign for the instruction and have enough lamports to pay for the `pre_authorization` account.
+ *     The `payer` MUST sign the transaction.
+ *     The `payer` MUST have enough lamports to pay for the `pre_authorization` account.
+ *     The `owner` MUST sign the transaction.
  *     The `owner` MUST be the `token_account.owner`.
  *     The `payer` and `owner` may be the same account.
  *     The `token_account.owner` MUST be the `owner`.

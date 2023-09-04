@@ -47,7 +47,9 @@ export interface InitSmartDelegateInstructionJSON {
  *     The `smart_delegate` PDA is used by the `pre_authorized_debit` program to sign for
  *     valid pre-authorized debits to transfer funds from the token account.
  *
- *     The `InitSmartDelegate` instruction requires the `payer` and `owner` to sign the transaction.
+ *     The `payer` MUST sign the transaction.
+ *     The `payer` MUST have enough lamports to pay for the `smart_delegate` account.
+ *     The `owner` MUST sign the transaction.
  *     The `owner` MUST be the `token_account.owner`.
  *     The `payer` and `owner` may be the same account.
  *     The `token_program` MUST be either the token program or token 22 program.
