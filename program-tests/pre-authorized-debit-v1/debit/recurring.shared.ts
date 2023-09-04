@@ -1,6 +1,6 @@
 import "../setup";
 import * as anchor from "@coral-xyz/anchor";
-import { expect } from "chai";
+import { assert, expect } from "chai";
 
 import { PreAuthorizedDebitV1 } from "../../../target/types/pre_authorized_debit_v1";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
@@ -11,10 +11,12 @@ import {
   mintTo,
 } from "@solana/spl-token";
 import {
+  DebitEvent,
   U64_MAX,
   derivePreAuthorization,
   deriveSmartDelegate,
   fundAccounts,
+  waitForTxToConfirm,
 } from "../utils";
 
 export function testRecurringDebit(
@@ -510,6 +512,68 @@ export function testRecurringDebit(
           .signers([debitAuthorityKeypair])
           .rpc();
       });
+    });
+
+    it("fires the DebitEvent event", async () => {
+      const activationUnixTimestamp =
+        Math.floor(new Date().getTime() / 1e3) - 1; // now
+
+      preAuthorizationPubkey = await setupRecurringPreAuthorization(
+        activationUnixTimestamp,
+        3, // 2 second repeat frequency
+        BigInt(50e6), // authorize 33 tokens each cycle
+        null, // infinite recurring pre-authorization (num_cycles set to None)
+        true, // non-cumulative, i.e. reset_every_cycle is set to false
+      );
+
+      const signature = await program.methods
+        .debit({ amount: new anchor.BN(50e6) })
+        .accounts({
+          debitAuthority: debitAuthorityKeypair.publicKey,
+          mint: mintPubkey,
+          tokenAccount: tokenAccountPubkey,
+          destinationTokenAccount: destinationTokenAccountPubkey,
+          smartDelegate: smartDelegatePubkey,
+          preAuthorization: preAuthorizationPubkey,
+          tokenProgram: tokenProgramId,
+        })
+        .signers([debitAuthorityKeypair])
+        .rpc();
+
+      const tx = await waitForTxToConfirm(signature, provider.connection);
+      assert(tx.meta?.logMessages, "tx.meta?.logMessages undefined");
+
+      const eventGenerator = eventParser.parseLogs(tx.meta.logMessages);
+      const events = [...eventGenerator];
+      expect(events.length).to.equal(1);
+      expect(events[0].name).to.equal("DebitEvent");
+      const [debitEvent] = events as [DebitEvent];
+      expect(Object.keys(debitEvent.data).length).to.equal(9);
+      expect(debitEvent.data.preAuthorization.toString()).to.equal(
+        preAuthorizationPubkey.toBase58(),
+      );
+      expect(debitEvent.data.smartDelegate.toString()).to.equal(
+        smartDelegatePubkey.toBase58(),
+      );
+      expect(debitEvent.data.mint.toString()).to.equal(mintPubkey.toBase58());
+      expect(debitEvent.data.tokenProgram.toString()).to.equal(
+        tokenProgramId.toBase58(),
+      );
+      expect(debitEvent.data.sourceTokenAccountOwner.toString()).to.equal(
+        userKeypair.publicKey.toBase58(),
+      );
+      expect(debitEvent.data.destinationTokenAccountOwner.toString()).to.equal(
+        destinationTokenAccountOwnerPubkey.toBase58(),
+      );
+      expect(debitEvent.data.sourceTokenAccount.toString()).to.equal(
+        tokenAccountPubkey.toBase58(),
+      );
+      expect(debitEvent.data.destinationTokenAccount.toString()).to.equal(
+        destinationTokenAccountPubkey.toBase58(),
+      );
+      expect(
+        (debitEvent.data.debitAuthorizationType as any).recurring,
+      ).to.deep.equal({});
     });
   });
 }
