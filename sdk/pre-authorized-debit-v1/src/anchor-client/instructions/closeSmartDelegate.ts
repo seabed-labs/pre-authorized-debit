@@ -35,6 +35,26 @@ export interface CloseSmartDelegateInstructionJSON {
   accounts: CloseSmartDelegateAccountsJSON;
 }
 
+/**
+ * The `CloseSmartDelegate` instruction will create close a `smart_delegate` account.
+ *
+ *     Closes an existing `smart_delegate` account.
+ *     The token program `revoke` instruction will be called on the `token_account`.
+ *
+ *     The `CloseSmartDelegate` instruction requires the `owner` to sign the transaction.
+ *     The `receiver` and `owner` may be the same account.
+ *     The `owner` MUST be the `token_account.owner`.
+ *     The `token_account.owner` MUST be the `owner`.
+ *     The `smart_delegate.token_account` must be the same as `token_account`.
+ *     The `token_program` MUST be either the token program or token 22 program.
+ *
+ *     Accounts expected by this instruction:
+ *       0. `[writable]` receiver: The receiver of the `smart_delegate` lamports.
+ *       1. `[]`         owner: The `token_account.owner`.
+ *       2. `[writable]` token_account: The `token_account` associated to the `smart_delegate` being closed.
+ *       3. `[writable]` smart_delegate.
+ *       4. `[]`         token_program.
+ */
 export class CloseSmartDelegate {
   static readonly ixName = "closeSmartDelegate";
   readonly ixName = CloseSmartDelegate.ixName;
@@ -44,7 +64,7 @@ export class CloseSmartDelegate {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: CloseSmartDelegateInstruction
+    readonly instructionData: CloseSmartDelegateInstruction,
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -53,7 +73,7 @@ export class CloseSmartDelegate {
 
   static fromDecoded(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): CloseSmartDelegate {
     const accounts = {
       receiver: flattenedAccounts[0],
@@ -67,7 +87,7 @@ export class CloseSmartDelegate {
 
   static decode(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): CloseSmartDelegate {
     return CloseSmartDelegate.fromDecoded(programId, flattenedAccounts);
   }
