@@ -42,7 +42,7 @@ export class ClosePreAuthorization {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: ClosePreAuthorizationInstruction,
+    readonly instructionData: ClosePreAuthorizationInstruction
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -51,7 +51,7 @@ export class ClosePreAuthorization {
 
   static fromDecoded(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[],
+    flattenedAccounts: PublicKey[]
   ): ClosePreAuthorization {
     const accounts = {
       receiver: flattenedAccounts[0],
@@ -64,7 +64,7 @@ export class ClosePreAuthorization {
 
   static decode(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[],
+    flattenedAccounts: PublicKey[]
   ): ClosePreAuthorization {
     return ClosePreAuthorization.fromDecoded(programId, flattenedAccounts);
   }

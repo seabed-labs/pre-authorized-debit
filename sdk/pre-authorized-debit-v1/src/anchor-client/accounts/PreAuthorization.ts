@@ -149,7 +149,7 @@ export class PreAuthorization {
     c: Connection,
     address: PublicKey,
     programId: PublicKey,
-    getAccountInfoConfig?: GetAccountInfoConfig,
+    getAccountInfoConfig?: GetAccountInfoConfig
   ): Promise<PreAuthorization | null> {
     const info = await c.getAccountInfo(address, getAccountInfoConfig);
     if (info === null) {
@@ -166,13 +166,13 @@ export class PreAuthorization {
     address: PublicKey,
     programId: PublicKey,
     getAccountInfoConfig?: GetAccountInfoConfig,
-    notFoundError: Error = new Error("Account with address not found."),
+    notFoundError: Error = new Error("Account with address not found.")
   ): Promise<PreAuthorization> {
     const account = await PreAuthorization.fetch(
       c,
       address,
       programId,
-      getAccountInfoConfig,
+      getAccountInfoConfig
     );
     if (!account) {
       throw notFoundError;
@@ -185,14 +185,14 @@ export class PreAuthorization {
     address: PublicKey,
     programId: PublicKey,
     getAccountInfoConfig?: GetAccountInfoConfig,
-    notFoundError: Error = new Error("Account with address not found."),
+    notFoundError: Error = new Error("Account with address not found.")
   ): Promise<PreAuthorizationAccount | null> {
     return await PreAuthorization.fetchNonNullable(
       c,
       address,
       programId,
       getAccountInfoConfig,
-      notFoundError,
+      notFoundError
     ).then((a) => a?.data);
   }
 
@@ -201,14 +201,14 @@ export class PreAuthorization {
     address: PublicKey,
     programId: PublicKey,
     getAccountInfoConfig?: GetAccountInfoConfig,
-    notFoundError: Error = new Error("Account with address not found."),
+    notFoundError: Error = new Error("Account with address not found.")
   ): Promise<PreAuthorizationAccount> {
     return await PreAuthorization.fetchNonNullable(
       c,
       address,
       programId,
       getAccountInfoConfig,
-      notFoundError,
+      notFoundError
     ).then((a) => a.data);
   }
 

@@ -51,7 +51,7 @@ export class OneTime {
       OneTime: {
         amount_authorized: new BN(this.value.amountAuthorized.toString()),
         expiry_unix_timestamp: new BN(
-          this.value.expiryUnixTimestamp.toString(),
+          this.value.expiryUnixTimestamp.toString()
         ),
       },
     };
@@ -115,10 +115,10 @@ export class Recurring {
     return {
       Recurring: {
         repeat_frequency_seconds: new BN(
-          this.value.repeatFrequencySeconds.toString(),
+          this.value.repeatFrequencySeconds.toString()
         ),
         recurring_amount_authorized: new BN(
-          this.value.recurringAmountAuthorized.toString(),
+          this.value.recurringAmountAuthorized.toString()
         ),
         num_cycles:
           (this.value.numCycles && new BN(this.value.numCycles.toString())) ||
@@ -155,7 +155,7 @@ export function fromDecoded(obj: any): types.InitPreAuthorizationVariantKind {
 }
 
 export function fromJSON(
-  obj: types.InitPreAuthorizationVariantJSON,
+  obj: types.InitPreAuthorizationVariantJSON
 ): types.InitPreAuthorizationVariantKind {
   switch (obj.kind) {
     case "OneTime": {
@@ -179,7 +179,7 @@ export function layout(property?: string) {
   const ret = borsh.rustEnum([
     borsh.struct(
       [borsh.u64("amount_authorized"), borsh.i64("expiry_unix_timestamp")],
-      "OneTime",
+      "OneTime"
     ),
     borsh.struct(
       [
@@ -188,7 +188,7 @@ export function layout(property?: string) {
         borsh.option(borsh.u64(), "num_cycles"),
         borsh.bool("reset_every_cycle"),
       ],
-      "Recurring",
+      "Recurring"
     ),
   ]);
   if (property !== undefined) {

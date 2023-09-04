@@ -58,7 +58,7 @@ export class Debit {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: DebitInstruction,
+    readonly instructionData: DebitInstruction
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -68,7 +68,7 @@ export class Debit {
   static fromDecoded(
     programId: PublicKey,
     args: DebitArgs,
-    flattenedAccounts: PublicKey[],
+    flattenedAccounts: PublicKey[]
   ): Debit {
     const accounts = {
       debitAuthority: flattenedAccounts[0],
@@ -85,12 +85,12 @@ export class Debit {
   static decode(
     programId: PublicKey,
     ixData: Uint8Array,
-    flattenedAccounts: PublicKey[],
+    flattenedAccounts: PublicKey[]
   ): Debit {
     return Debit.fromDecoded(
       programId,
       layout.decode(ixData, Debit.identifier.length),
-      flattenedAccounts,
+      flattenedAccounts
     );
   }
 
@@ -140,7 +140,7 @@ export class Debit {
       {
         params: types.DebitParams.toEncodable(this.instructionData.args.params),
       },
-      buffer,
+      buffer
     );
     const data = Buffer.concat([Debit.identifier, buffer]).slice(0, 8 + len);
     const ix = new TransactionInstruction({
