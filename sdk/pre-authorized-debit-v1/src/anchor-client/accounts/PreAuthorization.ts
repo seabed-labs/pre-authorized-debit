@@ -5,21 +5,87 @@ import * as borsh from "@coral-xyz/borsh";
 import * as types from "../types";
 
 export interface PreAuthorizationAccount {
-  paused: boolean;
-  tokenAccount: PublicKey;
-  variant: types.PreAuthorizationVariantKind;
-  debitAuthority: PublicKey;
-  activationUnixTimestamp: bigint;
+  /**
+   * The `bump` is the canonical PDA bump when derived with seeds:
+   *       ['pre-authorization', token_account, debit_authority].
+   *       This field is initialized in `init_pre_authorization`.
+   *       This field is never updated in any instruction.
+   */
   bump: number;
+  /**
+   * If `paused === true`, then the `debit_authority` cannot debit via the `token_account`.
+   *       This field is initialized to `false` in `init_pre_authorization`.
+   *       This field can be updated by the `token_account.owner` in `update_pause_pre_authorization`.
+   */
+  paused: boolean;
+  /**
+   * The `token_account` is the account the `debit_authority` will be able to debit from.
+   *       This field is initialized in `init_pre_authorization`.
+   *       This field is never updated in any instruction.
+   */
+  tokenAccount: PublicKey;
+  /**
+   * The `variant` contains the data specific to a one-time
+   *       or recurring debit.
+   *       This field is initialized in `init_pre_authorization`.
+   *       This field is never updated in any instruction.
+   */
+  variant: types.PreAuthorizationVariantKind;
+  /**
+   * The `debit_authority` is the key that can debit from the `token_account`.
+   *       This field is initialized in `init_pre_authorization`.
+   *       This field is never updated in any instruction.
+   */
+  debitAuthority: PublicKey;
+  /**
+   * The `activation_unix_timestamp` represents when the debit_authority can next debit
+   *       from the `token_account`.
+   *       The field is initialized to __ in `init_pre_authorization`.
+   *       This field is updated in __ TODO(18f6ba).
+   */
+  activationUnixTimestamp: bigint;
 }
 
 export interface PreAuthorizationAccountJSON {
-  paused: boolean;
-  tokenAccount: string;
-  variant: types.PreAuthorizationVariantJSON;
-  debitAuthority: string;
-  activationUnixTimestamp: string;
+  /**
+   * The `bump` is the canonical PDA bump when derived with seeds:
+   *       ['pre-authorization', token_account, debit_authority].
+   *       This field is initialized in `init_pre_authorization`.
+   *       This field is never updated in any instruction.
+   */
   bump: number;
+  /**
+   * If `paused === true`, then the `debit_authority` cannot debit via the `token_account`.
+   *       This field is initialized to `false` in `init_pre_authorization`.
+   *       This field can be updated by the `token_account.owner` in `update_pause_pre_authorization`.
+   */
+  paused: boolean;
+  /**
+   * The `token_account` is the account the `debit_authority` will be able to debit from.
+   *       This field is initialized in `init_pre_authorization`.
+   *       This field is never updated in any instruction.
+   */
+  tokenAccount: string;
+  /**
+   * The `variant` contains the data specific to a one-time
+   *       or recurring debit.
+   *       This field is initialized in `init_pre_authorization`.
+   *       This field is never updated in any instruction.
+   */
+  variant: types.PreAuthorizationVariantJSON;
+  /**
+   * The `debit_authority` is the key that can debit from the `token_account`.
+   *       This field is initialized in `init_pre_authorization`.
+   *       This field is never updated in any instruction.
+   */
+  debitAuthority: string;
+  /**
+   * The `activation_unix_timestamp` represents when the debit_authority can next debit
+   *       from the `token_account`.
+   *       The field is initialized to __ in `init_pre_authorization`.
+   *       This field is updated in __ TODO(18f6ba).
+   */
+  activationUnixTimestamp: string;
 }
 
 export class PreAuthorization {
@@ -30,22 +96,22 @@ export class PreAuthorization {
   ]);
 
   static readonly layout = borsh.struct([
+    borsh.u8("bump"),
     borsh.bool("paused"),
     borsh.publicKey("tokenAccount"),
     types.PreAuthorizationVariant.layout("variant"),
     borsh.publicKey("debitAuthority"),
     borsh.i64("activationUnixTimestamp"),
-    borsh.u8("bump"),
   ]);
 
   constructor(accountData: PreAuthorizationAccount) {
     this.data = {
+      bump: accountData.bump,
       paused: accountData.paused,
       tokenAccount: accountData.tokenAccount,
       variant: accountData.variant,
       debitAuthority: accountData.debitAuthority,
       activationUnixTimestamp: accountData.activationUnixTimestamp,
-      bump: accountData.bump,
     };
   }
 
@@ -61,12 +127,12 @@ export class PreAuthorization {
     const dec = PreAuthorization.layout.decode(data.subarray(8));
 
     return new PreAuthorization({
+      bump: dec.bump,
       paused: dec.paused,
       tokenAccount: dec.tokenAccount,
       variant: types.PreAuthorizationVariant.fromDecoded(dec.variant),
       debitAuthority: dec.debitAuthority,
       activationUnixTimestamp: dec.activationUnixTimestamp,
-      bump: dec.bump,
     });
   }
 
@@ -140,20 +206,20 @@ export class PreAuthorization {
   static toJSON(data: PreAuthorizationAccount): PreAuthorizationAccountJSON {
     // convert fields to classes if needed
     const account = {
+      bump: data.bump,
       paused: data.paused,
       tokenAccount: data.tokenAccount,
       variant: data.variant,
       debitAuthority: data.debitAuthority,
       activationUnixTimestamp: data.activationUnixTimestamp,
-      bump: data.bump,
     };
     return {
+      bump: account.bump,
       paused: account.paused,
       tokenAccount: account.tokenAccount.toString(),
       variant: account.variant.toJSON(),
       debitAuthority: account.debitAuthority.toString(),
       activationUnixTimestamp: account.activationUnixTimestamp.toString(),
-      bump: account.bump,
     };
   }
 
@@ -163,12 +229,12 @@ export class PreAuthorization {
 
   static fromJSON(obj: PreAuthorizationAccountJSON): PreAuthorization {
     return new PreAuthorization({
+      bump: obj.bump,
       paused: obj.paused,
       tokenAccount: new PublicKey(obj.tokenAccount),
       variant: types.PreAuthorizationVariant.fromJSON(obj.variant),
       debitAuthority: new PublicKey(obj.debitAuthority),
       activationUnixTimestamp: BigInt(obj.activationUnixTimestamp),
-      bump: obj.bump,
     });
   }
 }

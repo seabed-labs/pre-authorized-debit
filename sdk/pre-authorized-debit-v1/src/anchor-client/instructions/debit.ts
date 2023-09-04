@@ -109,12 +109,12 @@ export class Debit {
       {
         pubkey: this.instructionData.accounts.tokenAccount,
         isSigner: false,
-        isWritable: false,
+        isWritable: true,
       },
       {
         pubkey: this.instructionData.accounts.destinationTokenAccount,
         isSigner: false,
-        isWritable: false,
+        isWritable: true,
       },
       {
         pubkey: this.instructionData.accounts.smartDelegate,
