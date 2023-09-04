@@ -6,19 +6,19 @@ import * as types from "../types";
 import * as borsh from "@coral-xyz/borsh";
 
 export interface InitPreAuthorizationParamsFields {
-  variant: types.PreAuthorizationVariantKind;
+  variant: types.InitPreAuthorizationVariantKind;
   debitAuthority: PublicKey;
   activationUnixTimestamp: bigint;
 }
 
 export interface InitPreAuthorizationParamsJSON {
-  variant: types.PreAuthorizationVariantJSON;
+  variant: types.InitPreAuthorizationVariantJSON;
   debitAuthority: string;
   activationUnixTimestamp: string;
 }
 
 export class InitPreAuthorizationParams {
-  readonly variant: types.PreAuthorizationVariantKind;
+  readonly variant: types.InitPreAuthorizationVariantKind;
   readonly debitAuthority: PublicKey;
   readonly activationUnixTimestamp: bigint;
 
@@ -31,7 +31,7 @@ export class InitPreAuthorizationParams {
   static layout(property?: string) {
     return borsh.struct(
       [
-        types.PreAuthorizationVariant.layout("variant"),
+        types.InitPreAuthorizationVariant.layout("variant"),
         borsh.publicKey("debitAuthority"),
         borsh.i64("activationUnixTimestamp"),
       ],
@@ -41,7 +41,7 @@ export class InitPreAuthorizationParams {
 
   static fromDecoded(obj: any) {
     return new InitPreAuthorizationParams({
-      variant: types.PreAuthorizationVariant.fromDecoded(obj.variant),
+      variant: types.InitPreAuthorizationVariant.fromDecoded(obj.variant),
       debitAuthority: obj.debitAuthority,
       activationUnixTimestamp: obj.activationUnixTimestamp,
     });
@@ -73,7 +73,7 @@ export class InitPreAuthorizationParams {
     obj: InitPreAuthorizationParamsJSON,
   ): InitPreAuthorizationParams {
     return new InitPreAuthorizationParams({
-      variant: types.PreAuthorizationVariant.fromJSON(obj.variant),
+      variant: types.InitPreAuthorizationVariant.fromJSON(obj.variant),
       debitAuthority: new PublicKey(obj.debitAuthority),
       activationUnixTimestamp: BigInt(obj.activationUnixTimestamp),
     });

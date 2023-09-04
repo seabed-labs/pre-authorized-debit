@@ -1,4 +1,5 @@
 import * as DebitAuthorizationType from "./DebitAuthorizationType";
+import * as InitPreAuthorizationVariant from "./InitPreAuthorizationVariant";
 import * as PreAuthorizationVariant from "./PreAuthorizationVariant";
 
 // This file was automatically generated. DO NOT MODIFY DIRECTLY.
@@ -37,6 +38,15 @@ export type DebitAuthorizationTypeKind =
 export type DebitAuthorizationTypeJSON =
   | DebitAuthorizationType.OneTimeJSON
   | DebitAuthorizationType.RecurringJSON;
+
+export { InitPreAuthorizationVariant };
+
+export type InitPreAuthorizationVariantKind =
+  | InitPreAuthorizationVariant.OneTime
+  | InitPreAuthorizationVariant.Recurring;
+export type InitPreAuthorizationVariantJSON =
+  | InitPreAuthorizationVariant.OneTimeJSON
+  | InitPreAuthorizationVariant.RecurringJSON;
 
 export { PreAuthorizationVariant };
 
