@@ -6,7 +6,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("HjJXoCqUmn6VQzXLqA1pEvWRZZcEMbD2HGixXKrs7DQj");
+declare_id!("Debit3fDrmgHiJpc5rhxi1YjsWtbupdSLaCRE1Xk7fhT");
 
 #[program]
 pub mod pre_authorized_debit_v1 {
