@@ -1,6 +1,6 @@
-import { spawn } from "node:child_process";
-import process from "node:process";
-import console from "node:console";
+const { spawn } = require("node:child_process");
+const process = require("node:process");
+const console = require("node:console");
 
 const isParallel = process.env.TEST_MODE !== "debug";
 const scope = process.argv[2] ? process.argv[2] : "**";

@@ -2,6 +2,8 @@
     "name": "@dcaf/pre-authorized-debit-v1",
     "packageManager": "yarn@3.6.0",
     "version": "0.1.0",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "scripts": {
         "build": "yarn build:anchor-client && yarn run tsc",
         "build:program": "cd ../../ && anchor build -p pre_authorized_debit_v1",
