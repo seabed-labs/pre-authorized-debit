@@ -1,0 +1,12 @@
+name: Program Tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Solana Anchor Test
+        uses: mrgnlabs/anchor-test-action@v0.5
