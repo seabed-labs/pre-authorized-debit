@@ -30,12 +30,12 @@ pub mod pre_authorized_debit_v1 {
     The `token_program` MUST be either the token program or token 22 program.
 
     Accounts expected by this instruction:
-      0. `[writable]` payer
-      1. `[]`         owner
-      2. `[writable]` token_account
-      3. `[writable]` smart_delegate
-      4. `[]`         token_program
-      5. `[]`         system_program
+        0. `[writable]` payer
+        1. `[]`         owner
+        2. `[writable]` token_account
+        3. `[writable]` smart_delegate
+        4. `[]`         token_program
+        5. `[]`         system_program
     */
     pub fn init_smart_delegate(ctx: Context<InitSmartDelegate>) -> Result<()> {
         handle_init_smart_delegate(ctx)
@@ -56,11 +56,11 @@ pub mod pre_authorized_debit_v1 {
     The `token_program` MUST be either the token program or token 22 program.
 
     Accounts expected by this instruction:
-      0. `[writable]` receiver: The receiver of the `smart_delegate` lamports.
-      1. `[]`         owner
-      2. `[writable]` token_account
-      3. `[writable]` smart_delegate
-      4. `[]`         token_program
+        0. `[writable]` receiver: The receiver of the `smart_delegate` lamports.
+        1. `[]`         owner
+        2. `[writable]` token_account
+        3. `[writable]` smart_delegate
+        4. `[]`         token_program
     */
     pub fn close_smart_delegate(ctx: Context<CloseSmartDelegate>) -> Result<()> {
         handle_close_smart_delegate(ctx)
@@ -87,11 +87,11 @@ pub mod pre_authorized_debit_v1 {
     The `pre_authorization.token_account` must be the same as `token_account`.
 
     Accounts expected by this instruction:
-      0. `[writable]` payer
-      1. `[]`         owner
-      2. `[writable]` token_account
-      3. `[writable]` pre_authorization
-      4. `[]`         system_program
+        0. `[writable]` payer
+        1. `[]`         owner
+        2. `[writable]` token_account
+        3. `[writable]` pre_authorization
+        4. `[]`         system_program
     */
     pub fn init_pre_authorization(
         ctx: Context<InitPreAuthorization>,
@@ -115,10 +115,10 @@ pub mod pre_authorized_debit_v1 {
     The `pre_authorization.token_account` must be the same as `token_account`.
 
     Accounts expected by this instruction:
-      0. `[writable]` receiver
-      1. `[]`         authority
-      2. `[]`         token_account
-      3. `[writable]` pre_authorization
+        0. `[writable]` receiver
+        1. `[]`         authority
+        2. `[]`         token_account
+        3. `[writable]` pre_authorization
     */
     pub fn close_pre_authorization(ctx: Context<ClosePreAuthorization>) -> Result<()> {
         handle_close_pre_authorization(ctx)
@@ -158,13 +158,13 @@ pub mod pre_authorized_debit_v1 {
     The `token_program` MUST equal the token program matching the `token_account`.
 
     Accounts expected by this instruction:
-      0. `[]`         debit_authority
-      1. `[]`         mint
-      2. `[writable]` token_account
-      3. `[writable]` destination_token_account
-      4. `[]`         smart_delegate
-      5. `[writable]` pre_authorization
-      6. `[]`         token_program
+        0. `[]`         debit_authority
+        1. `[]`         mint
+        2. `[writable]` token_account
+        3. `[writable]` destination_token_account
+        4. `[]`         smart_delegate
+        5. `[writable]` pre_authorization
+        6. `[]`         token_program
     */
     pub fn debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
         handle_debit(ctx, params)
@@ -180,9 +180,9 @@ pub mod pre_authorized_debit_v1 {
     The `pre_authorization.token_account` MUST equal the `token_account`.
 
     Accounts expected by this instruction:
-      0. `[writable]` owner
-      2. `[]`         token_account
-      3. `[writable]` pre_authorization
+        0. `[writable]` owner
+        2. `[]`         token_account
+        3. `[writable]` pre_authorization
     */
     pub fn update_pause_pre_authorization(
         ctx: Context<UpdatePausePreAuthorization>,
