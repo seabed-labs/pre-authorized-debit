@@ -137,7 +137,7 @@ export function testRecurringDebit(
         tokenProgramId,
       );
 
-      smartDelegatePubkey = deriveSmartDelegate(
+      [smartDelegatePubkey] = deriveSmartDelegate(
         tokenAccountPubkey,
         program.programId,
       );
@@ -971,7 +971,7 @@ export function testRecurringDebit(
           tokenProgramId,
         );
 
-        const newSmartDelegatePubkey = deriveSmartDelegate(
+        const [newSmartDelegatePubkey] = deriveSmartDelegate(
           newTokenAccountPubkey,
           program.programId,
         );

@@ -106,7 +106,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           undefined,
           tokenProgramId,
         );
-        smartDelegate = deriveSmartDelegate(
+        [smartDelegate] = deriveSmartDelegate(
           validTokenAccount,
           program.programId,
         );
@@ -267,7 +267,10 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID,
     );
-    const smartDelegate = deriveSmartDelegate(tokenAccount, program.programId);
+    const [smartDelegate] = deriveSmartDelegate(
+      tokenAccount,
+      program.programId,
+    );
     await program.methods
       .initSmartDelegate()
       .accounts({
@@ -330,7 +333,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         TOKEN_PROGRAM_ID,
       ),
     ]);
-    const smartDelegate = deriveSmartDelegate(
+    const [smartDelegate] = deriveSmartDelegate(
       validTokenAccount,
       program.programId,
     );

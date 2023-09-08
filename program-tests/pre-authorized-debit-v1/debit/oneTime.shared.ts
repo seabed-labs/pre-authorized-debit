@@ -130,7 +130,7 @@ export function testOneTimeDebit(
         tokenProgramId,
       );
 
-      smartDelegatePubkey = deriveSmartDelegate(
+      [smartDelegatePubkey] = deriveSmartDelegate(
         tokenAccountPubkey,
         program.programId,
       );
@@ -467,7 +467,7 @@ export function testOneTimeDebit(
         tokenProgramId,
       );
 
-      const newSmartDelegatePubkey = deriveSmartDelegate(
+      const [newSmartDelegatePubkey] = deriveSmartDelegate(
         newTokenAccountPubkey,
         program.programId,
       );
