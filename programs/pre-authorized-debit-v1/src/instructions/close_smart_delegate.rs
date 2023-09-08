@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program_option::COption;
 use anchor_spl::token_interface::{self, Revoke, TokenAccount, TokenInterface};
 
 use crate::{errors::CustomProgramError, state::smart_delegate::SmartDelegate};
@@ -34,14 +35,18 @@ pub struct CloseSmartDelegate<'info> {
 }
 
 pub fn handle_close_smart_delegate(ctx: Context<CloseSmartDelegate>) -> Result<()> {
-    // idempotent
-    token_interface::revoke(CpiContext::new(
-        ctx.accounts.token_program.to_account_info(),
-        Revoke {
-            source: ctx.accounts.token_account.to_account_info(),
-            authority: ctx.accounts.owner.to_account_info(),
-        },
-    ))?;
+    if let COption::Some(token_account_delegate) = ctx.accounts.token_account.delegate {
+        if token_account_delegate.eq(&ctx.accounts.smart_delegate.key()) {
+            // idempotent
+            token_interface::revoke(CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                Revoke {
+                    source: ctx.accounts.token_account.to_account_info(),
+                    authority: ctx.accounts.owner.to_account_info(),
+                },
+            ))?;
+        }
+    }
 
     emit!(SmartDelegateClosed {
         receiver: ctx.accounts.receiver.key(),
