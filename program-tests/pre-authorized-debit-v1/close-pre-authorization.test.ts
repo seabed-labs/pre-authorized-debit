@@ -60,6 +60,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
     expectedDebitAuthority: PublicKey,
     expectedCloseAuthority: PublicKey,
     expectedOwner: PublicKey,
+    expectedReceiver: PublicKey,
     expectedTokenAccount: PublicKey,
     expectedPreAuthorization: PublicKey,
   ): Promise<void> {
@@ -93,7 +94,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
       expectedOwner.toString(),
     );
     expect(closePreAuthEventData.receiver!.toString()).to.equal(
-      expectedOwner.toString(),
+      expectedReceiver.toString(),
     );
     expect(closePreAuthEventData.tokenAccount!.toString()).to.equal(
       expectedTokenAccount.toString(),
@@ -219,6 +220,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   debitAuthority.publicKey,
                   closeAuthorityKeypair.publicKey,
                   owner.publicKey,
+                  owner.publicKey,
                   tokenAccount,
                   preAuthorization,
                 );
@@ -244,6 +246,57 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                 );
               });
             });
+          });
+
+          it("should allow using receiver !== token_account.owner when token_account.owner signs", async () => {
+            const tokenAccountDataBefore = await getAccount(
+              provider.connection,
+              tokenAccount,
+              undefined,
+              tokenProgramId,
+            );
+            expect(tokenAccountDataBefore.amount.toString()).to.equal(
+              "1000000",
+            );
+
+            const newReceiver = new Keypair();
+            const signature = await program.methods
+              .closePreAuthorization()
+              .accounts({
+                receiver: newReceiver.publicKey,
+                authority: owner.publicKey,
+                tokenAccount: tokenAccount,
+                preAuthorization: preAuthorization,
+              })
+              .signers([owner])
+              .rpc();
+
+            await verifyClosePreAuthorizationEvent(
+              signature,
+              preAuthType as "one time" | "recurring",
+              debitAuthority.publicKey,
+              owner.publicKey,
+              owner.publicKey,
+              newReceiver.publicKey,
+              tokenAccount,
+              preAuthorization,
+            );
+
+            // verify sol balances
+            const receiverAccountInfoAfter =
+              await provider.connection.getAccountInfo(newReceiver.publicKey);
+            assert(receiverAccountInfoAfter);
+            // should refund the receiver
+            expect(receiverAccountInfoAfter.lamports).to.be.greaterThan(0);
+
+            // verify token account balance is unchanged
+            const tokenAccountDataAfter = await getAccount(
+              provider.connection,
+              tokenAccount,
+              undefined,
+              tokenProgramId,
+            );
+            expect(tokenAccountDataAfter.amount.toString()).to.equal("1000000");
           });
 
           it("should throw an error if an token account does not match the pre authorization", async () => {
@@ -289,17 +342,17 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
             );
           });
 
-          it("should throw if the receiver is not the token account owner", async () => {
+          it("should throw if the receiver is not the token account owner when pre_authorization.debit_authority signs", async () => {
             await expect(
               program.methods
                 .closePreAuthorization()
                 .accounts({
                   receiver: mintAuthority.publicKey,
-                  authority: mintAuthority.publicKey,
+                  authority: debitAuthority.publicKey,
                   tokenAccount: tokenAccount,
                   preAuthorization: preAuthorization,
                 })
-                .signers([mintAuthority])
+                .signers([debitAuthority])
                 .rpc(),
             ).to.eventually.be.rejectedWith(
               /AnchorError caused by account: receiver. Error Code: OnlyTokenAccountOwnerCanReceiveClosePreAuthFunds. Error Number: 6005. Error Message: Only token account owner can receive funds from closing pre-authorization account./,
