@@ -108,14 +108,14 @@ __metadata:
 
 "@dcaf/pre-authorized-debit-v1@file:../sdk/pre-authorized-debit-v1::locator=%40dcaf%2Fprogram-library-scripts%40workspace%3Ascripts":
   version: 0.1.0
-  resolution: "@dcaf/pre-authorized-debit-v1@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=96cfdb&locator=%40dcaf%2Fprogram-library-scripts%40workspace%3Ascripts"
+  resolution: "@dcaf/pre-authorized-debit-v1@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=4e9ff3&locator=%40dcaf%2Fprogram-library-scripts%40workspace%3Ascripts"
   dependencies:
     "@coral-xyz/anchor": ^0.28.0
     "@coral-xyz/borsh": ^0.28.0
     "@solana/spl-token": ^0.3.8
     "@solana/web3.js": ^1.78.4
     bn.js: ^5.2.1
-  checksum: f1769755671f8721915dea961eb9a858a1e976cbe92024708b5d69b00b1d45899c15a1274500cbf4805e6d561ba5d676a8d88b7dc919b8664b5cccae6bc32fd5
+  checksum: a8b672aca2cad0d6c9d4947d623c8d4579cb63632b423124a809f1fcb64d566f87c2d1231b9ac368171cee87d5b3c41546c2321d31d0ba9ac5434a850ef49f35
   languageName: node
   linkType: hard
 
@@ -3822,6 +3822,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^6.6.0
     "@typescript-eslint/parser": ^6.6.0
     add: ^2.0.6
+    chai-as-promised: ^7.1.1
     eslint: ^8.48.0
     eslint-config-prettier: ^9.0.0
     eslint-config-standard: ^17.1.0
