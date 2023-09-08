@@ -10,8 +10,6 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
-      - name: Husky Workaround
-        run: git config --global --add safe.directory /github/workspace
       - name: Solana Anchor Test
         uses: dcaf-labs/anchor-test-action@main
         with:
