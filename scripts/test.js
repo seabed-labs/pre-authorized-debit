@@ -15,7 +15,6 @@ let testsFailed = false;
 
 const tests = spawn(command, args, {
   cwd: process.cwd(),
-  shell: true,
   detached: false,
   env: {
     ...process.env,
