@@ -1,4 +1,4 @@
-import { AnchorProvider, Provider, Event, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, Event, Program } from "@coral-xyz/anchor";
 import {
   Connection,
   MAX_SEED_LENGTH,
@@ -145,7 +145,7 @@ function deriveNthPda(
 ): [PublicKey, number] {
   let nonce = 255;
   let numFound = 0;
-  while (nonce != 0) {
+  while (nonce !== 0) {
     try {
       const seedsWithNonce = seeds.concat(Buffer.from([nonce]));
       const address = createProgramAddressSync(seedsWithNonce, programId);
@@ -164,9 +164,9 @@ function deriveNthPda(
   throw new Error(`Unable to find a viable program address nonce`);
 }
 
-///////////////////////////////
+/// ////////////////////////////
 // The functions below where copied from solana web3.js
-///////////////////////////////
+/// ////////////////////////////
 
 function createProgramAddressSync(
   seeds: Array<Buffer | Uint8Array>,

@@ -25,6 +25,7 @@ import {
   createAccount,
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
+import { PreAuthorizationCreatedEventData } from "../../sdk/pre-authorized-debit-v1/src";
 
 describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   const program =
@@ -155,7 +156,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
                 payer: payer.publicKey,
                 owner: owner.publicKey,
                 tokenAccount: validTokenAccount,
-                preAuthorization: preAuthorization,
+                preAuthorization,
                 systemProgram: SystemProgram.programId,
               })
               .signers([owner, payer])
@@ -168,7 +169,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             const events = [...eventGenerator];
             expect(events.length).to.equal(1);
             const [initPreAuthEvent] = events;
-            expect(initPreAuthEvent).to.not.be.null;
+            expect(initPreAuthEvent).to.not.equal(null);
             if (preAuthType === "one time") {
               expect(initPreAuthEvent.name).to.equal(
                 "OneTimePreAuthorizationCreated",
@@ -179,7 +180,8 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               );
             }
             expect(Object.keys(initPreAuthEvent.data).length).to.equal(1);
-            const initPreAuthEventData = initPreAuthEvent.data.data as any;
+            const initPreAuthEventData = initPreAuthEvent.data
+              .data as PreAuthorizationCreatedEventData;
             expect(Object.keys(initPreAuthEventData).length).to.equal(5);
 
             expect(initPreAuthEventData.debitAuthority!.toString()).to.equal(
@@ -200,7 +202,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             );
 
             // verify sol balances
-            let [payerAccountInfoAfter, ownerAccountInfoAfter] =
+            const [payerAccountInfoAfter, ownerAccountInfoAfter] =
               await Promise.all([
                 provider.connection.getAccountInfo(payer.publicKey),
                 provider.connection.getAccountInfo(owner.publicKey),
@@ -255,7 +257,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               payer: payer.publicKey,
               owner: owner.publicKey,
               tokenAccount: validTokenAccount,
-              preAuthorization: preAuthorization,
+              preAuthorization,
               systemProgram: SystemProgram.programId,
             })
             .signers([payer])
@@ -288,7 +290,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               payer: payer.publicKey,
               owner: debitAuthority.publicKey,
               tokenAccount: validTokenAccount,
-              preAuthorization: preAuthorization,
+              preAuthorization,
               systemProgram: SystemProgram.programId,
             })
             .signers([debitAuthority, payer])
@@ -321,7 +323,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               payer: payer.publicKey,
               owner: owner.publicKey,
               tokenAccount: validTokenAccount,
-              preAuthorization: preAuthorization,
+              preAuthorization,
               systemProgram: SystemProgram.programId,
             })
             .signers([owner, payer])
@@ -354,7 +356,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               payer: payer.publicKey,
               owner: owner.publicKey,
               tokenAccount: validTokenAccount,
-              preAuthorization: preAuthorization,
+              preAuthorization,
               systemProgram: tokenProgramId,
             })
             .signers([owner, payer])

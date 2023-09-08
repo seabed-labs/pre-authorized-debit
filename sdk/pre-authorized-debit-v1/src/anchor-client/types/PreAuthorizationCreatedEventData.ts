@@ -45,7 +45,7 @@ export class PreAuthorizationCreatedEventData {
         borsh.publicKey("tokenAccount"),
         borsh.publicKey("preAuthorization"),
       ],
-      property
+      property,
     );
   }
 
@@ -84,7 +84,7 @@ export class PreAuthorizationCreatedEventData {
   }
 
   static fromJSON(
-    obj: PreAuthorizationCreatedEventDataJSON
+    obj: PreAuthorizationCreatedEventDataJSON,
   ): PreAuthorizationCreatedEventData {
     return new PreAuthorizationCreatedEventData({
       debitAuthority: new PublicKey(obj.debitAuthority),

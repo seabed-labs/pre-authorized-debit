@@ -24,6 +24,7 @@ import {
   fundAccounts,
   waitForTxToConfirm,
 } from "./utils";
+import { PreAuthorizationClosedEventDataFields } from "../../sdk/pre-authorized-debit-v1/src";
 
 // TODO(Mocha): Split this test file into multiple test files to take
 // advantage of parallel test execution
@@ -72,7 +73,6 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
     const events = [...eventGenerator];
     expect(events.length).to.equal(1);
     const [closePreAuthEvent] = events;
-    expect(closePreAuthEvent).to.not.be.null;
     if (preAuthType === "one time") {
       expect(closePreAuthEvent.name).to.equal("OneTimePreAuthorizationClosed");
     } else {
@@ -81,25 +81,27 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
       );
     }
     expect(Object.keys(closePreAuthEvent.data).length).to.equal(1);
-    const closePreAuthEventData = closePreAuthEvent.data.data as any;
+    const closePreAuthEventData = closePreAuthEvent.data
+      .data as PreAuthorizationClosedEventDataFields;
+    expect(closePreAuthEventData).to.not.equal(null);
     expect(Object.keys(closePreAuthEventData).length).to.equal(6);
 
-    expect(closePreAuthEventData.debitAuthority!.toString()).to.equal(
+    expect(closePreAuthEventData.debitAuthority.toString()).to.equal(
       expectedDebitAuthority.toString(),
     );
-    expect(closePreAuthEventData.closingAuthority!.toString()).to.equal(
+    expect(closePreAuthEventData.closingAuthority.toString()).to.equal(
       expectedCloseAuthority.toString(),
     );
-    expect(closePreAuthEventData.tokenAccountOwner!.toString()).to.equal(
+    expect(closePreAuthEventData.tokenAccountOwner.toString()).to.equal(
       expectedOwner.toString(),
     );
-    expect(closePreAuthEventData.receiver!.toString()).to.equal(
+    expect(closePreAuthEventData.receiver.toString()).to.equal(
       expectedReceiver.toString(),
     );
-    expect(closePreAuthEventData.tokenAccount!.toString()).to.equal(
+    expect(closePreAuthEventData.tokenAccount.toString()).to.equal(
       expectedTokenAccount.toString(),
     );
-    expect(closePreAuthEventData.preAuthorization!.toString()).to.equal(
+    expect(closePreAuthEventData.preAuthorization.toString()).to.equal(
       expectedPreAuthorization.toString(),
     );
   }
@@ -177,8 +179,8 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               .accounts({
                 payer: mintAuthority.publicKey,
                 owner: owner.publicKey,
-                tokenAccount: tokenAccount,
-                preAuthorization: preAuthorization,
+                tokenAccount,
+                preAuthorization,
                 systemProgram: SystemProgram.programId,
               })
               .signers([owner, mintAuthority])
@@ -209,8 +211,8 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   .accounts({
                     receiver: owner.publicKey,
                     authority: closeAuthorityKeypair.publicKey,
-                    tokenAccount: tokenAccount,
-                    preAuthorization: preAuthorization,
+                    tokenAccount,
+                    preAuthorization,
                   })
                   .signers([closeAuthorityKeypair])
                   .rpc();
@@ -265,8 +267,8 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               .accounts({
                 receiver: newReceiver.publicKey,
                 authority: owner.publicKey,
-                tokenAccount: tokenAccount,
-                preAuthorization: preAuthorization,
+                tokenAccount,
+                preAuthorization,
               })
               .signers([owner])
               .rpc();
@@ -316,7 +318,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   receiver: owner.publicKey,
                   authority: owner.publicKey,
                   tokenAccount: newTokenAccount,
-                  preAuthorization: preAuthorization,
+                  preAuthorization,
                 })
                 .signers([owner])
                 .rpc(),
@@ -332,8 +334,8 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                 .accounts({
                   receiver: owner.publicKey,
                   authority: mintAuthority.publicKey,
-                  tokenAccount: tokenAccount,
-                  preAuthorization: preAuthorization,
+                  tokenAccount,
+                  preAuthorization,
                 })
                 .signers([mintAuthority])
                 .rpc(),
@@ -349,8 +351,8 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                 .accounts({
                   receiver: mintAuthority.publicKey,
                   authority: debitAuthority.publicKey,
-                  tokenAccount: tokenAccount,
-                  preAuthorization: preAuthorization,
+                  tokenAccount,
+                  preAuthorization,
                 })
                 .signers([debitAuthority])
                 .rpc(),

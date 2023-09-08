@@ -8,8 +8,8 @@
     "packageManager": "yarn@3.6.0",
     "scripts": {
         "postinstall": "husky install",
-        "lint:fix": "eslint --fix",
-        "lint": "eslint",
+        "lint:fix": "eslint \"*/**/*{.js,.ts}\" --fix && prettier \"*/**/*{.js,.ts}\" --write",
+        "lint": "eslint \"*/**/*{.js,.ts}\" && prettier \"*/**/*{.js,.ts}\" --check",
         "test": "cargo test && anchor test"
     },
     "devDependencies": {
@@ -21,6 +21,7 @@
         "eslint-config-prettier": "^9.0.0",
         "eslint-config-standard": "^17.1.0",
         "eslint-plugin-import": "^2.28.1",
+        "eslint-plugin-n": "^16.0.2",
         "eslint-plugin-node": "^11.1.0",
         "eslint-plugin-promise": "^6.1.1",
         "husky": "^8.0.3",

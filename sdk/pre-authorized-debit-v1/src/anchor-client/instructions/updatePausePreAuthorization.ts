@@ -66,7 +66,7 @@ export class UpdatePausePreAuthorization {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: UpdatePausePreAuthorizationInstruction
+    readonly instructionData: UpdatePausePreAuthorizationInstruction,
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -76,7 +76,7 @@ export class UpdatePausePreAuthorization {
   static fromDecoded(
     programId: PublicKey,
     args: UpdatePausePreAuthorizationArgs,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): UpdatePausePreAuthorization {
     const accounts = {
       owner: flattenedAccounts[0],
@@ -89,12 +89,12 @@ export class UpdatePausePreAuthorization {
   static decode(
     programId: PublicKey,
     ixData: Uint8Array,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): UpdatePausePreAuthorization {
     return UpdatePausePreAuthorization.fromDecoded(
       programId,
       layout.decode(ixData, UpdatePausePreAuthorization.identifier.length),
-      flattenedAccounts
+      flattenedAccounts,
     );
   }
 
@@ -123,10 +123,10 @@ export class UpdatePausePreAuthorization {
     const len = layout.encode(
       {
         params: types.UpdatePausePreAuthorizationParams.toEncodable(
-          this.instructionData.args.params
+          this.instructionData.args.params,
         ),
       },
-      buffer
+      buffer,
     );
     const data = Buffer.concat([
       UpdatePausePreAuthorization.identifier,

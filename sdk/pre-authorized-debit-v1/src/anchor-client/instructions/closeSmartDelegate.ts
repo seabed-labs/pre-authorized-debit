@@ -65,7 +65,7 @@ export class CloseSmartDelegate {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: CloseSmartDelegateInstruction
+    readonly instructionData: CloseSmartDelegateInstruction,
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -74,7 +74,7 @@ export class CloseSmartDelegate {
 
   static fromDecoded(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): CloseSmartDelegate {
     const accounts = {
       receiver: flattenedAccounts[0],
@@ -88,7 +88,7 @@ export class CloseSmartDelegate {
 
   static decode(
     programId: PublicKey,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): CloseSmartDelegate {
     return CloseSmartDelegate.fromDecoded(programId, flattenedAccounts);
   }

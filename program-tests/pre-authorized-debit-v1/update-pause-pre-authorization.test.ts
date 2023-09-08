@@ -23,6 +23,7 @@ import {
   fundAccounts,
   waitForTxToConfirm,
 } from "./utils";
+import { PausePreAuthorizationEventData } from "../../sdk/pre-authorized-debit-v1/src";
 
 describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
   const program =
@@ -54,14 +55,15 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
     const events = [...eventGenerator];
     expect(events.length).to.equal(1);
     const [pausePreAuthEvent] = events;
-    expect(pausePreAuthEvent).to.not.be.null;
+    expect(pausePreAuthEvent).to.not.equal(null);
     if (newPausedValue) {
       expect(pausePreAuthEvent.name).to.equal("PreAuthorizationPaused");
     } else {
       expect(pausePreAuthEvent.name).to.equal("PreAuthorizationUnpaused");
     }
     expect(Object.keys(pausePreAuthEvent.data).length).to.equal(1);
-    const pausePreAuthEventData = pausePreAuthEvent.data.data as any;
+    const pausePreAuthEventData = pausePreAuthEvent.data
+      .data as PausePreAuthorizationEventData;
     expect(Object.keys(pausePreAuthEventData).length).to.equal(4);
     expect(pausePreAuthEventData.owner!.toString()).to.equal(
       ownerPublicKey.toString(),
@@ -191,8 +193,8 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
               .accounts({
                 payer: mintAuthority.publicKey,
                 owner: owner.publicKey,
-                tokenAccount: tokenAccount,
-                preAuthorization: preAuthorization,
+                tokenAccount,
+                preAuthorization,
                 systemProgram: SystemProgram.programId,
               })
               .signers([owner, mintAuthority])
@@ -212,8 +214,8 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
                   })
                   .accounts({
                     owner: owner.publicKey,
-                    tokenAccount: tokenAccount,
-                    preAuthorization: preAuthorization,
+                    tokenAccount,
+                    preAuthorization,
                   })
                   .signers([owner])
                   .rpc();
@@ -239,8 +241,8 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
                   })
                   .accounts({
                     owner: owner.publicKey,
-                    tokenAccount: tokenAccount,
-                    preAuthorization: preAuthorization,
+                    tokenAccount,
+                    preAuthorization,
                   })
                   .signers([owner])
                   .rpc();
@@ -268,8 +270,8 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
                   })
                   .accounts({
                     owner: owner.publicKey,
-                    tokenAccount: tokenAccount,
-                    preAuthorization: preAuthorization,
+                    tokenAccount,
+                    preAuthorization,
                   })
                   .signers([owner])
                   .rpc();
@@ -295,8 +297,8 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
                   })
                   .accounts({
                     owner: owner.publicKey,
-                    tokenAccount: tokenAccount,
-                    preAuthorization: preAuthorization,
+                    tokenAccount,
+                    preAuthorization,
                   })
                   .signers([owner])
                   .rpc();
@@ -329,7 +331,7 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
                 .accounts({
                   owner: owner.publicKey,
                   tokenAccount: newTokenAccount,
-                  preAuthorization: preAuthorization,
+                  preAuthorization,
                 })
                 .signers([owner])
                 .rpc(),
@@ -346,8 +348,8 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
                 })
                 .accounts({
                   owner: debitAuthority.publicKey,
-                  tokenAccount: tokenAccount,
-                  preAuthorization: preAuthorization,
+                  tokenAccount,
+                  preAuthorization,
                 })
                 .signers([debitAuthority])
                 .rpc(),

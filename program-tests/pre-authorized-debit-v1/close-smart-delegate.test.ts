@@ -61,7 +61,6 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
     const events = [...eventGenerator];
     expect(events.length).to.equal(1);
     const [smartDelegateEvent] = events;
-    expect(smartDelegateEvent).to.not.be.null;
     expect(smartDelegateEvent.name).to.equal("SmartDelegateClosed");
     expect(Object.keys(smartDelegateEvent.data).length).to.equal(5);
     expect(smartDelegateEvent.data.receiver!.toString()).to.equal(
@@ -117,7 +116,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
             payer: receiver.publicKey,
             owner: owner.publicKey,
             tokenAccount: validTokenAccount,
-            smartDelegate: smartDelegate,
+            smartDelegate,
             tokenProgram: tokenProgramId,
             systemProgram: SystemProgram.programId,
           })
@@ -132,7 +131,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           undefined,
           tokenProgramId,
         );
-        expect(tokenAccountDataBefore.delegate).to.not.be.null;
+        expect(tokenAccountDataBefore.delegate).to.not.equal(null);
         expect(tokenAccountDataBefore.delegatedAmount.toString()).to.not.equal(
           "0",
         );
@@ -149,7 +148,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
             receiver: receiver.publicKey,
             owner: owner.publicKey,
             tokenAccount: validTokenAccount,
-            smartDelegate: smartDelegate,
+            smartDelegate,
             tokenProgram: tokenProgramId,
           })
           .signers([owner])
@@ -165,7 +164,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         );
 
         // verify sol balances
-        let [receiverAccountInfoAfter, ownerAccountInfoAfter] =
+        const [receiverAccountInfoAfter, ownerAccountInfoAfter] =
           await Promise.all([
             provider.connection.getAccountInfo(receiver.publicKey),
             provider.connection.getAccountInfo(owner.publicKey),
@@ -182,7 +181,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         // verify smart delegate account closed
         const smartDelegateAccount =
           await provider.connection.getAccountInfo(smartDelegate);
-        expect(smartDelegateAccount).to.be.null;
+        expect(smartDelegateAccount).to.equal(null);
 
         // verify revoke
         const tokenAccountDataAfter = await getAccount(
@@ -191,7 +190,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           undefined,
           tokenProgramId,
         );
-        expect(tokenAccountDataAfter.delegate).to.be.null;
+        expect(tokenAccountDataAfter.delegate).to.equal(null);
         expect(tokenAccountDataAfter.delegatedAmount.toString()).to.equal("0");
       });
 
@@ -216,7 +215,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
             receiver: receiver.publicKey,
             owner: owner.publicKey,
             tokenAccount: validTokenAccount,
-            smartDelegate: smartDelegate,
+            smartDelegate,
             tokenProgram: tokenProgramId,
           })
           .signers([owner])
@@ -274,8 +273,8 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
       .accounts({
         payer: receiver.publicKey,
         owner: owner.publicKey,
-        tokenAccount: tokenAccount,
-        smartDelegate: smartDelegate,
+        tokenAccount,
+        smartDelegate,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
@@ -289,8 +288,8 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           // swap receiver and owner
           receiver: owner.publicKey,
           owner: receiver.publicKey,
-          tokenAccount: tokenAccount,
-          smartDelegate: smartDelegate,
+          tokenAccount,
+          smartDelegate,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([receiver])
@@ -341,7 +340,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         payer: receiver.publicKey,
         owner: owner.publicKey,
         tokenAccount: validTokenAccount,
-        smartDelegate: smartDelegate,
+        smartDelegate,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })
@@ -355,7 +354,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           receiver: receiver.publicKey,
           owner: owner.publicKey,
           tokenAccount: invalidTokenAccount,
-          smartDelegate: smartDelegate,
+          smartDelegate,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .signers([owner])

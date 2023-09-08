@@ -40,7 +40,7 @@ export class PausePreAuthorizationEventData {
         borsh.publicKey("preAuthorization"),
         borsh.bool("newPausedValue"),
       ],
-      property
+      property,
     );
   }
 
@@ -76,7 +76,7 @@ export class PausePreAuthorizationEventData {
   }
 
   static fromJSON(
-    obj: PausePreAuthorizationEventDataJSON
+    obj: PausePreAuthorizationEventDataJSON,
   ): PausePreAuthorizationEventData {
     return new PausePreAuthorizationEventData({
       owner: new PublicKey(obj.owner),

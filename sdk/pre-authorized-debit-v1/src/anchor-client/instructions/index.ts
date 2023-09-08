@@ -42,7 +42,7 @@ export interface InstructionHandler<T> {
   closePreAuthorizationIxHandler(ix: ClosePreAuthorization): Promise<T>;
   debitIxHandler(ix: Debit): Promise<T>;
   updatePausePreAuthorizationIxHandler(
-    ix: UpdatePausePreAuthorization
+    ix: UpdatePausePreAuthorization,
   ): Promise<T>;
 }
 
@@ -50,7 +50,7 @@ export async function processInstruction<T>(
   programId: PublicKey,
   ixData: Uint8Array,
   accounts: PublicKey[],
-  instructionHandler: InstructionHandler<T>
+  instructionHandler: InstructionHandler<T>,
 ): Promise<T | undefined> {
   const ixDataBuff = Buffer.from(ixData);
   if (InitSmartDelegate.isIdentifierEqual(ixDataBuff)) {
@@ -65,7 +65,7 @@ export async function processInstruction<T>(
     const decodedIx = InitPreAuthorization.decode(
       programId,
       ixDataBuff,
-      accounts
+      accounts,
     );
     return await instructionHandler.initPreAuthorizationIxHandler(decodedIx);
   }
@@ -81,10 +81,10 @@ export async function processInstruction<T>(
     const decodedIx = UpdatePausePreAuthorization.decode(
       programId,
       ixDataBuff,
-      accounts
+      accounts,
     );
     return await instructionHandler.updatePausePreAuthorizationIxHandler(
-      decodedIx
+      decodedIx,
     );
   }
   return undefined;

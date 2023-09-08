@@ -83,7 +83,7 @@ export class InitPreAuthorization {
 
   constructor(
     readonly programId: PublicKey,
-    readonly instructionData: InitPreAuthorizationInstruction
+    readonly instructionData: InitPreAuthorizationInstruction,
   ) {}
 
   static isIdentifierEqual(ixData: Buffer): boolean {
@@ -93,7 +93,7 @@ export class InitPreAuthorization {
   static fromDecoded(
     programId: PublicKey,
     args: InitPreAuthorizationArgs,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): InitPreAuthorization {
     const accounts = {
       payer: flattenedAccounts[0],
@@ -108,12 +108,12 @@ export class InitPreAuthorization {
   static decode(
     programId: PublicKey,
     ixData: Uint8Array,
-    flattenedAccounts: PublicKey[]
+    flattenedAccounts: PublicKey[],
   ): InitPreAuthorization {
     return InitPreAuthorization.fromDecoded(
       programId,
       layout.decode(ixData, InitPreAuthorization.identifier.length),
-      flattenedAccounts
+      flattenedAccounts,
     );
   }
 
@@ -152,14 +152,14 @@ export class InitPreAuthorization {
     const len = layout.encode(
       {
         params: types.InitPreAuthorizationParams.toEncodable(
-          this.instructionData.args.params
+          this.instructionData.args.params,
         ),
       },
-      buffer
+      buffer,
     );
     const data = Buffer.concat([InitPreAuthorization.identifier, buffer]).slice(
       0,
-      8 + len
+      8 + len,
     );
     const ix = new TransactionInstruction({
       keys: this.toAccountMetas(),

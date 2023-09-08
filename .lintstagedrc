@@ -1,5 +1,5 @@
 {
-  "*.js": ["yarn run prettier --write"],
-  "*.ts": ["yarn run prettier --write"],
+  "*.js": ["yarn run eslint --fix", "yarn run prettier --write"],
+  "*.ts": ["yarn run eslint --fix", "yarn run prettier --write"],
   "*.rs": ["cargo lint:fix:clippy", "cargo lint:fix:fmt"]
 }

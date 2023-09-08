@@ -46,7 +46,7 @@ export class LastDebitedCycleBeforeCurrentCycle extends Error {
 
   constructor(readonly logs?: string[]) {
     super(
-      "6002: Last debited cycle is after current debited cycle (invalid state)"
+      "6002: Last debited cycle is after current debited cycle (invalid state)",
     );
   }
 }
@@ -82,7 +82,7 @@ export class OnlyTokenAccountOwnerCanReceiveClosePreAuthFunds extends Error {
 
   constructor(readonly logs?: string[]) {
     super(
-      "6005: Only token account owner can receive funds from closing pre-authorization account"
+      "6005: Only token account owner can receive funds from closing pre-authorization account",
     );
   }
 }
@@ -107,7 +107,7 @@ export class PreAuthorizationCloseUnauthorized extends Error {
 
   constructor(readonly logs?: string[]) {
     super(
-      "6007: Pre-authorization can only be closed by debit_authority or token_account.owner"
+      "6007: Pre-authorization can only be closed by debit_authority or token_account.owner",
     );
   }
 }
@@ -143,7 +143,7 @@ export class DebitUnauthorized extends Error {
 
   constructor(readonly logs?: string[]) {
     super(
-      "6010: Only pre_authorization.debit_authority is authorized to debit funds using pre-authorizations"
+      "6010: Only pre_authorization.debit_authority is authorized to debit funds using pre-authorizations",
     );
   }
 }

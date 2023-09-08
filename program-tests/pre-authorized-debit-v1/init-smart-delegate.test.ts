@@ -90,8 +90,8 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           .accounts({
             payer: payer.publicKey,
             owner: owner.publicKey,
-            tokenAccount: tokenAccount,
-            smartDelegate: smartDelegate,
+            tokenAccount,
+            smartDelegate,
             tokenProgram: tokenProgramId,
             systemProgram: SystemProgram.programId,
           })
@@ -105,7 +105,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
         const events = [...eventGenerator];
         expect(events.length).to.equal(1);
         const [smartDelegateEvent] = events;
-        expect(smartDelegateEvent).to.not.be.null;
+        expect(smartDelegateEvent).to.not.equal(null);
         expect(smartDelegateEvent.name).to.equal("SmartDelegateInitialized");
         expect(Object.keys(smartDelegateEvent.data).length).to.equal(6);
         expect(smartDelegateEvent.data.payer!.toString()).to.equal(
@@ -192,8 +192,8 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
         .accounts({
           payer: payer.publicKey,
           owner: owner.publicKey,
-          tokenAccount: tokenAccount,
-          smartDelegate: smartDelegate,
+          tokenAccount,
+          smartDelegate,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
         })
@@ -234,7 +234,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
         .accounts({
           payer: payer.publicKey,
           owner: owner.publicKey,
-          tokenAccount: tokenAccount,
+          tokenAccount,
           smartDelegate: invalidSmartDelegate,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: SystemProgram.programId,
@@ -276,7 +276,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
         .accounts({
           payer: payer.publicKey,
           owner: owner.publicKey,
-          tokenAccount: tokenAccount,
+          tokenAccount,
           smartDelegate: validSmartDelegate,
           tokenProgram: SystemProgram.programId,
           systemProgram: SystemProgram.programId,
@@ -318,7 +318,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
         .accounts({
           payer: payer.publicKey,
           owner: owner.publicKey,
-          tokenAccount: tokenAccount,
+          tokenAccount,
           smartDelegate: validSmartDelegate,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: TOKEN_2022_PROGRAM_ID,
