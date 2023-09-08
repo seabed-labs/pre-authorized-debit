@@ -24,7 +24,7 @@ import {
   createAccount,
 } from "@solana/spl-token";
 
-describe.only("pre-authorized-debit-v1#init-smart-delegate", () => {
+describe("pre-authorized-debit-v1#init-smart-delegate", () => {
   const program =
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
   const eventParser = new EventParser(program.programId, program.coder);
