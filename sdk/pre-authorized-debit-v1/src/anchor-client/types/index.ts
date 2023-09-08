@@ -5,54 +5,54 @@ import * as PreAuthorizationVariant from "./PreAuthorizationVariant";
 // This file was automatically generated. DO NOT MODIFY DIRECTLY.
 export { PreAuthorizationClosedEventData } from "./PreAuthorizationClosedEventData";
 export type {
-	PreAuthorizationClosedEventDataFields,
-	PreAuthorizationClosedEventDataJSON,
+  PreAuthorizationClosedEventDataFields,
+  PreAuthorizationClosedEventDataJSON,
 } from "./PreAuthorizationClosedEventData";
 export { DebitParams } from "./DebitParams";
 export type { DebitParamsFields, DebitParamsJSON } from "./DebitParams";
 export { InitPreAuthorizationParams } from "./InitPreAuthorizationParams";
 export type {
-	InitPreAuthorizationParamsFields,
-	InitPreAuthorizationParamsJSON,
+  InitPreAuthorizationParamsFields,
+  InitPreAuthorizationParamsJSON,
 } from "./InitPreAuthorizationParams";
 export { PreAuthorizationCreatedEventData } from "./PreAuthorizationCreatedEventData";
 export type {
-	PreAuthorizationCreatedEventDataFields,
-	PreAuthorizationCreatedEventDataJSON,
+  PreAuthorizationCreatedEventDataFields,
+  PreAuthorizationCreatedEventDataJSON,
 } from "./PreAuthorizationCreatedEventData";
 export { UpdatePausePreAuthorizationParams } from "./UpdatePausePreAuthorizationParams";
 export type {
-	UpdatePausePreAuthorizationParamsFields,
-	UpdatePausePreAuthorizationParamsJSON,
+  UpdatePausePreAuthorizationParamsFields,
+  UpdatePausePreAuthorizationParamsJSON,
 } from "./UpdatePausePreAuthorizationParams";
 export { PausePreAuthorizationEventData } from "./PausePreAuthorizationEventData";
 export type {
-	PausePreAuthorizationEventDataFields,
-	PausePreAuthorizationEventDataJSON,
+  PausePreAuthorizationEventDataFields,
+  PausePreAuthorizationEventDataJSON,
 } from "./PausePreAuthorizationEventData";
 export { DebitAuthorizationType };
 
 export type DebitAuthorizationTypeKind =
-	| DebitAuthorizationType.OneTime
-	| DebitAuthorizationType.Recurring;
+  | DebitAuthorizationType.OneTime
+  | DebitAuthorizationType.Recurring;
 export type DebitAuthorizationTypeJSON =
-	| DebitAuthorizationType.OneTimeJSON
-	| DebitAuthorizationType.RecurringJSON;
+  | DebitAuthorizationType.OneTimeJSON
+  | DebitAuthorizationType.RecurringJSON;
 
 export { InitPreAuthorizationVariant };
 
 export type InitPreAuthorizationVariantKind =
-	| InitPreAuthorizationVariant.OneTime
-	| InitPreAuthorizationVariant.Recurring;
+  | InitPreAuthorizationVariant.OneTime
+  | InitPreAuthorizationVariant.Recurring;
 export type InitPreAuthorizationVariantJSON =
-	| InitPreAuthorizationVariant.OneTimeJSON
-	| InitPreAuthorizationVariant.RecurringJSON;
+  | InitPreAuthorizationVariant.OneTimeJSON
+  | InitPreAuthorizationVariant.RecurringJSON;
 
 export { PreAuthorizationVariant };
 
 export type PreAuthorizationVariantKind =
-	| PreAuthorizationVariant.OneTime
-	| PreAuthorizationVariant.Recurring;
+  | PreAuthorizationVariant.OneTime
+  | PreAuthorizationVariant.Recurring;
 export type PreAuthorizationVariantJSON =
-	| PreAuthorizationVariant.OneTimeJSON
-	| PreAuthorizationVariant.RecurringJSON;
+  | PreAuthorizationVariant.OneTimeJSON
+  | PreAuthorizationVariant.RecurringJSON;
