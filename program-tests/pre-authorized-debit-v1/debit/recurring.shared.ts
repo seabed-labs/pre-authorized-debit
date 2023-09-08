@@ -609,7 +609,7 @@ export function testRecurringDebit(
               .signers([debitAuthorityKeypair])
               .rpc();
 
-            await delay(3);
+            await delay(4);
           }
 
           const destinationTokenAccount = await getAccount(
