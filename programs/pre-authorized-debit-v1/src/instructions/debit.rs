@@ -252,7 +252,11 @@ fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitPara
     );
 
     if let Some(num_cycles) = num_cycles {
-        msg!("num_cycles: {:}, current_cycle: {:}", num_cycles, current_cycle);
+        msg!(
+            "num_cycles: {:}, current_cycle: {:}",
+            num_cycles,
+            current_cycle
+        );
         require!(
             current_cycle <= num_cycles,
             CustomProgramError::PreAuthorizationNotActive
