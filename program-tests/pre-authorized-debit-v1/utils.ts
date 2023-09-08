@@ -105,18 +105,18 @@ export function deriveInvalidPreAuthorization(
  * Derives the canonical public key for the smart-delegate
  * @param tokenAccount
  * @param programId
- * @returns
+ * @returns [PDA Pubkey, PDA Bump]
  */
 export function deriveSmartDelegate(
   tokenAccount: PublicKey,
   programId: PublicKey,
-): PublicKey {
-  const [pdaPubkey] = PublicKey.findProgramAddressSync(
+): [PublicKey, number] {
+  const [pdaPubkey, pdaBump] = PublicKey.findProgramAddressSync(
     [Buffer.from("smart-delegate"), tokenAccount.toBuffer()],
     programId,
   );
 
-  return pdaPubkey;
+  return [pdaPubkey, pdaBump];
 }
 
 /**

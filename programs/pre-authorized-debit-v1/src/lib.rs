@@ -27,7 +27,7 @@ pub mod pre_authorized_debit_v1 {
     The `owner` MUST sign the transaction.
     The `owner` MUST be the `token_account.owner`.
     The `payer` and `owner` may be the same account.
-    The `token_program` MUST be either the token program or token 22 program.
+    The `token_program` MUST be either the SPL Token program or SPL Token2022 program.
 
     Accounts expected by this instruction:
         0. `[writable]` payer

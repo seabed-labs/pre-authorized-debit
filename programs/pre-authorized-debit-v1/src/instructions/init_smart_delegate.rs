@@ -61,9 +61,9 @@ pub fn handle_init_smart_delegate(ctx: Context<InitSmartDelegate>) -> Result<()>
         smart_delegate: ctx.accounts.smart_delegate.key(),
     });
 
-    // NOTE: The user can revoke this delegation whenever they want by directly send the revoke IX to the SPL token program.
+    // NOTE: The user can revoke this delegation whenever they want by directly send the revoke IX to the SPL token / token2022 program.
     //       If they do this, our SDK will expose direct IXs to re-connect the smart-delegate with an approve_checked IX.
-    //       Re-connecting does not require an IX in this program as it can be done directly with the SPL token program.
+    //       Re-connecting does not require an IX in this program as it can be done directly with the SPL token / token2022 program.
 
     Ok(())
 }

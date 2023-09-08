@@ -2,7 +2,6 @@ import "./setup";
 
 import {
   AnchorProvider,
-  BorshCoder,
   EventParser,
   Program,
   workspace,
@@ -11,6 +10,7 @@ import { assert, expect } from "chai";
 import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
+  U64_MAX,
   deriveInvalidSmartDelegate,
   deriveSmartDelegate,
   fundAccounts,
@@ -24,36 +24,30 @@ import {
   createAccount,
 } from "@solana/spl-token";
 
-describe("pre-authorized-debit-v1#init-smart-delegate", () => {
+describe.only("pre-authorized-debit-v1#init-smart-delegate", () => {
   const program =
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
-  const eventParser = new EventParser(
-    program.programId,
-    new BorshCoder(program.idl),
-  );
+  const eventParser = new EventParser(program.programId, program.coder);
   const provider = program.provider as AnchorProvider;
 
-  let payer: Keypair;
-  let owner: Keypair;
-  let mintAuthority: Keypair;
-
+  let payer: Keypair, owner: Keypair, mintAuthority: Keypair;
   let mint: PublicKey;
 
   beforeEach(async () => {
-    mintAuthority = new Keypair();
-    payer = new Keypair();
-    owner = new Keypair();
+    mintAuthority = Keypair.generate();
+    payer = Keypair.generate();
+    owner = Keypair.generate();
 
     await fundAccounts(
       provider,
       [payer.publicKey, owner.publicKey, mintAuthority.publicKey],
-      500_000_000,
+      500e6,
     );
   });
 
   [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].forEach((tokenProgramId) => {
     context(`with token program ${tokenProgramId.toString()}`, () => {
-      it(`should create a smart delegate`, async () => {
+      it("should create a smart delegate", async () => {
         mint = await createMint(
           provider.connection,
           mintAuthority,
@@ -73,15 +67,15 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           undefined,
           tokenProgramId,
         );
-        const smartDelegate = deriveSmartDelegate(
+        const [smartDelegate, smartDelegateBump] = deriveSmartDelegate(
           tokenAccount,
           program.programId,
         );
 
         const [payerAccountInfoBefore, ownerAccountInfoBefore] =
-          await Promise.all([
-            provider.connection.getAccountInfo(payer.publicKey),
-            provider.connection.getAccountInfo(owner.publicKey),
+          await provider.connection.getMultipleAccountsInfo([
+            payer.publicKey,
+            owner.publicKey,
           ]);
         assert(payerAccountInfoBefore && ownerAccountInfoBefore);
 
@@ -129,9 +123,9 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
 
         // verify sol balances
         const [payerAccountInfoAfter, ownerAccountInfoAfter] =
-          await Promise.all([
-            provider.connection.getAccountInfo(payer.publicKey),
-            provider.connection.getAccountInfo(owner.publicKey),
+          await provider.connection.getMultipleAccountsInfo([
+            payer.publicKey,
+            owner.publicKey,
           ]);
         assert(payerAccountInfoAfter && ownerAccountInfoAfter);
         expect(ownerAccountInfoBefore.lamports).to.equal(
@@ -147,6 +141,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
         expect(smartDelegateAccount.tokenAccount.toString()).to.equal(
           tokenAccount.toString(),
         );
+        expect(smartDelegateAccount.bump).to.equal(smartDelegateBump);
 
         // verify token account delegate
         const tokenAccountData = await getAccount(
@@ -159,7 +154,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           smartDelegate.toString(),
         );
         expect(tokenAccountData.delegatedAmount.toString()).to.equal(
-          "18446744073709551615",
+          U64_MAX.toString(),
         );
       });
     });
@@ -185,7 +180,10 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID,
     );
-    const smartDelegate = deriveSmartDelegate(tokenAccount, program.programId);
+    const [smartDelegate] = deriveSmartDelegate(
+      tokenAccount,
+      program.programId,
+    );
     await expect(
       program.methods
         .initSmartDelegate()
@@ -266,7 +264,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID,
     );
-    const validSmartDelegate = deriveSmartDelegate(
+    const [smartDelegate] = deriveSmartDelegate(
       tokenAccount,
       program.programId,
     );
@@ -277,7 +275,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           payer: payer.publicKey,
           owner: owner.publicKey,
           tokenAccount,
-          smartDelegate: validSmartDelegate,
+          smartDelegate,
           tokenProgram: SystemProgram.programId,
           systemProgram: SystemProgram.programId,
         })
@@ -308,7 +306,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
       undefined,
       TOKEN_PROGRAM_ID,
     );
-    const validSmartDelegate = deriveSmartDelegate(
+    const [smartDelegate] = deriveSmartDelegate(
       tokenAccount,
       program.programId,
     );
@@ -319,7 +317,7 @@ describe("pre-authorized-debit-v1#init-smart-delegate", () => {
           payer: payer.publicKey,
           owner: owner.publicKey,
           tokenAccount,
-          smartDelegate: validSmartDelegate,
+          smartDelegate,
           tokenProgram: TOKEN_PROGRAM_ID,
           systemProgram: TOKEN_2022_PROGRAM_ID,
         })
