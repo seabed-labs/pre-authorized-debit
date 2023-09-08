@@ -1,0 +1,5 @@
+[alias]
+"lint:clippy" = "clippy -- -D warnings --A clippy::too_many_arguments --A clippy::borrowed-box --A clippy::result_large_err"
+"lint:fix:clippy" = "clippy --fix --allow-dirty --allow-staged -- -D warnings --A clippy::too_many_arguments --A clippy::borrowed-box --A clippy::result_large_err"
+"lint:fmt" = "fmt -- --check"
+"lint:fix:fmt" = "fmt"
