@@ -90,12 +90,12 @@ export interface PreAuthorizationAccountJSON {
 
 /**
  * The `pre_authorization` is a PDA account derived with the seeds:
- *   ['pre-authorization', token_account, debit_authority].
- *   The `pre_authorization` can be thought of as the rule for the `smart_delegate`.
- *   The `pre_authorization` can validate a recurring or one-time debit from the `token_account`.
- *   The `smart_delegate` will validate the rules of the `pre_authorization` in the `debit` instruction.
- *   A `pre_authorization` is associated many:1 with a `token_account`,
- *   however, for a given `debit_authority` and `token_account` there can only be one `pre_authorization`.
+ *  ['pre-authorization', token_account, debit_authority].
+ *  The `pre_authorization` can be thought of as the rule for the `smart_delegate`.
+ *  The `pre_authorization` can validate a recurring or one-time debit from the `token_account`.
+ *  The `smart_delegate` will validate the rules of the `pre_authorization` in the `debit` instruction.
+ *  A `pre_authorization` is associated many:1 with a `token_account`,
+ *  however, for a given `debit_authority` and `token_account` there can only be one `pre_authorization`.
  */
 export class PreAuthorization {
 	readonly data: PreAuthorizationAccount;
