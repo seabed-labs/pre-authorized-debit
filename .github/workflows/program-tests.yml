@@ -8,5 +8,9 @@ jobs:
   program-tests:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Solana Anchor Test
         uses: mrgnlabs/anchor-test-action@v0.5
+        with:
+          args: "" # add anchor test args, e.g. "--skip-lint"
+          workspace_dir: "." # path to the anchor workspace, e.g. "./my_workspace"
