@@ -5,10 +5,15 @@ use crate::{errors::CustomProgramError, state::pre_authorization::PreAuthorizati
 
 #[derive(Accounts)]
 pub struct ClosePreAuthorization<'info> {
-    /// CHECK: Verified manually
+    // Either the token account owner signs and sets any receiver they want
+    // or debit_authority signs and MUST set the receiver to be the token_account.owner
+    /// CHECK: This can be any account
     #[account(
         mut,
-        address = token_account.owner @ CustomProgramError::OnlyTokenAccountOwnerCanReceiveClosePreAuthFunds,
+        constraint = (
+            authority.key.eq(&token_account.owner) ||
+            receiver.key.eq(&token_account.owner)
+        ) @ CustomProgramError::OnlyTokenAccountOwnerCanReceiveClosePreAuthFunds
     )]
     pub receiver: AccountInfo<'info>,
 
