@@ -54,6 +54,55 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
     );
   });
 
+  async function verifyClosePreAuthorizationEvent(
+    signature: string,
+    preAuthType: "one time" | "recurring",
+    expectedDebitAuthority: PublicKey,
+    expectedCloseAuthority: PublicKey,
+    expectedOwner: PublicKey,
+    expectedTokenAccount: PublicKey,
+    expectedPreAuthorization: PublicKey,
+  ): Promise<void> {
+    const tx = await waitForTxToConfirm(signature, provider.connection);
+    assert(tx.meta?.logMessages);
+
+    // verify events
+    const eventGenerator = eventParser.parseLogs(tx.meta.logMessages);
+    const events = [...eventGenerator];
+    expect(events.length).to.equal(1);
+    const [closePreAuthEvent] = events;
+    expect(closePreAuthEvent).to.not.be.null;
+    if (preAuthType === "one time") {
+      expect(closePreAuthEvent.name).to.equal("OneTimePreAuthorizationClosed");
+    } else {
+      expect(closePreAuthEvent.name).to.equal(
+        "RecurringPreAuthorizationClosed",
+      );
+    }
+    expect(Object.keys(closePreAuthEvent.data).length).to.equal(1);
+    const closePreAuthEventData = closePreAuthEvent.data.data as any;
+    expect(Object.keys(closePreAuthEventData).length).to.equal(6);
+
+    expect(closePreAuthEventData.debitAuthority!.toString()).to.equal(
+      expectedDebitAuthority.toString(),
+    );
+    expect(closePreAuthEventData.closingAuthority!.toString()).to.equal(
+      expectedCloseAuthority.toString(),
+    );
+    expect(closePreAuthEventData.tokenAccountOwner!.toString()).to.equal(
+      expectedOwner.toString(),
+    );
+    expect(closePreAuthEventData.receiver!.toString()).to.equal(
+      expectedOwner.toString(),
+    );
+    expect(closePreAuthEventData.tokenAccount!.toString()).to.equal(
+      expectedTokenAccount.toString(),
+    );
+    expect(closePreAuthEventData.preAuthorization!.toString()).to.equal(
+      expectedPreAuthorization.toString(),
+    );
+  }
+
   [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].forEach((tokenProgramId) => {
     context(`with token program ${tokenProgramId.toString()}`, () => {
       let mint: PublicKey;
@@ -164,52 +213,15 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   })
                   .signers([closeAuthorityKeypair])
                   .rpc();
-                const tx = await waitForTxToConfirm(
+                await verifyClosePreAuthorizationEvent(
                   signature,
-                  provider.connection,
+                  preAuthType as "one time" | "recurring",
+                  debitAuthority.publicKey,
+                  closeAuthorityKeypair.publicKey,
+                  owner.publicKey,
+                  tokenAccount,
+                  preAuthorization,
                 );
-                assert(tx.meta?.logMessages);
-
-                // verify events
-                const eventGenerator = eventParser.parseLogs(
-                  tx.meta.logMessages,
-                );
-                const events = [...eventGenerator];
-                expect(events.length).to.equal(1);
-                const [closePreAuthEvent] = events;
-                expect(closePreAuthEvent).to.not.be.null;
-                if (preAuthType === "one time") {
-                  expect(closePreAuthEvent.name).to.equal(
-                    "OneTimePreAuthorizationClosed",
-                  );
-                } else {
-                  expect(closePreAuthEvent.name).to.equal(
-                    "RecurringPreAuthorizationClosed",
-                  );
-                }
-                expect(Object.keys(closePreAuthEvent.data).length).to.equal(1);
-                const closePreAuthEventData = closePreAuthEvent.data
-                  .data as any;
-                expect(Object.keys(closePreAuthEventData).length).to.equal(6);
-
-                expect(
-                  closePreAuthEventData.debitAuthority!.toString(),
-                ).to.equal(debitAuthority.publicKey.toString());
-                expect(
-                  closePreAuthEventData.closingAuthority!.toString(),
-                ).to.equal(closeAuthorityKeypair.publicKey.toString());
-                expect(
-                  closePreAuthEventData.tokenAccountOwner!.toString(),
-                ).to.equal(owner.publicKey.toString());
-                expect(closePreAuthEventData.receiver!.toString()).to.equal(
-                  owner.publicKey.toString(),
-                );
-                expect(closePreAuthEventData.tokenAccount!.toString()).to.equal(
-                  tokenAccount.toString(),
-                );
-                expect(
-                  closePreAuthEventData.preAuthorization!.toString(),
-                ).to.equal(preAuthorization.toString());
 
                 // verify sol balances
                 const ownerAccountInfoAfter =
