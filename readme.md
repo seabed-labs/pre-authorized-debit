@@ -1,5 +1,7 @@
 # Pre Authorized Debit
 
+[![Program Tests](https://github.com/dcaf-labs/pre-authorized-debit/actions/workflows/program-tests.yml/badge.svg)](https://github.com/dcaf-labs/pre-authorized-debit/actions/workflows/program-tests.yml)
+
 The Pre Authorized Debit (PAD) program is a Solana primitive to extend functionality of a token account
 with pre-authorized debits (an advanced form of a multi-delegate).
 The PAD program supports both spl token program and token program 22.
