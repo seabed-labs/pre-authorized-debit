@@ -283,7 +283,52 @@ fn compute_current_cycle(
     activation_unix_timestamp: i64,
     repeat_frequency_seconds: u64,
 ) -> u64 {
-    let seconds_since_activation = (current_unix_timestamp - activation_unix_timestamp) as u64;
-
+    let seconds_since_activation =
+        u64::try_from(current_unix_timestamp - activation_unix_timestamp).unwrap();
     1 + (seconds_since_activation / repeat_frequency_seconds)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_case::test_case;
+
+    #[test_case(100, 100, 1, 1)]
+    #[test_case(101, 100, 1, 2)]
+    #[test_case(102, 100, 1, 3)]
+    #[test_case(98, 0, 33, 3)]
+    #[test_case(100, 0, 33, 4)]
+    #[test_case(100, -100, 33, 7)]
+    #[test_case(i64::MAX, 0, 1, u64::try_from(i64::MAX).unwrap() + 1)]
+    fn compute_current_cycle_happy_path(
+        current_unix_timestamp: i64,
+        activation_unix_timestamp: i64,
+        repeat_frequency_seconds: u64,
+        expected_res: u64,
+    ) {
+        assert_eq!(
+            expected_res,
+            compute_current_cycle(
+                current_unix_timestamp,
+                activation_unix_timestamp,
+                repeat_frequency_seconds
+            )
+        );
+    }
+
+    #[test_case(0, 100, 1)]
+    #[test_case(-1, 100, 1)]
+    #[test_case(99, 100, 1)]
+    #[should_panic]
+    fn compute_current_cycle_errors(
+        current_unix_timestamp: i64,
+        activation_unix_timestamp: i64,
+        repeat_frequency_seconds: u64,
+    ) {
+        compute_current_cycle(
+            current_unix_timestamp,
+            activation_unix_timestamp,
+            repeat_frequency_seconds,
+        );
+    }
 }
