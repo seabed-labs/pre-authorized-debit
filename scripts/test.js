@@ -6,7 +6,7 @@ const isParallel = process.env.TEST_MODE !== "debug";
 const scope = process.argv[2] ? process.argv[2] : "**";
 const testCommand = `yarn run ts-mocha -p ./tsconfig.json -t 1000000 ${
   isParallel ? "--parallel" : ""
-} program-tests/${scope}/*.test.ts --retries 2`;
+} --retries 2 program-tests/${scope}/*.test.ts`;
 
 console.log("Running:", testCommand);
 const [command, ...args] = testCommand.split(" ");
