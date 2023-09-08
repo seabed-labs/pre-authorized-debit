@@ -10,7 +10,8 @@
     "scripts": {
         "postinstall": "husky install",
         "lint:fix": "yarn workspaces foreach run lint:fix",
-        "lint": "yarn workspaces foreach run lint"
+        "lint": "yarn workspaces foreach run lint",
+        "test": "cargo test && anchor test"
     },
     "devDependencies": {
         "husky": "^8.0.3",
