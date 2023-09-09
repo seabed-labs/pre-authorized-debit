@@ -1,6 +1,5 @@
 import {
   AnchorProvider,
-  BorshCoder,
   EventParser,
   Program,
   workspace,
@@ -20,44 +19,38 @@ import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1
 
 import "./setup";
 import {
+  PreAuthTestVariant,
   derivePreAuthorization,
   fundAccounts,
   waitForTxToConfirm,
 } from "./utils";
 import { PreAuthorizationClosedEventDataFields } from "../../sdk/pre-authorized-debit-v1/src";
 
-// TODO(Mocha): Split this test file into multiple test files to take
-// advantage of parallel test execution
 describe("pre-authorized-debit-v1#close-pre-authorization", () => {
   const program =
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
-  const eventParser = new EventParser(
-    program.programId,
-    new BorshCoder(program.idl),
-  );
   const provider = program.provider as AnchorProvider;
+  const eventParser = new EventParser(program.programId, program.coder);
 
-  let owner: Keypair;
-  let mintAuthority: Keypair;
-  let debitAuthority: Keypair;
+  let owner: Keypair, mintAuthority: Keypair, debitAuthority: Keypair;
 
   const activationUnixTimestamp = Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
   const expirationUnixTimestamp = activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
 
   beforeEach(async () => {
-    mintAuthority = new Keypair();
-    owner = new Keypair();
-    debitAuthority = new Keypair();
+    mintAuthority = Keypair.generate();
+    owner = Keypair.generate();
+    debitAuthority = Keypair.generate();
     await fundAccounts(
       provider,
       [owner.publicKey, mintAuthority.publicKey, debitAuthority.publicKey],
-      500_000_000,
+      500e6,
     );
   });
 
   async function verifyClosePreAuthorizationEvent(
     signature: string,
-    preAuthType: "one time" | "recurring",
+    preAuthType: PreAuthTestVariant,
     expectedDebitAuthority: PublicKey,
     expectedCloseAuthority: PublicKey,
     expectedOwner: PublicKey,
@@ -73,7 +66,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
     const events = [...eventGenerator];
     expect(events.length).to.equal(1);
     const [closePreAuthEvent] = events;
-    if (preAuthType === "one time") {
+    if (preAuthType === PreAuthTestVariant.OneTime) {
       expect(closePreAuthEvent.name).to.equal("OneTimePreAuthorizationClosed");
     } else {
       expect(closePreAuthEvent.name).to.equal(
@@ -108,11 +101,10 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
 
   [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].forEach((tokenProgramId) => {
     context(`with token program ${tokenProgramId.toString()}`, () => {
-      let mint: PublicKey;
-      let tokenAccount: PublicKey;
+      let mint: PublicKey, tokenAccount: PublicKey;
 
-      ["one time", "recurring"].forEach((preAuthType: string) => {
-        context(`with a ${preAuthType} pre authorization`, () => {
+      Object.values(PreAuthTestVariant).forEach((preAuthType) => {
+        context(`with a ${preAuthType} pre-authorization variant`, () => {
           let preAuthorization: PublicKey;
 
           beforeEach(async () => {
@@ -122,7 +114,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               mintAuthority.publicKey,
               null,
               6,
-              new Keypair(),
+              Keypair.generate(),
               undefined,
               tokenProgramId,
             );
@@ -131,7 +123,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               mintAuthority,
               mint,
               owner.publicKey,
-              new Keypair(),
+              Keypair.generate(),
               undefined,
               tokenProgramId,
             );
@@ -141,7 +133,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               mint,
               tokenAccount,
               mintAuthority,
-              1_000_000,
+              1e6,
               undefined,
               undefined,
               tokenProgramId,
@@ -152,7 +144,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               program.programId,
             );
             const preAuthVariant =
-              preAuthType === "one time"
+              preAuthType === PreAuthTestVariant.OneTime
                 ? {
                     oneTime: {
                       amountAuthorized: new anchor.BN(100e6),
@@ -177,19 +169,19 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                 activationUnixTimestamp: new anchor.BN(activationUnixTimestamp),
               })
               .accounts({
-                payer: mintAuthority.publicKey,
+                payer: provider.publicKey,
                 owner: owner.publicKey,
                 tokenAccount,
                 preAuthorization,
                 systemProgram: SystemProgram.programId,
               })
-              .signers([owner, mintAuthority])
+              .signers([owner])
               .rpc();
           });
 
           ["owner", "debit authority"].forEach((closeAuthority: string) => {
             context(`as the ${closeAuthority}`, () => {
-              it(`should close the pre authorization`, async () => {
+              it("should close the pre authorization", async () => {
                 const closeAuthorityKeypair =
                   closeAuthority === "owner" ? owner : debitAuthority;
                 const tokenAccountDataBefore = await getAccount(
@@ -197,9 +189,6 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   tokenAccount,
                   undefined,
                   tokenProgramId,
-                );
-                expect(tokenAccountDataBefore.amount.toString()).to.equal(
-                  "1000000",
                 );
 
                 const ownerAccountInfoBefore =
@@ -216,9 +205,10 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   })
                   .signers([closeAuthorityKeypair])
                   .rpc();
+
                 await verifyClosePreAuthorizationEvent(
                   signature,
-                  preAuthType as "one time" | "recurring",
+                  preAuthType,
                   debitAuthority.publicKey,
                   closeAuthorityKeypair.publicKey,
                   owner.publicKey,
@@ -236,15 +226,15 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
                   ownerAccountInfoBefore.lamports,
                 );
 
-                // verify token account balance is unchanged
+                // verify token account is unchanged
                 const tokenAccountDataAfter = await getAccount(
                   provider.connection,
                   tokenAccount,
                   undefined,
                   tokenProgramId,
                 );
-                expect(tokenAccountDataAfter.amount.toString()).to.equal(
-                  "1000000",
+                expect(tokenAccountDataAfter).to.deep.equal(
+                  tokenAccountDataBefore,
                 );
               });
             });
@@ -257,11 +247,8 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               undefined,
               tokenProgramId,
             );
-            expect(tokenAccountDataBefore.amount.toString()).to.equal(
-              "1000000",
-            );
 
-            const newReceiver = new Keypair();
+            const newReceiver = Keypair.generate();
             const signature = await program.methods
               .closePreAuthorization()
               .accounts({
@@ -275,7 +262,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
 
             await verifyClosePreAuthorizationEvent(
               signature,
-              preAuthType as "one time" | "recurring",
+              preAuthType,
               debitAuthority.publicKey,
               owner.publicKey,
               owner.publicKey,
@@ -298,16 +285,16 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               undefined,
               tokenProgramId,
             );
-            expect(tokenAccountDataAfter.amount.toString()).to.equal("1000000");
+            expect(tokenAccountDataAfter).to.deep.equal(tokenAccountDataBefore);
           });
 
-          it("should throw an error if an token account does not match the pre authorization", async () => {
+          it("should throw an error if a token account does not match the pre-authorization", async () => {
             const newTokenAccount = await createAccount(
               provider.connection,
               mintAuthority,
               mint,
               owner.publicKey,
-              new Keypair(),
+              Keypair.generate(),
               undefined,
               tokenProgramId,
             );
