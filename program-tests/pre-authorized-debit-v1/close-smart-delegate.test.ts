@@ -2,7 +2,6 @@ import "./setup";
 
 import {
   AnchorProvider,
-  BorshCoder,
   EventParser,
   Program,
   workspace,
@@ -23,25 +22,20 @@ import {
 describe("pre-authorized-debit-v1#close-smart-delegate", () => {
   const program =
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
-  const eventParser = new EventParser(
-    program.programId,
-    new BorshCoder(program.idl),
-  );
   const provider = program.provider as AnchorProvider;
+  const eventParser = new EventParser(program.programId, program.coder);
 
-  let receiver: Keypair;
-  let owner: Keypair;
-  let mintAuthority: Keypair;
+  let receiver: Keypair, owner: Keypair, mintAuthority: Keypair;
 
   beforeEach(async () => {
-    mintAuthority = new Keypair();
-    receiver = new Keypair();
-    owner = new Keypair();
+    mintAuthority = Keypair.generate();
+    receiver = Keypair.generate();
+    owner = Keypair.generate();
 
     await fundAccounts(
       provider,
       [receiver.publicKey, owner.publicKey, mintAuthority.publicKey],
-      500_000_000,
+      500e6,
     );
   });
 
@@ -82,9 +76,9 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
 
   [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].forEach((tokenProgramId) => {
     describe(`with token program ${tokenProgramId.toString()}`, () => {
-      let mint: PublicKey;
-      let validTokenAccount: PublicKey;
-      let smartDelegate: PublicKey;
+      let mint: PublicKey,
+        validTokenAccount: PublicKey,
+        smartDelegate: PublicKey;
 
       beforeEach(async () => {
         mint = await createMint(
@@ -93,7 +87,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           mintAuthority.publicKey,
           null,
           6,
-          new Keypair(),
+          Keypair.generate(),
           undefined,
           tokenProgramId,
         );
@@ -102,7 +96,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
           receiver,
           mint,
           owner.publicKey,
-          new Keypair(),
+          Keypair.generate(),
           undefined,
           tokenProgramId,
         );
@@ -113,18 +107,18 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         await program.methods
           .initSmartDelegate()
           .accounts({
-            payer: receiver.publicKey,
+            payer: program.provider.publicKey,
             owner: owner.publicKey,
             tokenAccount: validTokenAccount,
             smartDelegate,
             tokenProgram: tokenProgramId,
             systemProgram: SystemProgram.programId,
           })
-          .signers([receiver, owner])
+          .signers([owner])
           .rpc();
       });
 
-      it(`should close a smart delegate`, async () => {
+      it("should close a smart delegate", async () => {
         const tokenAccountDataBefore = await getAccount(
           provider.connection,
           validTokenAccount,
@@ -137,9 +131,9 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         );
 
         const [receiverAccountInfoBefore, ownerAccountInfoBefore] =
-          await Promise.all([
-            provider.connection.getAccountInfo(receiver.publicKey),
-            provider.connection.getAccountInfo(owner.publicKey),
+          await provider.connection.getMultipleAccountsInfo([
+            receiver.publicKey,
+            owner.publicKey,
           ]);
         assert(receiverAccountInfoBefore && ownerAccountInfoBefore);
         const signature = await program.methods
@@ -165,9 +159,9 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
 
         // verify sol balances
         const [receiverAccountInfoAfter, ownerAccountInfoAfter] =
-          await Promise.all([
-            provider.connection.getAccountInfo(receiver.publicKey),
-            provider.connection.getAccountInfo(owner.publicKey),
+          await provider.connection.getMultipleAccountsInfo([
+            receiver.publicKey,
+            owner.publicKey,
           ]);
         assert(receiverAccountInfoAfter && ownerAccountInfoAfter);
         expect(ownerAccountInfoBefore.lamports).to.equal(
@@ -194,9 +188,9 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         expect(tokenAccountDataAfter.delegatedAmount.toString()).to.equal("0");
       });
 
-      it("should not revoke delegate that is not the smart-delegate", async () => {
-        const newDelegate = new Keypair();
-        const newDelegateAmount = BigInt(100);
+      it("should not revoke token_account.delegate if it's not the smart_delegate", async () => {
+        const newDelegate = Keypair.generate();
+        const newDelegateAmount = BigInt(100); // arbitrary
         await approve(
           provider.connection,
           owner,
@@ -243,6 +237,11 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         expect(tokenAccount.delegatedAmount.toString()).to.equal(
           newDelegateAmount.toString(),
         );
+
+        // verify that the smart_delegate was still closed
+        const smartDelegateAccountInfo =
+          await provider.connection.getAccountInfo(smartDelegate);
+        expect(smartDelegateAccountInfo).to.equal(null);
       });
     });
   });
@@ -254,7 +253,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
       mintAuthority.publicKey,
       null,
       6,
-      new Keypair(),
+      Keypair.generate(),
       undefined,
       TOKEN_PROGRAM_ID,
     );
@@ -309,7 +308,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
       mintAuthority.publicKey,
       null,
       6,
-      new Keypair(),
+      Keypair.generate(),
       undefined,
       TOKEN_PROGRAM_ID,
     );
@@ -319,7 +318,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         receiver,
         mint,
         owner.publicKey,
-        new Keypair(),
+        Keypair.generate(),
         undefined,
         TOKEN_PROGRAM_ID,
       ),
@@ -328,7 +327,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
         receiver,
         mint,
         owner.publicKey,
-        new Keypair(),
+        Keypair.generate(),
         undefined,
         TOKEN_PROGRAM_ID,
       ),
@@ -350,6 +349,7 @@ describe("pre-authorized-debit-v1#close-smart-delegate", () => {
       .signers([receiver, owner])
       .rpc();
 
+    // The seed error masks the custom error, hence we check for that
     await expect(
       program.methods
         .closeSmartDelegate()
