@@ -210,3 +210,8 @@ export type DebitEvent = Event<
 >;
 
 export const U64_MAX = (BigInt(2) ** BigInt(64) - BigInt(1)).toString();
+
+export enum PreAuthTestVariant {
+  OneTime = "one-time",
+  Recurring = "recurring",
+}

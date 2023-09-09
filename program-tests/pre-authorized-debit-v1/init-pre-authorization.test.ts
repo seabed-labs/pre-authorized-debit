@@ -10,6 +10,7 @@ import { assert, expect } from "chai";
 import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
+  PreAuthTestVariant,
   deriveInvalidPreAuthorization,
   derivePreAuthorization,
   fundAccounts,
@@ -26,11 +27,6 @@ import {
 import * as anchor from "@coral-xyz/anchor";
 import { PreAuthorizationCreatedEventData } from "../../sdk/pre-authorized-debit-v1/src";
 import { InitPreAuthorizationParams } from "../../sdk/pre-authorized-debit-v1/dist/anchor-client/types/InitPreAuthorizationParams";
-
-enum PreAuthTestVariant {
-  OneTime = "one-time",
-  Recurring = "recurring",
-}
 
 describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   const program =

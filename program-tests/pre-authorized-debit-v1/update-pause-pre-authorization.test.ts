@@ -1,6 +1,5 @@
 import {
   AnchorProvider,
-  BorshCoder,
   EventParser,
   Program,
   workspace,
@@ -19,6 +18,7 @@ import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1
 
 import "./setup";
 import {
+  PreAuthTestVariant,
   derivePreAuthorization,
   fundAccounts,
   waitForTxToConfirm,
@@ -28,15 +28,10 @@ import { PausePreAuthorizationEventData } from "../../sdk/pre-authorized-debit-v
 describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
   const program =
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
-  const eventParser = new EventParser(
-    program.programId,
-    new BorshCoder(program.idl),
-  );
   const provider = program.provider as AnchorProvider;
+  const eventParser = new EventParser(program.programId, program.coder);
 
-  let owner: Keypair;
-  let mintAuthority: Keypair;
-  let debitAuthority: Keypair;
+  let owner: Keypair, mintAuthority: Keypair, debitAuthority: Keypair;
 
   const activationUnixTimestamp = Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
   const expirationUnixTimestamp = activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
@@ -110,23 +105,22 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
   }
 
   beforeEach(async () => {
-    mintAuthority = new Keypair();
-    owner = new Keypair();
-    debitAuthority = new Keypair();
+    mintAuthority = Keypair.generate();
+    owner = Keypair.generate();
+    debitAuthority = Keypair.generate();
     await fundAccounts(
       provider,
       [owner.publicKey, mintAuthority.publicKey, debitAuthority.publicKey],
-      500_000_000,
+      500e6,
     );
   });
 
   [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].forEach((tokenProgramId) => {
     context(`with token program ${tokenProgramId.toString()}`, () => {
-      let mint: PublicKey;
-      let tokenAccount: PublicKey;
+      let mint: PublicKey, tokenAccount: PublicKey;
 
-      ["one time", "recurring"].forEach((preAuthType: string) => {
-        context(`with a ${preAuthType} pre authorization`, () => {
+      Object.keys(PreAuthTestVariant).forEach((preAuthType) => {
+        context(`with a ${preAuthType} pre-authorization variant`, () => {
           let preAuthorization: PublicKey;
 
           beforeEach(async () => {
@@ -136,7 +130,7 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
               mintAuthority.publicKey,
               null,
               6,
-              new Keypair(),
+              Keypair.generate(),
               undefined,
               tokenProgramId,
             );
@@ -145,7 +139,7 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
               mintAuthority,
               mint,
               owner.publicKey,
-              new Keypair(),
+              Keypair.generate(),
               undefined,
               tokenProgramId,
             );
@@ -155,7 +149,7 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
               mint,
               tokenAccount,
               mintAuthority,
-              1_000_000,
+              1e6,
               undefined,
               undefined,
               tokenProgramId,
@@ -166,7 +160,7 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
               program.programId,
             );
             const preAuthVariant =
-              preAuthType === "one time"
+              preAuthType === PreAuthTestVariant.OneTime
                 ? {
                     oneTime: {
                       amountAuthorized: new anchor.BN(100e6),
@@ -191,17 +185,17 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
                 activationUnixTimestamp: new anchor.BN(activationUnixTimestamp),
               })
               .accounts({
-                payer: mintAuthority.publicKey,
+                payer: provider.publicKey,
                 owner: owner.publicKey,
                 tokenAccount,
                 preAuthorization,
                 systemProgram: SystemProgram.programId,
               })
-              .signers([owner, mintAuthority])
+              .signers([owner])
               .rpc();
           });
 
-          it(`should pause and un-pause a pre authorization`, async () => {
+          it("should pause and un-pause a pre authorization", async () => {
             // pause
             await verifyPreAuthorizationAccount(
               preAuthorization,
@@ -257,7 +251,7 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
             );
           });
 
-          it(`should pause a pre authorization twice ( idempotent)`, async () => {
+          it("should pause a pre authorization twice (idempotent)", async () => {
             // pause
             await verifyPreAuthorizationAccount(
               preAuthorization,
@@ -313,13 +307,13 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
             );
           });
 
-          it("should throw an error if an token account does not match the pre authorization", async () => {
+          it("should throw an error if an token account does not match the pre-authorization", async () => {
             const newTokenAccount = await createAccount(
               provider.connection,
               mintAuthority,
               mint,
               owner.publicKey,
-              new Keypair(),
+              Keypair.generate(),
               undefined,
               tokenProgramId,
             );
