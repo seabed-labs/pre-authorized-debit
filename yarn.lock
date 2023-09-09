@@ -108,14 +108,14 @@ __metadata:
 
 "@dcaf/pre-authorized-debit-v1@file:../sdk/pre-authorized-debit-v1::locator=%40dcaf%2Fprogram-library-scripts%40workspace%3Ascripts":
   version: 0.1.0
-  resolution: "@dcaf/pre-authorized-debit-v1@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=4e9ff3&locator=%40dcaf%2Fprogram-library-scripts%40workspace%3Ascripts"
+  resolution: "@dcaf/pre-authorized-debit-v1@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=a46efb&locator=%40dcaf%2Fprogram-library-scripts%40workspace%3Ascripts"
   dependencies:
     "@coral-xyz/anchor": ^0.28.0
     "@coral-xyz/borsh": ^0.28.0
     "@solana/spl-token": ^0.3.8
     "@solana/web3.js": ^1.78.4
     bn.js: ^5.2.1
-  checksum: a8b672aca2cad0d6c9d4947d623c8d4579cb63632b423124a809f1fcb64d566f87c2d1231b9ac368171cee87d5b3c41546c2321d31d0ba9ac5434a850ef49f35
+  checksum: f17379ec2263b9e7e269e1383d4f624d83cfe1576861b89f878ce8329a955586875eaa1d1ce9250b46c89767ec1eee6535ec59e80baf9ce02d5d2caed03b358c
   languageName: node
   linkType: hard
 
