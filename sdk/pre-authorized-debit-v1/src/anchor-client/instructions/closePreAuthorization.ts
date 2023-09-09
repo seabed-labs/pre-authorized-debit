@@ -48,10 +48,10 @@ export interface ClosePreAuthorizationInstructionJSON {
  *     The `pre_authorization.token_account` must be the same as `token_account`.
  *
  *     Accounts expected by this instruction:
- *       0. `[writable]` receiver
- *       1. `[]`         authority
- *       2. `[]`         token_account
- *       3. `[writable]` pre_authorization
+ *         0. `[writable]` receiver
+ *         1. `[]`         authority
+ *         2. `[]`         token_account
+ *         3. `[writable]` pre_authorization
  */
 export class ClosePreAuthorization {
   static readonly ixName = "closePreAuthorization";

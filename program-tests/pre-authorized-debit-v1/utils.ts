@@ -64,8 +64,8 @@ export function derivePreAuthorization(
   tokenAccount: PublicKey,
   debitAuthority: PublicKey,
   programId: PublicKey,
-): PublicKey {
-  const [pdaPubkey] = PublicKey.findProgramAddressSync(
+): [PublicKey, number] {
+  const [pdaPubkey, pdaBump] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("pre-authorization"),
       tokenAccount.toBuffer(),
@@ -73,7 +73,7 @@ export function derivePreAuthorization(
     ],
     programId,
   );
-  return pdaPubkey;
+  return [pdaPubkey, pdaBump];
 }
 
 /**

@@ -2,7 +2,6 @@ import "./setup";
 
 import {
   AnchorProvider,
-  BorshCoder,
   EventParser,
   Program,
   workspace,
@@ -26,26 +25,29 @@ import {
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
 import { PreAuthorizationCreatedEventData } from "../../sdk/pre-authorized-debit-v1/src";
+import { InitPreAuthorizationParams } from "../../sdk/pre-authorized-debit-v1/dist/anchor-client/types/InitPreAuthorizationParams";
+
+enum PreAuthTestVariant {
+  OneTime = "one-time",
+  Recurring = "recurring",
+}
 
 describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   const program =
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
-  const eventParser = new EventParser(
-    program.programId,
-    new BorshCoder(program.idl),
-  );
   const provider = program.provider as AnchorProvider;
+  const eventParser = new EventParser(program.programId, program.coder);
 
-  let payer: Keypair;
-  let owner: Keypair;
-  let mintAuthority: Keypair;
-  let debitAuthority: Keypair;
+  let payer: Keypair,
+    owner: Keypair,
+    mintAuthority: Keypair,
+    debitAuthority: Keypair;
 
   beforeEach(async () => {
-    mintAuthority = new Keypair();
-    payer = new Keypair();
-    owner = new Keypair();
-    debitAuthority = new Keypair();
+    mintAuthority = Keypair.generate();
+    payer = Keypair.generate();
+    owner = Keypair.generate();
+    debitAuthority = Keypair.generate();
 
     await fundAccounts(
       provider,
@@ -55,7 +57,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
         mintAuthority.publicKey,
         debitAuthority.publicKey,
       ],
-      500_000_000,
+      500e6,
     );
   });
 
@@ -66,8 +68,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
       const expirationUnixTimestamp =
         activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
 
-      let mint: PublicKey;
-      let validTokenAccount: PublicKey;
+      let mint: PublicKey, validTokenAccount: PublicKey;
 
       beforeEach(async () => {
         mint = await createMint(
@@ -76,7 +77,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           mintAuthority.publicKey,
           null,
           6,
-          new Keypair(),
+          Keypair.generate(),
           undefined,
           tokenProgramId,
         );
@@ -85,7 +86,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           payer,
           mint,
           owner.publicKey,
-          new Keypair(),
+          Keypair.generate(),
           undefined,
           tokenProgramId,
         );
@@ -95,16 +96,16 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           mint,
           validTokenAccount,
           mintAuthority,
-          1_000_000,
+          1e6,
           undefined,
           undefined,
           tokenProgramId,
         );
       });
 
-      ["one time", "recurring"].forEach((preAuthType: string) => {
-        context(`with ${preAuthType} variant`, () => {
-          it(`should create a pre authorization`, async () => {
+      Object.values(PreAuthTestVariant).forEach((preAuthType) => {
+        context(`with ${preAuthType} pre-authorization variant`, () => {
+          it("should create a pre-authorization", async () => {
             const tokenAccountDataBefore = await getAccount(
               provider.connection,
               validTokenAccount,
@@ -112,23 +113,24 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               tokenProgramId,
             );
             expect(tokenAccountDataBefore.amount.toString()).to.equal(
-              "1000000",
+              (1e6).toString(),
             );
 
             const [payerAccountInfoBefore, ownerAccountInfoBefore] =
-              await Promise.all([
-                provider.connection.getAccountInfo(payer.publicKey),
-                provider.connection.getAccountInfo(owner.publicKey),
+              await provider.connection.getMultipleAccountsInfo([
+                payer.publicKey,
+                owner.publicKey,
               ]);
             assert(payerAccountInfoBefore && ownerAccountInfoBefore);
 
-            const preAuthorization = derivePreAuthorization(
-              validTokenAccount,
-              debitAuthority.publicKey,
-              program.programId,
-            );
+            const [preAuthorization, preAuthorizationBump] =
+              derivePreAuthorization(
+                validTokenAccount,
+                debitAuthority.publicKey,
+                program.programId,
+              );
             const preAuthVariant =
-              preAuthType === "one time"
+              preAuthType === PreAuthTestVariant.OneTime
                 ? {
                     oneTime: {
                       amountAuthorized: new anchor.BN(100e6),
@@ -170,7 +172,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             expect(events.length).to.equal(1);
             const [initPreAuthEvent] = events;
             expect(initPreAuthEvent).to.not.equal(null);
-            if (preAuthType === "one time") {
+            if (preAuthType === PreAuthTestVariant.OneTime) {
               expect(initPreAuthEvent.name).to.equal(
                 "OneTimePreAuthorizationCreated",
               );
@@ -182,30 +184,72 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             expect(Object.keys(initPreAuthEvent.data).length).to.equal(1);
             const initPreAuthEventData = initPreAuthEvent.data
               .data as PreAuthorizationCreatedEventData;
-            expect(Object.keys(initPreAuthEventData).length).to.equal(5);
+            expect(Object.keys(initPreAuthEventData).length).to.equal(6);
 
-            expect(initPreAuthEventData.debitAuthority!.toString()).to.equal(
+            expect(initPreAuthEventData.debitAuthority.toString()).to.equal(
               debitAuthority.publicKey.toString(),
             );
-            expect(initPreAuthEventData.owner!.toString()).to.equal(
+            expect(initPreAuthEventData.owner.toString()).to.equal(
               owner.publicKey.toString(),
             );
-            expect(initPreAuthEventData.payer!.toString()).to.equal(
+            expect(initPreAuthEventData.payer.toString()).to.equal(
               payer.publicKey.toString(),
             );
 
-            expect(initPreAuthEventData.tokenAccount!.toString()).to.equal(
+            expect(initPreAuthEventData.tokenAccount.toString()).to.equal(
               validTokenAccount.toString(),
             );
-            expect(initPreAuthEventData.preAuthorization!.toString()).to.equal(
+            expect(initPreAuthEventData.preAuthorization.toString()).to.equal(
               preAuthorization.toString(),
+            );
+            const eventDataInitParams =
+              initPreAuthEventData.initParams as InitPreAuthorizationParams;
+            expect(
+              eventDataInitParams.activationUnixTimestamp.toString(),
+            ).to.equal(activationUnixTimestamp.toString());
+            expect(eventDataInitParams.debitAuthority.toString()).to.equal(
+              debitAuthority.publicKey.toString(),
+            );
+            const variantData =
+              preAuthType === PreAuthTestVariant.OneTime
+                ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (eventDataInitParams.variant as any).oneTime
+                : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (eventDataInitParams.variant as any).recurring;
+            expect(
+              preAuthType === PreAuthTestVariant.OneTime
+                ? {
+                    amountAuthorized: variantData.amountAuthorized.toString(),
+                    expiryUnixTimestamp:
+                      variantData.expiryUnixTimestamp.toString(),
+                  }
+                : {
+                    repeatFrequencySeconds:
+                      variantData.repeatFrequencySeconds.toString(),
+                    recurringAmountAuthorized:
+                      variantData.recurringAmountAuthorized.toString(),
+                    numCycles: variantData.numCycles,
+                    resetEveryCycle: variantData.resetEveryCycle,
+                  },
+            ).to.deep.equal(
+              preAuthType === PreAuthTestVariant.OneTime
+                ? {
+                    amountAuthorized: (100e6).toString(),
+                    expiryUnixTimestamp: expirationUnixTimestamp.toString(),
+                  }
+                : {
+                    repeatFrequencySeconds: "30",
+                    recurringAmountAuthorized: (10e6).toString(),
+                    numCycles: null,
+                    resetEveryCycle: false,
+                  },
             );
 
             // verify sol balances
             const [payerAccountInfoAfter, ownerAccountInfoAfter] =
-              await Promise.all([
-                provider.connection.getAccountInfo(payer.publicKey),
-                provider.connection.getAccountInfo(owner.publicKey),
+              await provider.connection.getMultipleAccountsInfo([
+                payer.publicKey,
+                owner.publicKey,
               ]);
             assert(payerAccountInfoAfter && ownerAccountInfoAfter);
             expect(ownerAccountInfoBefore.lamports).to.equal(
@@ -216,11 +260,79 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               payerAccountInfoBefore.lamports,
             );
 
-            // verify smart delegate account closed
-            // const smartDelegateAccount = await provider.connection.getAccountInfo(
-            //   smartDelegate
-            // );
-            // expect(smartDelegateAccount).to.be.null;
+            // fetch pre-authorization account and check values
+            const preAuthorizationAccount =
+              await program.account.preAuthorization.fetch(preAuthorization);
+
+            if (preAuthType === PreAuthTestVariant.OneTime) {
+              expect({
+                ...preAuthorizationAccount,
+                activationUnixTimestamp:
+                  preAuthorizationAccount.activationUnixTimestamp.toString(),
+                variant: {
+                  oneTime: {
+                    ...preAuthorizationAccount.variant.oneTime,
+                    amountAuthorized:
+                      preAuthorizationAccount.variant.oneTime?.amountAuthorized.toString(),
+                    expiryUnixTimestamp:
+                      preAuthorizationAccount.variant.oneTime?.expiryUnixTimestamp.toString(),
+                    amountDebited:
+                      preAuthorizationAccount.variant.oneTime?.amountDebited.toString(),
+                  },
+                },
+              }).to.deep.equal({
+                bump: preAuthorizationBump,
+                paused: false,
+                tokenAccount: validTokenAccount,
+                debitAuthority: debitAuthority.publicKey,
+                activationUnixTimestamp: activationUnixTimestamp.toString(),
+                variant: {
+                  oneTime: {
+                    amountAuthorized: (100e6).toString(),
+                    expiryUnixTimestamp: expirationUnixTimestamp.toString(),
+                    amountDebited: "0",
+                  },
+                },
+              });
+            } else {
+              expect({
+                ...preAuthorizationAccount,
+                activationUnixTimestamp:
+                  preAuthorizationAccount.activationUnixTimestamp.toString(),
+                variant: {
+                  recurring: {
+                    ...preAuthorizationAccount.variant.recurring,
+                    recurringAmountAuthorized:
+                      preAuthorizationAccount.variant.recurring?.recurringAmountAuthorized.toString(),
+                    repeatFrequencySeconds:
+                      preAuthorizationAccount.variant.recurring?.repeatFrequencySeconds.toString(),
+                    amountDebitedLastCycle:
+                      preAuthorizationAccount.variant.recurring?.amountDebitedLastCycle.toString(),
+                    amountDebitedTotal:
+                      preAuthorizationAccount.variant.recurring?.amountDebitedTotal.toString(),
+                    lastDebitedCycle:
+                      preAuthorizationAccount.variant.recurring?.lastDebitedCycle.toString(),
+                  },
+                },
+              }).to.deep.equal({
+                bump: preAuthorizationBump,
+                paused: false,
+                tokenAccount: validTokenAccount,
+                debitAuthority: debitAuthority.publicKey,
+                activationUnixTimestamp: activationUnixTimestamp.toString(),
+                variant: {
+                  recurring: {
+                    repeatFrequencySeconds: "30",
+                    recurringAmountAuthorized: (10e6).toString(),
+                    amountDebitedLastCycle: "0",
+                    amountDebitedTotal: "0",
+                    lastDebitedCycle: "1",
+                    numCycles: null,
+                    resetEveryCycle: false,
+                  },
+                },
+              });
+            }
 
             // verify token account balance is unchanged
             const tokenAccountDataAfter = await getAccount(
@@ -229,13 +341,15 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               undefined,
               tokenProgramId,
             );
-            expect(tokenAccountDataAfter.amount.toString()).to.equal("1000000");
+            expect(tokenAccountDataAfter.amount.toString()).to.equal(
+              (1e6).toString(),
+            );
           });
         });
       });
 
       it("should throw an error if the owner does not sign", async () => {
-        const preAuthorization = derivePreAuthorization(
+        const [preAuthorization] = derivePreAuthorization(
           validTokenAccount,
           debitAuthority.publicKey,
           program.programId,
@@ -268,7 +382,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
       });
 
       it("should throw an error if the owner does not own the token account", async () => {
-        const preAuthorization = derivePreAuthorization(
+        const [preAuthorization] = derivePreAuthorization(
           validTokenAccount,
           debitAuthority.publicKey,
           program.programId,
@@ -279,6 +393,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             expiryUnixTimestamp: new anchor.BN(expirationUnixTimestamp),
           },
         };
+        const newOwner = Keypair.generate();
         await expect(
           program.methods
             .initPreAuthorization({
@@ -288,12 +403,12 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             })
             .accounts({
               payer: payer.publicKey,
-              owner: debitAuthority.publicKey,
+              owner: newOwner.publicKey,
               tokenAccount: validTokenAccount,
               preAuthorization,
               systemProgram: SystemProgram.programId,
             })
-            .signers([debitAuthority, payer])
+            .signers([newOwner, payer])
             .rpc(),
         ).to.eventually.be.rejectedWith(
           /AnchorError caused by account: token_account. Error Code: InitPreAuthorizationUnauthorized. Error Number: 6011. Error Message: Only token account owner can initialize a pre-authorization./,
@@ -334,7 +449,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
       });
 
       it("should throw an error if the system program is not valid", async () => {
-        const preAuthorization = derivePreAuthorization(
+        const [preAuthorization] = derivePreAuthorization(
           validTokenAccount,
           debitAuthority.publicKey,
           program.programId,

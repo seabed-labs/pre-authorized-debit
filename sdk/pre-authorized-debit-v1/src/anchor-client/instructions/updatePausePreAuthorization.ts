@@ -53,9 +53,9 @@ const layout = borsh.struct([
  *     The `pre_authorization.token_account` MUST equal the `token_account`.
  *
  *     Accounts expected by this instruction:
- *       0. `[writable]` owner
- *       2. `[]`         token_account
- *       3. `[writable]` pre_authorization
+ *         0. `[writable]` owner
+ *         2. `[]`         token_account
+ *         3. `[writable]` pre_authorization
  */
 export class UpdatePausePreAuthorization {
   static readonly ixName = "updatePausePreAuthorization";

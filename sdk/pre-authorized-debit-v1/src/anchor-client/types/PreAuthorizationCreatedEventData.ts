@@ -11,6 +11,7 @@ export interface PreAuthorizationCreatedEventDataFields {
   payer: PublicKey;
   tokenAccount: PublicKey;
   preAuthorization: PublicKey;
+  initParams: types.InitPreAuthorizationParamsFields;
 }
 
 export interface PreAuthorizationCreatedEventDataJSON {
@@ -19,6 +20,7 @@ export interface PreAuthorizationCreatedEventDataJSON {
   payer: string;
   tokenAccount: string;
   preAuthorization: string;
+  initParams: types.InitPreAuthorizationParamsJSON;
 }
 
 export class PreAuthorizationCreatedEventData {
@@ -27,6 +29,7 @@ export class PreAuthorizationCreatedEventData {
   readonly payer: PublicKey;
   readonly tokenAccount: PublicKey;
   readonly preAuthorization: PublicKey;
+  readonly initParams: types.InitPreAuthorizationParams;
 
   constructor(fields: PreAuthorizationCreatedEventDataFields) {
     this.debitAuthority = fields.debitAuthority;
@@ -34,6 +37,9 @@ export class PreAuthorizationCreatedEventData {
     this.payer = fields.payer;
     this.tokenAccount = fields.tokenAccount;
     this.preAuthorization = fields.preAuthorization;
+    this.initParams = new types.InitPreAuthorizationParams({
+      ...fields.initParams,
+    });
   }
 
   static layout(property?: string) {
@@ -44,6 +50,7 @@ export class PreAuthorizationCreatedEventData {
         borsh.publicKey("payer"),
         borsh.publicKey("tokenAccount"),
         borsh.publicKey("preAuthorization"),
+        types.InitPreAuthorizationParams.layout("initParams"),
       ],
       property,
     );
@@ -56,6 +63,7 @@ export class PreAuthorizationCreatedEventData {
       payer: obj.payer,
       tokenAccount: obj.tokenAccount,
       preAuthorization: obj.preAuthorization,
+      initParams: types.InitPreAuthorizationParams.fromDecoded(obj.initParams),
     });
   }
 
@@ -66,6 +74,9 @@ export class PreAuthorizationCreatedEventData {
       payer: fields.payer,
       tokenAccount: fields.tokenAccount,
       preAuthorization: fields.preAuthorization,
+      initParams: types.InitPreAuthorizationParams.toEncodable(
+        fields.initParams,
+      ),
     };
   }
 
@@ -80,6 +91,7 @@ export class PreAuthorizationCreatedEventData {
       payer: this.payer.toString(),
       tokenAccount: this.tokenAccount.toString(),
       preAuthorization: this.preAuthorization.toString(),
+      initParams: this.initParams.toJSON(),
     };
   }
 
@@ -92,6 +104,7 @@ export class PreAuthorizationCreatedEventData {
       payer: new PublicKey(obj.payer),
       tokenAccount: new PublicKey(obj.tokenAccount),
       preAuthorization: new PublicKey(obj.preAuthorization),
+      initParams: types.InitPreAuthorizationParams.fromJSON(obj.initParams),
     });
   }
 }

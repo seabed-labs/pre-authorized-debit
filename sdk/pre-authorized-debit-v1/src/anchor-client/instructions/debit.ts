@@ -83,13 +83,13 @@ const layout = borsh.struct([types.DebitParams.layout("params")]);
  *     The `token_program` MUST equal the token program matching the `token_account`.
  *
  *     Accounts expected by this instruction:
- *       0. `[]`         debit_authority
- *       1. `[]`         mint
- *       2. `[writable]` token_account
- *       3. `[writable]` destination_token_account
- *       4. `[]`         smart_delegate
- *       5. `[writable]` pre_authorization
- *       6. `[]`         token_program
+ *         0. `[]`         debit_authority
+ *         1. `[]`         mint
+ *         2. `[writable]` token_account
+ *         3. `[writable]` destination_token_account
+ *         4. `[]`         smart_delegate
+ *         5. `[writable]` pre_authorization
+ *         6. `[]`         token_program
  */
 export class Debit {
   static readonly ixName = "debit";
@@ -195,9 +195,7 @@ export class Debit {
 
   toArgsJSON(): DebitArgsJSON {
     const args = {
-      params: new types.DebitParams({
-        ...this.instructionData.args.params,
-      }),
+      params: new types.DebitParams({ ...this.instructionData.args.params }),
     };
     return {
       params: args.params.toJSON(),

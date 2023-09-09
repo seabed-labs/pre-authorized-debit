@@ -50,11 +50,11 @@ export interface CloseSmartDelegateInstructionJSON {
  *     The `token_program` MUST be either the token program or token 22 program.
  *
  *     Accounts expected by this instruction:
- *       0. `[writable]` receiver: The receiver of the `smart_delegate` lamports.
- *       1. `[]`         owner
- *       2. `[writable]` token_account
- *       3. `[writable]` smart_delegate
- *       4. `[]`         token_program
+ *         0. `[writable]` receiver: The receiver of the `smart_delegate` lamports.
+ *         1. `[]`         owner
+ *         2. `[writable]` token_account
+ *         3. `[writable]` smart_delegate
+ *         4. `[]`         token_program
  */
 export class CloseSmartDelegate {
   static readonly ixName = "closeSmartDelegate";

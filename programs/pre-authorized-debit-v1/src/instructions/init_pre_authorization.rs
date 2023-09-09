@@ -51,11 +51,11 @@ pub enum InitPreAuthorizationVariant {
     Recurring {
         repeat_frequency_seconds: u64,
         recurring_amount_authorized: u64,
-        // None: infinite recurring
-        // Some(n): approved for n cycles from activation,
+        // None: infinitely recurring until cancelled / closed
+        // Some(n): approved for n cycles from activation
         num_cycles: Option<u64>,
         // true: amount authorized is reset to "recurring_amount_authorized" each cycle
-        // false: unused amounts from prev. cycles carries forward to new cycles
+        // false: unused amounts from prev. cycles carries forward to new cycles (even when paused, cancel/close to stop)
         reset_every_cycle: bool,
     },
 }
@@ -104,6 +104,7 @@ pub fn handle_init_pre_authorization(
         payer: ctx.accounts.payer.key(),
         token_account: ctx.accounts.token_account.key(),
         pre_authorization: ctx.accounts.pre_authorization.key(),
+        init_params: params,
     };
 
     match ctx.accounts.pre_authorization.variant {
@@ -125,6 +126,7 @@ pub struct PreAuthorizationCreatedEventData {
     pub payer: Pubkey,
     pub token_account: Pubkey,
     pub pre_authorization: Pubkey,
+    pub init_params: InitPreAuthorizationParams,
 }
 
 #[event]
