@@ -160,7 +160,7 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
               undefined,
               tokenProgramId,
             );
-            preAuthorization = derivePreAuthorization(
+            [preAuthorization] = derivePreAuthorization(
               tokenAccount,
               debitAuthority.publicKey,
               program.programId,

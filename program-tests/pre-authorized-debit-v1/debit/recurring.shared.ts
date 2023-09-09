@@ -53,7 +53,7 @@ export function testRecurringDebit(
       numCycles: number | null,
       resetEveryCycle: boolean,
     ): Promise<PublicKey> {
-      const preAuthorizationPubkey = derivePreAuthorization(
+      const [preAuthorizationPubkey] = derivePreAuthorization(
         tokenAccountPubkey,
         debitAuthorityKeypair.publicKey,
         program.programId,
@@ -1038,7 +1038,7 @@ export function testRecurringDebit(
         const expirationUnixTimestamp =
           activationUnixTimestamp + 10 * 24 * 60 * 60; // now + 10 days
 
-        const newPreAuthorizationPubkey = derivePreAuthorization(
+        const [newPreAuthorizationPubkey] = derivePreAuthorization(
           newTokenAccountPubkey,
           debitAuthorityKeypair.publicKey,
           program.programId,

@@ -146,7 +146,7 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
               undefined,
               tokenProgramId,
             );
-            preAuthorization = derivePreAuthorization(
+            [preAuthorization] = derivePreAuthorization(
               tokenAccount,
               debitAuthority.publicKey,
               program.programId,
