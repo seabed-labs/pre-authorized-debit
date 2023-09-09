@@ -13,6 +13,7 @@ Pre-authorized debits can be one-time or recurring.
 
 Pre-authorized debt authorities can debit from a users token account using their pre-authorization
 and the smart-delegate. Debt authorities can debit from a token account as long as:
+
 - The pre-authorized debit is ready for debiting
 - The token account has the necessary funds needed for the debit
 - The smart-delegate remains the delegate of the token-account
@@ -23,7 +24,6 @@ Users at any time withdraw from their token-account as the `owner` or pause a pr
 
 To prevent accidental removals of the token-account delegate, an ancillary program is
 planned for future development, mimicking a similar feature set as the associated token program.
-
 
 ## Docs
 
@@ -53,13 +53,14 @@ All SDK's live under `sdk`, and their tests live in their nested sdk folder (`sd
 ├── sdk
 │  └── pre-authorized-debit-v1
 ```
+
 ### Requirements
 
--   rust 1.72.0
--   node 18.17.1
--   yarn 3.6.0
--   solana 1.16.10
--   anchor 0.28.0
+- rust 1.72.0
+- node 18.17.1
+- yarn 3.6.0
+- solana 1.16.10
+- anchor 0.28.0
 
 ### Getting Started
 
@@ -69,5 +70,3 @@ anchor test
 # To make use of a ".only" in a test
 # TEST_MODE=debug anchor test
 ```
-
-
