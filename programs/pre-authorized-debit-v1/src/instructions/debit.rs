@@ -219,7 +219,6 @@ fn validate_one_time_pre_authorization(ctx: &Context<Debit>, params: &DebitParam
 fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitParams) -> Result<()> {
     let pre_authorization = &ctx.accounts.pre_authorization;
     let current_unix_timestamp = Clock::get()?.unix_timestamp;
-
     let (
         repeat_frequency_seconds,
         recurring_amount_authorized,
@@ -248,14 +247,6 @@ fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitPara
         ),
         _ => panic!("Unreachable code path"),
     };
-    require!(
-        current_unix_timestamp >= 0,
-        CustomProgramError::InvalidTimestamp
-    );
-    require!(
-        pre_authorization.activation_unix_timestamp >= 0,
-        CustomProgramError::InvalidTimestamp
-    );
     let current_cycle = compute_current_cycle(
         u64::try_from(current_unix_timestamp).unwrap(),
         u64::try_from(pre_authorization.activation_unix_timestamp).unwrap(),
