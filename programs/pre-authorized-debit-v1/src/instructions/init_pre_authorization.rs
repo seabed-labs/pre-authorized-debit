@@ -39,14 +39,14 @@ pub struct InitPreAuthorization<'info> {
 pub struct InitPreAuthorizationParams {
     pub variant: InitPreAuthorizationVariant,
     pub debit_authority: Pubkey,
-    pub activation_unix_timestamp: i64,
+    pub activation_unix_timestamp: u64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub enum InitPreAuthorizationVariant {
     OneTime {
         amount_authorized: u64,
-        expiry_unix_timestamp: i64,
+        expiry_unix_timestamp: u64,
     },
     Recurring {
         repeat_frequency_seconds: u64,
@@ -71,7 +71,7 @@ pub fn handle_init_pre_authorization(
             expiry_unix_timestamp,
         } => PreAuthorizationVariant::OneTime {
             amount_authorized,
-            expiry_unix_timestamp,
+            expiry_unix_timestamp: i64::try_from(expiry_unix_timestamp).unwrap(),
             amount_debited: 0,
         },
         InitPreAuthorizationVariant::Recurring {
@@ -92,7 +92,8 @@ pub fn handle_init_pre_authorization(
 
     ctx.accounts.pre_authorization.paused = false;
     ctx.accounts.pre_authorization.debit_authority = params.debit_authority;
-    ctx.accounts.pre_authorization.activation_unix_timestamp = params.activation_unix_timestamp;
+    ctx.accounts.pre_authorization.activation_unix_timestamp =
+        i64::try_from(params.activation_unix_timestamp).unwrap();
     ctx.accounts.pre_authorization.bump = *ctx
         .bumps
         .get("pre_authorization")

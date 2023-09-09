@@ -74,9 +74,13 @@ pub fn handle_debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
             num_cycles,
             reset_every_cycle,
         } => {
+            require!(
+                ctx.accounts.pre_authorization.activation_unix_timestamp >= 0,
+                CustomProgramError::InvalidTimestamp
+            );
             let current_cycle = compute_current_cycle(
-                Clock::get()?.unix_timestamp,
-                ctx.accounts.pre_authorization.activation_unix_timestamp,
+                u64::try_from(Clock::get()?.unix_timestamp).unwrap(),
+                u64::try_from(ctx.accounts.pre_authorization.activation_unix_timestamp).unwrap(),
                 repeat_frequency_seconds,
             );
 
@@ -244,10 +248,17 @@ fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitPara
         ),
         _ => panic!("Unreachable code path"),
     };
-
+    require!(
+        current_unix_timestamp >= 0,
+        CustomProgramError::InvalidTimestamp
+    );
+    require!(
+        pre_authorization.activation_unix_timestamp >= 0,
+        CustomProgramError::InvalidTimestamp
+    );
     let current_cycle = compute_current_cycle(
-        current_unix_timestamp,
-        pre_authorization.activation_unix_timestamp,
+        u64::try_from(current_unix_timestamp).unwrap(),
+        u64::try_from(pre_authorization.activation_unix_timestamp).unwrap(),
         repeat_frequency_seconds,
     );
 
@@ -284,12 +295,11 @@ fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitPara
 }
 
 fn compute_current_cycle(
-    current_unix_timestamp: i64,
-    activation_unix_timestamp: i64,
+    current_unix_timestamp: u64,
+    activation_unix_timestamp: u64,
     repeat_frequency_seconds: u64,
 ) -> u64 {
-    let seconds_since_activation =
-        u64::try_from(current_unix_timestamp - activation_unix_timestamp).unwrap();
+    let seconds_since_activation = current_unix_timestamp - activation_unix_timestamp;
     1 + (seconds_since_activation / repeat_frequency_seconds)
 }
 
@@ -303,11 +313,9 @@ mod tests {
     #[test_case(102, 100, 1, 3)]
     #[test_case(98, 0, 33, 3)]
     #[test_case(100, 0, 33, 4)]
-    #[test_case(100, -100, 33, 7)]
-    #[test_case(i64::MAX, 0, 1, u64::try_from(i64::MAX).unwrap() + 1)]
     fn compute_current_cycle_happy_path(
-        current_unix_timestamp: i64,
-        activation_unix_timestamp: i64,
+        current_unix_timestamp: u64,
+        activation_unix_timestamp: u64,
         repeat_frequency_seconds: u64,
         expected_res: u64,
     ) {
@@ -321,13 +329,12 @@ mod tests {
         );
     }
 
-    #[test_case(0, 100, 1)]
-    #[test_case(-1, 100, 1)]
-    #[test_case(99, 100, 1)]
+    #[test_case(100, 101, 1)]
+    #[test_case(u64::MAX, 0, 1)]
     #[should_panic]
     fn compute_current_cycle_errors(
-        current_unix_timestamp: i64,
-        activation_unix_timestamp: i64,
+        current_unix_timestamp: u64,
+        activation_unix_timestamp: u64,
         repeat_frequency_seconds: u64,
     ) {
         compute_current_cycle(

@@ -476,6 +476,43 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           /AnchorError caused by account: system_program. Error Code: InvalidProgramId. Error Number: 3008. Error Message: Program ID was not as expected./,
         );
       });
+
+      it("should not store negative timestamps even if specified via client", async () => {
+        const [preAuthorization] = derivePreAuthorization(
+          validTokenAccount,
+          debitAuthority.publicKey,
+          program.programId,
+        );
+        const preAuthVariant = {
+          oneTime: {
+            amountAuthorized: new anchor.BN(100e6),
+            expiryUnixTimestamp: new anchor.BN(-1),
+          },
+        };
+        await program.methods
+          .initPreAuthorization({
+            variant: preAuthVariant,
+            debitAuthority: debitAuthority.publicKey,
+            activationUnixTimestamp: new anchor.BN(-1),
+          })
+          .accounts({
+            payer: payer.publicKey,
+            owner: owner.publicKey,
+            tokenAccount: validTokenAccount,
+            preAuthorization,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([owner, payer])
+          .rpc();
+
+        const preAuthAccount = await program.account.preAuthorization.fetch(
+          preAuthorization,
+        );
+        expect(
+          preAuthAccount.variant.oneTime?.expiryUnixTimestamp.toString(),
+        ).to.equal("1");
+        expect(preAuthAccount.activationUnixTimestamp.toString()).to.equal("1");
+      });
     });
   });
 });

@@ -44,4 +44,7 @@ pub enum CustomProgramError {
 
     #[msg("Only token account owner can pause a pre-authorization")]
     PausePreAuthorizationUnauthorized, // 6013 or 0x177D
+
+    #[msg("Invalid timestamp value provided")]
+    InvalidTimestamp, // 6014 or 0x177E
 }
