@@ -514,7 +514,7 @@ export function testRecurringDebit(
           .rpc();
       });
 
-      it("does not carry-forward undebited amount from previous cycle", async () => {
+      it("does not carry-forward un-debited amount from previous cycle", async () => {
         await program.methods
           .debit({ amount: new anchor.BN(23e6) })
           .accounts({

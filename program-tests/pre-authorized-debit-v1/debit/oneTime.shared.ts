@@ -376,7 +376,7 @@ export function testOneTimeDebit(
       );
     });
 
-    it("fails if attempting to debit more than pre_authorization inital authorization", async () => {
+    it("fails if attempting to debit more than pre_authorization initial authorization", async () => {
       await expect(
         program.methods
           .debit({ amount: new anchor.BN(101e6) })
