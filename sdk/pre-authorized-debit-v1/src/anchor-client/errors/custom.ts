@@ -13,7 +13,8 @@ export type CustomError =
   | DebitUnauthorized
   | InitPreAuthorizationUnauthorized
   | InitSmartDelegateUnauthorized
-  | PausePreAuthorizationUnauthorized;
+  | PausePreAuthorizationUnauthorized
+  | InvalidTimestamp;
 
 export class PreAuthorizationNotActive extends Error {
   static readonly code = 6000;
@@ -181,6 +182,17 @@ export class PausePreAuthorizationUnauthorized extends Error {
   }
 }
 
+export class InvalidTimestamp extends Error {
+  static readonly code = 6014;
+  readonly code = 6014;
+  readonly name = "InvalidTimestamp";
+  readonly msg = "Invalid timestamp value provided";
+
+  constructor(readonly logs?: string[]) {
+    super("6014: Invalid timestamp value provided");
+  }
+}
+
 export function fromCode(code: number, logs?: string[]): CustomError | null {
   switch (code) {
     case 6000:
@@ -211,6 +223,8 @@ export function fromCode(code: number, logs?: string[]): CustomError | null {
       return new InitSmartDelegateUnauthorized(logs);
     case 6013:
       return new PausePreAuthorizationUnauthorized(logs);
+    case 6014:
+      return new InvalidTimestamp(logs);
   }
 
   return null;

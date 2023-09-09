@@ -178,7 +178,7 @@ export function fromJSON(
 export function layout(property?: string) {
   const ret = borsh.rustEnum([
     borsh.struct(
-      [borsh.u64("amount_authorized"), borsh.i64("expiry_unix_timestamp")],
+      [borsh.u64("amount_authorized"), borsh.u64("expiry_unix_timestamp")],
       "OneTime",
     ),
     borsh.struct(

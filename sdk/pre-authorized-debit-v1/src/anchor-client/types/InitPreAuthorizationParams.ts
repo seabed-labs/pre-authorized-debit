@@ -33,7 +33,7 @@ export class InitPreAuthorizationParams {
       [
         types.InitPreAuthorizationVariant.layout("variant"),
         borsh.publicKey("debitAuthority"),
-        borsh.i64("activationUnixTimestamp"),
+        borsh.u64("activationUnixTimestamp"),
       ],
       property,
     );
