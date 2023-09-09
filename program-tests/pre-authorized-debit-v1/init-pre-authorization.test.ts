@@ -505,13 +505,78 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           .signers([owner, payer])
           .rpc();
 
-        const preAuthAccount = await program.account.preAuthorization.fetch(
-          preAuthorization,
-        );
+        const preAuthAccount =
+          await program.account.preAuthorization.fetch(preAuthorization);
         expect(
           preAuthAccount.variant.oneTime?.expiryUnixTimestamp.toString(),
         ).to.equal("1");
         expect(preAuthAccount.activationUnixTimestamp.toString()).to.equal("1");
+      });
+
+      it("should throw an error when attempting to use a timestamp larger than i64::MAX for expiryUnixTimestamp", async () => {
+        const [preAuthorization] = derivePreAuthorization(
+          validTokenAccount,
+          debitAuthority.publicKey,
+          program.programId,
+        );
+        const preAuthVariant = {
+          oneTime: {
+            amountAuthorized: new anchor.BN(100e6),
+            expiryUnixTimestamp: new anchor.BN("18446744073709551615"),
+          },
+        };
+        await expect(
+          program.methods
+            .initPreAuthorization({
+              variant: preAuthVariant,
+              debitAuthority: debitAuthority.publicKey,
+              activationUnixTimestamp: new anchor.BN("1"),
+            })
+            .accounts({
+              payer: payer.publicKey,
+              owner: owner.publicKey,
+              tokenAccount: validTokenAccount,
+              preAuthorization,
+              systemProgram: SystemProgram.programId,
+            })
+            .signers([owner, payer])
+            .rpc(),
+        ).to.eventually.be.rejectedWith(
+          /Error Code: InvalidTimestamp. Error Number: 6014. Error Message: Invalid timestamp value provided./,
+        );
+      });
+
+      it("should throw an error when attempting to use a timestamp larger than i64::MAX for activationUnixTimestamp", async () => {
+        const [preAuthorization] = derivePreAuthorization(
+          validTokenAccount,
+          debitAuthority.publicKey,
+          program.programId,
+        );
+        const preAuthVariant = {
+          oneTime: {
+            amountAuthorized: new anchor.BN(100e6),
+            expiryUnixTimestamp: new anchor.BN("1"),
+          },
+        };
+        await expect(
+          program.methods
+            .initPreAuthorization({
+              variant: preAuthVariant,
+              debitAuthority: debitAuthority.publicKey,
+              activationUnixTimestamp: new anchor.BN("18446744073709551615"),
+            })
+            .accounts({
+              payer: payer.publicKey,
+              owner: owner.publicKey,
+              tokenAccount: validTokenAccount,
+              preAuthorization,
+              systemProgram: SystemProgram.programId,
+            })
+            .signers([owner, payer])
+            .rpc(),
+        ).to.eventually.be.rejectedWith(
+          /Error Code: InvalidTimestamp. Error Number: 6014. Error Message: Invalid timestamp value provided./,
+        );
       });
     });
   });

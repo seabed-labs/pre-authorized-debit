@@ -64,16 +64,27 @@ pub fn handle_init_pre_authorization(
     ctx: Context<InitPreAuthorization>,
     params: InitPreAuthorizationParams,
 ) -> Result<()> {
+    require!(
+        params.activation_unix_timestamp <= i64::MAX as u64,
+        CustomProgramError::InvalidTimestamp
+    );
+
     ctx.accounts.pre_authorization.token_account = ctx.accounts.token_account.key();
     ctx.accounts.pre_authorization.variant = match params.variant {
         InitPreAuthorizationVariant::OneTime {
             amount_authorized,
             expiry_unix_timestamp,
-        } => PreAuthorizationVariant::OneTime {
-            amount_authorized,
-            expiry_unix_timestamp: i64::try_from(expiry_unix_timestamp).unwrap(),
-            amount_debited: 0,
-        },
+        } => {
+            require!(
+                expiry_unix_timestamp <= i64::MAX as u64,
+                CustomProgramError::InvalidTimestamp
+            );
+            PreAuthorizationVariant::OneTime {
+                amount_authorized,
+                expiry_unix_timestamp: i64::try_from(expiry_unix_timestamp).unwrap(),
+                amount_debited: 0,
+            }
+        }
         InitPreAuthorizationVariant::Recurring {
             repeat_frequency_seconds,
             recurring_amount_authorized,
