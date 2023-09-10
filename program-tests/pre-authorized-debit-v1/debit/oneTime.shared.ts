@@ -256,6 +256,173 @@ export function testOneTimeDebit(
       });
     });
 
+    context("partial debits", () => {
+      async function partialDebitNTimes(
+        n: number,
+        amount: number,
+      ): Promise<void> {
+        for (let i = 0; i < n; i++) {
+          const sourceTokenAccountBefore = await getAccount(
+            provider.connection,
+            tokenAccountPubkey,
+            undefined,
+            tokenProgramId,
+          );
+
+          const destinationTokenAccountBefore = await getAccount(
+            provider.connection,
+            destinationTokenAccountPubkey,
+            undefined,
+            tokenProgramId,
+          );
+
+          const preAuthorizationBefore =
+            await program.account.preAuthorization.fetch(
+              preAuthorizationPubkey,
+            );
+
+          expect(destinationTokenAccountBefore.amount.toString()).to.equal(
+            (i * amount).toString(),
+          );
+          expect(sourceTokenAccountBefore.amount.toString()).to.equal(
+            (1000e6 - i * amount).toString(),
+          );
+          expect(sourceTokenAccountBefore.delegate?.toBase58()).to.equal(
+            smartDelegatePubkey.toBase58(),
+          );
+          expect(sourceTokenAccountBefore.delegatedAmount.toString()).to.equal(
+            (BigInt(U64_MAX) - BigInt(i * amount)).toString(),
+          );
+          expect(
+            preAuthorizationBefore.variant.oneTime?.amountDebited.toString(),
+          ).to.equal((i * amount).toString());
+
+          await program.methods
+            .debit({ amount: new anchor.BN(amount) })
+            .accounts({
+              debitAuthority: debitAuthorityKeypair.publicKey,
+              mint: mintPubkey,
+              tokenAccount: tokenAccountPubkey,
+              destinationTokenAccount: destinationTokenAccountPubkey,
+              smartDelegate: smartDelegatePubkey,
+              preAuthorization: preAuthorizationPubkey,
+              tokenProgram: tokenProgramId,
+            })
+            .signers([debitAuthorityKeypair])
+            .rpc();
+
+          const destinationTokenAccountAfter = await getAccount(
+            provider.connection,
+            destinationTokenAccountPubkey,
+            undefined,
+            tokenProgramId,
+          );
+          const sourceTokenAccountAfter = await getAccount(
+            provider.connection,
+            tokenAccountPubkey,
+            undefined,
+            tokenProgramId,
+          );
+
+          const preAuthorizationAfter =
+            await program.account.preAuthorization.fetch(
+              preAuthorizationPubkey,
+            );
+
+          expect(destinationTokenAccountAfter.amount.toString()).to.equal(
+            ((i + 1) * amount).toString(),
+          );
+          expect(sourceTokenAccountAfter.amount.toString()).to.equal(
+            (1000e6 - (i + 1) * amount).toString(),
+          );
+          expect(sourceTokenAccountAfter.delegate?.toBase58()).to.equal(
+            smartDelegatePubkey.toBase58(),
+          );
+          expect(sourceTokenAccountAfter.delegatedAmount.toString()).to.equal(
+            (BigInt(U64_MAX) - BigInt((i + 1) * amount)).toString(),
+          );
+          expect(
+            preAuthorizationAfter.variant.oneTime?.amountDebited.toString(),
+          ).to.equal(((i + 1) * amount).toString());
+          expect({
+            ...preAuthorizationBefore,
+            variant: {
+              oneTime: {
+                ...preAuthorizationBefore.variant.oneTime,
+                amountDebited: null,
+              },
+            },
+          }).to.deep.equal({
+            ...preAuthorizationAfter,
+            variant: {
+              oneTime: {
+                ...preAuthorizationAfter.variant.oneTime,
+                amountDebited: null,
+              },
+            },
+          });
+        }
+      }
+
+      it("should allow partial debits to a total of authorized amount", async () => {
+        const partialWithdrawAmount = 25e6;
+        await partialDebitNTimes(4, partialWithdrawAmount);
+        const preAuthorizationAfter =
+          await program.account.preAuthorization.fetch(preAuthorizationPubkey);
+        expect(
+          preAuthorizationAfter.variant.oneTime?.amountDebited.toString(),
+        ).to.equal((4 * partialWithdrawAmount).toString());
+        expect(preAuthorizationAfter.debitAuthority.toString()).to.equal(
+          debitAuthorityKeypair.publicKey.toString(),
+        );
+        expect(preAuthorizationAfter.paused).to.equal(false);
+      });
+
+      it("should not allow debiting after debiting a total of authorized amount", async () => {
+        const partialWithdrawAmount = 25e6;
+        await partialDebitNTimes(4, partialWithdrawAmount);
+        await expect(
+          program.methods
+            .debit({ amount: new anchor.BN(partialWithdrawAmount) })
+            .accounts({
+              debitAuthority: debitAuthorityKeypair.publicKey,
+              mint: mintPubkey,
+              tokenAccount: tokenAccountPubkey,
+              destinationTokenAccount: destinationTokenAccountPubkey,
+              smartDelegate: smartDelegatePubkey,
+              preAuthorization: preAuthorizationPubkey,
+              tokenProgram: tokenProgramId,
+            })
+            .signers([debitAuthorityKeypair])
+            .rpc(),
+        ).to.eventually.be.rejectedWith(
+          /Error Code: CannotDebitMoreThanAvailable. Error Number: 6001. Error Message: Cannot debit more than authorized/,
+        );
+      });
+
+      it("should not allow debiting more then authorized amount in a partial debit", async () => {
+        const partialWithdrawAmount = 25e6;
+        await partialDebitNTimes(3, partialWithdrawAmount);
+        await expect(
+          program.methods
+            .debit({ amount: new anchor.BN(2 * partialWithdrawAmount) })
+            .accounts({
+              debitAuthority: debitAuthorityKeypair.publicKey,
+              mint: mintPubkey,
+              tokenAccount: tokenAccountPubkey,
+              destinationTokenAccount: destinationTokenAccountPubkey,
+              smartDelegate: smartDelegatePubkey,
+              preAuthorization: preAuthorizationPubkey,
+              tokenProgram: tokenProgramId,
+            })
+            .signers([debitAuthorityKeypair])
+            .rpc(),
+        ).to.eventually.be.rejectedWith(
+          /Error Code: CannotDebitMoreThanAvailable. Error Number: 6001. Error Message: Cannot debit more than authorized/,
+        );
+      });
+    });
+
     it("fails if pre_authorization is paused", async () => {
       await program.methods
         .updatePausePreAuthorization({
