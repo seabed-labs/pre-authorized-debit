@@ -121,6 +121,7 @@ pub fn handle_debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
 
     emit!(DebitEvent {
         pre_authorization: ctx.accounts.pre_authorization.key(),
+        debit_authority: ctx.accounts.debit_authority.key(),
         smart_delegate: ctx.accounts.smart_delegate.key(),
         token_program: ctx.accounts.token_program.key(),
         mint: ctx.accounts.token_account.mint,
@@ -128,24 +129,32 @@ pub fn handle_debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
         destination_token_account_owner: ctx.accounts.destination_token_account.owner,
         source_token_account: ctx.accounts.token_account.key(),
         destination_token_account: ctx.accounts.destination_token_account.key(),
-        debit_authorization_type: match ctx.accounts.pre_authorization.variant {
-            PreAuthorizationVariant::OneTime { .. } => DebitAuthorizationType::OneTime,
-            PreAuthorizationVariant::Recurring { .. } => DebitAuthorizationType::Recurring,
-        }
+        debit_variant: match ctx.accounts.pre_authorization.variant {
+            PreAuthorizationVariant::OneTime { .. } => DebitEventVariant::OneTime {
+                debit_amount: params.amount
+            },
+            PreAuthorizationVariant::Recurring {
+                last_debited_cycle, ..
+            } => DebitEventVariant::Recurring {
+                debit_amount: params.amount,
+                cycle: last_debited_cycle
+            },
+        },
     });
 
     Ok(())
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
-pub enum DebitAuthorizationType {
-    OneTime,
-    Recurring,
+pub enum DebitEventVariant {
+    OneTime { debit_amount: u64 },
+    Recurring { debit_amount: u64, cycle: u64 },
 }
 
 #[event]
 pub struct DebitEvent {
     pub pre_authorization: Pubkey,
+    pub debit_authority: Pubkey,
     pub smart_delegate: Pubkey,
     pub mint: Pubkey,
     pub token_program: Pubkey,
@@ -153,7 +162,7 @@ pub struct DebitEvent {
     pub destination_token_account_owner: Pubkey,
     pub source_token_account: Pubkey,
     pub destination_token_account: Pubkey,
-    pub debit_authorization_type: DebitAuthorizationType,
+    pub debit_variant: DebitEventVariant,
 }
 
 fn validate_debit(ctx: &Context<Debit>, params: &DebitParams) -> Result<()> {
