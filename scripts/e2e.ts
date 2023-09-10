@@ -1,12 +1,4 @@
 import {
-  Debit,
-  InitPreAuthorization,
-  InitPreAuthorizationParams,
-  InitPreAuthorizationVariant,
-  InitSmartDelegate,
-  PreAuthorizationVariant,
-} from "@dcaf/pre-authorized-debit-v1";
-import {
   Keypair,
   Connection,
   PublicKey,
@@ -23,7 +15,14 @@ import {
   createMint,
   mintTo,
 } from "@solana/spl-token";
-import { DebitParams } from "../sdk/pre-authorized-debit-v1/dist";
+import {
+  InitSmartDelegate,
+  InitPreAuthorization,
+  InitPreAuthorizationParams,
+  InitPreAuthorizationVariant,
+  Debit,
+  DebitParams,
+} from "@dcaf/pad";
 
 dotenv.config();
 

@@ -1,9 +1,9 @@
 {
-  "name": "@dcaf/program-library-scripts",
+  "name": "@dcaf/pad-library-scripts",
   "packageManager": "yarn@3.6.0",
   "private": true,
   "dependencies": {
-    "@dcaf/pre-authorized-debit-v1": "file:../sdk/pre-authorized-debit-v1",
+    "@dcaf/pad": "1.0.0",
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.78.4",
     "dotenv": "^16.3.1"
