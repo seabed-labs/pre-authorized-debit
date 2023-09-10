@@ -50,7 +50,7 @@ export function testRecurringDebit(
       activationUnixTimestamp: number,
       repeatFrequencySeconds: number,
       recurringAmountAuthorized: bigint,
-      numCycles: number | null,
+      numCycles: bigint | number | null,
       resetEveryCycle: boolean,
     ): Promise<PublicKey> {
       const [preAuthorizationPubkey] = derivePreAuthorization(
@@ -67,7 +67,7 @@ export function testRecurringDebit(
               recurringAmountAuthorized: new anchor.BN(
                 recurringAmountAuthorized.toString(),
               ),
-              numCycles: numCycles ? new anchor.BN(numCycles) : null,
+              numCycles: numCycles ? new anchor.BN(numCycles.toString()) : null,
               resetEveryCycle,
             },
           },
@@ -1160,6 +1160,158 @@ export function testRecurringDebit(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (debitEvent.data.debitAuthorizationType as any).recurring,
         ).to.deep.equal({});
+      });
+    });
+
+    context("negative timestamps", () => {
+      it("fails if activation_timestamp is negative and cycles have ran out", async () => {
+        const activationUnixTimestamp = -(
+          Math.floor(new Date().getTime() / 1e3) +
+          365 * 24 * 60 * 60
+        ); // negative value of 1 year from now
+
+        preAuthorizationPubkey = await setupRecurringPreAuthorization(
+          activationUnixTimestamp,
+          3, // 3 second repeat frequency
+          BigInt(33e6), // authorize 33 tokens each cycle
+          2, // finite to 2 cycles
+          false, // cumulative, i.e. reset_every_cycle is set to false
+        );
+
+        await expect(
+          program.methods
+            .debit({ amount: new anchor.BN(50e6) })
+            .accounts({
+              debitAuthority: debitAuthorityKeypair.publicKey,
+              mint: mintPubkey,
+              tokenAccount: tokenAccountPubkey,
+              destinationTokenAccount: destinationTokenAccountPubkey,
+              smartDelegate: smartDelegatePubkey,
+              preAuthorization: preAuthorizationPubkey,
+              tokenProgram: tokenProgramId,
+            })
+            .signers([debitAuthorityKeypair])
+            .rpc(),
+        ).to.eventually.be.rejectedWith(
+          /Error Code: PreAuthorizationNotActive. Error Number: 6000/,
+        );
+      });
+
+      it("allows debit if activation_timestamp is negative but there is no cycle limit", async () => {
+        const activationUnixTimestamp = -(
+          Math.floor(new Date().getTime() / 1e3) +
+          365 * 24 * 60 * 60
+        ); // negative value of 1 year from now
+
+        preAuthorizationPubkey = await setupRecurringPreAuthorization(
+          activationUnixTimestamp,
+          3, // 3 second repeat frequency
+          BigInt(33e6), // authorize 33 tokens each cycle
+          null, // infinite
+          true, // non-cumulative, i.e. reset_every_cycle is set to true
+        );
+
+        const destinationTokenAccountBefore = await getAccount(
+          provider.connection,
+          destinationTokenAccountPubkey,
+          undefined,
+          tokenProgramId,
+        );
+
+        await program.methods
+          .debit({ amount: new anchor.BN(33e6) })
+          .accounts({
+            debitAuthority: debitAuthorityKeypair.publicKey,
+            mint: mintPubkey,
+            tokenAccount: tokenAccountPubkey,
+            destinationTokenAccount: destinationTokenAccountPubkey,
+            smartDelegate: smartDelegatePubkey,
+            preAuthorization: preAuthorizationPubkey,
+            tokenProgram: tokenProgramId,
+          })
+          .signers([debitAuthorityKeypair])
+          .rpc();
+
+        const destinationTokenAccountAfter = await getAccount(
+          provider.connection,
+          destinationTokenAccountPubkey,
+          undefined,
+          tokenProgramId,
+        );
+
+        expect(
+          destinationTokenAccountAfter.amount -
+            destinationTokenAccountBefore.amount,
+        ).to.equal(BigInt(33e6));
+      });
+
+      it("allows cumulative debit if activation_timestamp is negative but there is a large cycle limit", async () => {
+        await mintTo(
+          provider.connection,
+          fundedKeypair,
+          mintPubkey,
+          tokenAccountPubkey,
+          mintAuthorityKeypair,
+          // u64::max - 1000e6, because we already minted 1000e6 in before each
+          BigInt(2) ** BigInt(64) - BigInt(1 + 1000e6), // mint maximum tokens
+          undefined,
+          undefined,
+          tokenProgramId,
+        );
+
+        const activationUnixTimestamp = -(365 * 24 * 60 * 60); // 1 year before epoch 0
+
+        const amountPerCycle = BigInt(33e6);
+        const cycleLimit = BigInt(2) ** BigInt(32) - BigInt(1);
+
+        preAuthorizationPubkey = await setupRecurringPreAuthorization(
+          activationUnixTimestamp,
+          3, // 3 second repeat frequency
+          amountPerCycle, // authorize 33 tokens each cycle
+          cycleLimit, // finite, but a lot of cycles (u32::max)
+          false, // cumulative, i.e. reset_every_cycle is set to false
+        );
+
+        const now = Math.floor(new Date().getTime() / 1e3);
+        const cyclesElapsed =
+          (BigInt(now) - BigInt(activationUnixTimestamp)) / BigInt(3);
+
+        const accumulatedAvailableAmount = amountPerCycle * cyclesElapsed;
+
+        const destinationTokenAccountBefore = await getAccount(
+          provider.connection,
+          destinationTokenAccountPubkey,
+          undefined,
+          tokenProgramId,
+        );
+
+        await program.methods
+          .debit({
+            amount: new anchor.BN(accumulatedAvailableAmount.toString()),
+          })
+          .accounts({
+            debitAuthority: debitAuthorityKeypair.publicKey,
+            mint: mintPubkey,
+            tokenAccount: tokenAccountPubkey,
+            destinationTokenAccount: destinationTokenAccountPubkey,
+            smartDelegate: smartDelegatePubkey,
+            preAuthorization: preAuthorizationPubkey,
+            tokenProgram: tokenProgramId,
+          })
+          .signers([debitAuthorityKeypair])
+          .rpc();
+
+        const destinationTokenAccountAfter = await getAccount(
+          provider.connection,
+          destinationTokenAccountPubkey,
+          undefined,
+          tokenProgramId,
+        );
+
+        expect(
+          destinationTokenAccountAfter.amount -
+            destinationTokenAccountBefore.amount,
+        ).to.equal(accumulatedAvailableAmount);
       });
     });
   });
