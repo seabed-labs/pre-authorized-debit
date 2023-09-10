@@ -12,8 +12,8 @@ pub enum CustomProgramError {
     #[msg("Last debited cycle is after current debited cycle (invalid state)")]
     LastDebitedCycleBeforeCurrentCycle, // 6002 or 0x1772
 
-    #[msg("Cannot change pre-authorization variant")]
-    CannotChangePreAuthorizationVariant, // 6003 or 0x1773
+    #[msg("Invalid timestamp value provided")]
+    InvalidTimestamp, // 6003 or 0x1773
 
     #[msg("Pre-Authorization paused")]
     PreAuthorizationPaused, // 6004 or 0x1774

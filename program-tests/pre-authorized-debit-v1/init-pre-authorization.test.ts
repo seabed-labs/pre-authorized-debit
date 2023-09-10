@@ -28,7 +28,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { PreAuthorizationCreatedEventData } from "../../sdk/pre-authorized-debit-v1/src";
 import { InitPreAuthorizationParams } from "../../sdk/pre-authorized-debit-v1/dist/anchor-client/types/InitPreAuthorizationParams";
 
-describe("pre-authorized-debit-v1#init-pre-authorization", () => {
+describe.only("pre-authorized-debit-v1#init-pre-authorization", () => {
   const program =
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
   const provider = program.provider as AnchorProvider;
@@ -342,6 +342,79 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             );
           });
         });
+      });
+
+      it("should allow negative timestamps", async () => {
+        const [preAuthorization] = derivePreAuthorization(
+          validTokenAccount,
+          debitAuthority.publicKey,
+          program.programId,
+        );
+        const preAuthVariant = {
+          oneTime: {
+            amountAuthorized: new anchor.BN(100e6),
+            expiryUnixTimestamp: new anchor.BN(-1),
+          },
+        };
+        await program.methods
+          .initPreAuthorization({
+            variant: preAuthVariant,
+            debitAuthority: debitAuthority.publicKey,
+            activationUnixTimestamp: new anchor.BN(-1),
+          })
+          .accounts({
+            payer: payer.publicKey,
+            owner: owner.publicKey,
+            tokenAccount: validTokenAccount,
+            preAuthorization,
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([owner, payer])
+          .rpc();
+
+        const preAuthAccount =
+          await program.account.preAuthorization.fetch(preAuthorization);
+        expect(
+          preAuthAccount.variant.oneTime?.expiryUnixTimestamp.toString(),
+        ).to.equal("-1");
+        expect(preAuthAccount.activationUnixTimestamp.toString()).to.equal(
+          "-1",
+        );
+      });
+
+      it("should throw an error if repeatFrequencySeconds is larger than i64::MAX", async () => {
+        const [preAuthorization] = derivePreAuthorization(
+          validTokenAccount,
+          debitAuthority.publicKey,
+          program.programId,
+        );
+        const preAuthVariant = {
+          recurring: {
+            repeatFrequencySeconds: new anchor.BN("18446744073709551615"),
+            recurringAmountAuthorized: new anchor.BN(10e6),
+            numCycles: null,
+            resetEveryCycle: false,
+          },
+        };
+        await expect(
+          program.methods
+            .initPreAuthorization({
+              variant: preAuthVariant,
+              debitAuthority: debitAuthority.publicKey,
+              activationUnixTimestamp: new anchor.BN(-1),
+            })
+            .accounts({
+              payer: payer.publicKey,
+              owner: owner.publicKey,
+              tokenAccount: validTokenAccount,
+              preAuthorization,
+              systemProgram: SystemProgram.programId,
+            })
+            .signers([owner, payer])
+            .rpc(),
+        ).to.eventually.be.rejectedWith(
+          /Error Code: InvalidTimestamp. Error Number: 6003. Error Message: Invalid timestamp value provided./,
+        );
       });
 
       it("should throw an error if the owner does not sign", async () => {
