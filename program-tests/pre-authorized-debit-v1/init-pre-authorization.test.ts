@@ -28,7 +28,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { PreAuthorizationCreatedEventData } from "../../sdk/pre-authorized-debit-v1/src";
 import { InitPreAuthorizationParams } from "@dcaf/pad";
 
-describe.only("pre-authorized-debit-v1#init-pre-authorization", () => {
+describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   const program =
     workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
   const provider = program.provider as AnchorProvider;
