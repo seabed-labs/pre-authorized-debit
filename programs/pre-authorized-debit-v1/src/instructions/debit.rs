@@ -252,11 +252,6 @@ fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitPara
     );
 
     if let Some(num_cycles) = num_cycles {
-        msg!(
-            "num_cycles: {:}, current_cycle: {:}",
-            num_cycles,
-            current_cycle
-        );
         require!(
             current_cycle <= num_cycles,
             CustomProgramError::PreAuthorizationNotActive
@@ -269,11 +264,14 @@ fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitPara
         CustomProgramError::LastDebitedCycleBeforeCurrentCycle
     );
 
-    let amount_available = match (reset_every_cycle, current_cycle == last_debited_cycle) {
-        (false, _) => recurring_amount_authorized * current_cycle - amount_debited_total,
-        (true, false) => recurring_amount_authorized,
-        (true, true) => recurring_amount_authorized - amount_debited_last_cycle,
-    };
+    let amount_available = compute_available_amount_for_recurring_debit(
+        current_cycle,
+        last_debited_cycle,
+        reset_every_cycle,
+        recurring_amount_authorized,
+        amount_debited_last_cycle,
+        amount_debited_total,
+    );
 
     require!(
         params.amount <= amount_available,
@@ -281,6 +279,21 @@ fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitPara
     );
 
     Ok(())
+}
+
+fn compute_available_amount_for_recurring_debit(
+    current_cycle: u64,
+    last_debited_cycle: u64,
+    reset_every_cycle: bool,
+    recurring_amount_authorized: u64,
+    amount_debited_last_cycle: u64,
+    amount_debited_total: u64,
+) -> u64 {
+    match (reset_every_cycle, current_cycle == last_debited_cycle) {
+        (false, _) => recurring_amount_authorized * current_cycle - amount_debited_total,
+        (true, false) => recurring_amount_authorized,
+        (true, true) => recurring_amount_authorized - amount_debited_last_cycle,
+    }
 }
 
 fn compute_current_cycle(
