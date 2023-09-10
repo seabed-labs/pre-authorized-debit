@@ -267,7 +267,7 @@ fn validate_recurring_pre_authorization(ctx: &Context<Debit>, params: &DebitPara
         );
     }
 
-    // could happen if validator has weird timestamps
+    // could happen if validator has decreasing timestamps in between TXs due to some weirdness
     require!(
         current_cycle >= last_debited_cycle,
         CustomProgramError::LastDebitedCycleBeforeCurrentCycle
