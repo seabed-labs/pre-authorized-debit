@@ -3,7 +3,7 @@ export type CustomError =
   | PreAuthorizationNotActive
   | CannotDebitMoreThanAvailable
   | LastDebitedCycleBeforeCurrentCycle
-  | CannotChangePreAuthorizationVariant
+  | InvalidTimestamp
   | PreAuthorizationPaused
   | OnlyTokenAccountOwnerCanReceiveClosePreAuthFunds
   | PreAuthorizationTokenAccountMismatch
@@ -51,14 +51,14 @@ export class LastDebitedCycleBeforeCurrentCycle extends Error {
   }
 }
 
-export class CannotChangePreAuthorizationVariant extends Error {
+export class InvalidTimestamp extends Error {
   static readonly code = 6003;
   readonly code = 6003;
-  readonly name = "CannotChangePreAuthorizationVariant";
-  readonly msg = "Cannot change pre-authorization variant";
+  readonly name = "InvalidTimestamp";
+  readonly msg = "Invalid timestamp value provided";
 
   constructor(readonly logs?: string[]) {
-    super("6003: Cannot change pre-authorization variant");
+    super("6003: Invalid timestamp value provided");
   }
 }
 
@@ -190,7 +190,7 @@ export function fromCode(code: number, logs?: string[]): CustomError | null {
     case 6002:
       return new LastDebitedCycleBeforeCurrentCycle(logs);
     case 6003:
-      return new CannotChangePreAuthorizationVariant(logs);
+      return new InvalidTimestamp(logs);
     case 6004:
       return new PreAuthorizationPaused(logs);
     case 6005:

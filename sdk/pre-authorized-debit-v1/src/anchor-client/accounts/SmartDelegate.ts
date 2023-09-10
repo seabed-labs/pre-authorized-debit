@@ -38,7 +38,7 @@ export interface SmartDelegateAccountJSON {
  * The `smart_delegate` is a PDA account derived with the seeds:
  *   ['smart-delegate', token_account].
  *   The `smart_delegate` is set as the delegate of
- *   the `token_account` in `init_smart_delegate` with u64::max.
+ *   the `token_account` in `init_smart_delegate` with u64::MAX as its delegated amount.
  *   A `smart_delegate` is associated 1:1 with a `token_account`.
  */
 export class SmartDelegate {

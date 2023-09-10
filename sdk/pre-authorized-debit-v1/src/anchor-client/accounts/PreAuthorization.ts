@@ -16,6 +16,8 @@ export interface PreAuthorizationAccount {
    * If `paused === true`, then the `debit_authority` cannot debit via the `token_account`.
    *       This field is initialized to `false` in `init_pre_authorization`.
    *       This field can be updated by the `token_account.owner` in `update_pause_pre_authorization`.
+   *       Note that recurring rebits that accrue the amounts across cycles will continue to do so while paused
+   *         (close the pre-authorization to stop this).
    */
   paused: boolean;
   /**
@@ -32,16 +34,14 @@ export interface PreAuthorizationAccount {
    */
   variant: types.PreAuthorizationVariantKind;
   /**
-   * The `debit_authority` is the key that can debit from the `token_account`.
+   * The `debit_authority` is the signer that can debit from the `token_account`.
    *       This field is initialized in `init_pre_authorization`.
    *       This field is never updated in any instruction.
    */
   debitAuthority: PublicKey;
   /**
-   * The `activation_unix_timestamp` represents when the debit_authority can next debit
-   *       from the `token_account`.
-   *       The field is initialized to __ in `init_pre_authorization`.
-   *       This field is updated in __ TODO(18f6ba).
+   * The `activation_unix_timestamp` represents when the pre-authorization becomes active (i.e. debits can occur).
+   *       The field is initialized in `init_pre_authorization`.
    */
   activationUnixTimestamp: bigint;
 }
@@ -58,6 +58,8 @@ export interface PreAuthorizationAccountJSON {
    * If `paused === true`, then the `debit_authority` cannot debit via the `token_account`.
    *       This field is initialized to `false` in `init_pre_authorization`.
    *       This field can be updated by the `token_account.owner` in `update_pause_pre_authorization`.
+   *       Note that recurring rebits that accrue the amounts across cycles will continue to do so while paused
+   *         (close the pre-authorization to stop this).
    */
   paused: boolean;
   /**
@@ -74,16 +76,14 @@ export interface PreAuthorizationAccountJSON {
    */
   variant: types.PreAuthorizationVariantJSON;
   /**
-   * The `debit_authority` is the key that can debit from the `token_account`.
+   * The `debit_authority` is the signer that can debit from the `token_account`.
    *       This field is initialized in `init_pre_authorization`.
    *       This field is never updated in any instruction.
    */
   debitAuthority: string;
   /**
-   * The `activation_unix_timestamp` represents when the debit_authority can next debit
-   *       from the `token_account`.
-   *       The field is initialized to __ in `init_pre_authorization`.
-   *       This field is updated in __ TODO(18f6ba).
+   * The `activation_unix_timestamp` represents when the pre-authorization becomes active (i.e. debits can occur).
+   *       The field is initialized in `init_pre_authorization`.
    */
   activationUnixTimestamp: string;
 }
@@ -92,7 +92,7 @@ export interface PreAuthorizationAccountJSON {
  * The `pre_authorization` is a PDA account derived with the seeds:
  *  ['pre-authorization', token_account, debit_authority].
  *  The `pre_authorization` can be thought of as the rule for the `smart_delegate`.
- *  The `pre_authorization` can validate a recurring or one-time debit from the `token_account`.
+ *  The `pre_authorization` can be used to validate a recurring or one-time debit from the `token_account`.
  *  The `smart_delegate` will validate the rules of the `pre_authorization` in the `debit` instruction.
  *  A `pre_authorization` is associated many:1 with a `token_account`,
  *  however, for a given `debit_authority` and `token_account` there can only be one `pre_authorization`.
