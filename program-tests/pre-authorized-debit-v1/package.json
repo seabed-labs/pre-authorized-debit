@@ -3,7 +3,9 @@
   "packageManager": "yarn@3.6.0",
   "private": true,
   "scripts": {
-    "test": "cd ../../ && anchor test pre-authorized-debit-v1"
+    "test": "yarn test:batch2 && yarn test:batch1",
+    "test:batch1": "cd ../../ && anchor test \"pre-authorized-debit-v1/**\" .ts",
+    "test:batch2": "cd ../../ && anchor test \"pre-authorized-debit-v1/**\" .2.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",

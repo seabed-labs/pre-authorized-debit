@@ -42,10 +42,17 @@ rustUnitTests.on("close", (code) => {
 
 let integrationTestsFailed = false;
 const isParallel = process.env.TEST_MODE !== "debug";
+
 const scope = process.argv[2] ? process.argv[2] : "**";
+// init_smart_delegate must be isolated to its own anchor test due to it creating a global account
+const testSuffix = process.argv[3] ? process.argv[3] : ".ts";
+// only retry on default test runs, not for the isolated tests in .2.ts
+const shouldRetry = testSuffix === ".ts";
 const testCommand = `yarn run ts-mocha -p ./tsconfig.json -t 1000000 ${
   isParallel ? "--parallel" : ""
-} --retries 2 program-tests/${scope}/*.test.ts`;
+} ${
+  shouldRetry ? "--retries 2 " : ""
+}program-tests/${scope}/*.test${testSuffix}`;
 
 console.log("Running:", testCommand);
 const [command, ...args] = testCommand.split(" ");

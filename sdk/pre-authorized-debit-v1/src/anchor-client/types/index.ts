@@ -1,4 +1,4 @@
-import * as DebitAuthorizationType from "./DebitAuthorizationType";
+import * as DebitEventVariant from "./DebitEventVariant";
 import * as InitPreAuthorizationVariant from "./InitPreAuthorizationVariant";
 import * as PreAuthorizationVariant from "./PreAuthorizationVariant";
 
@@ -30,14 +30,14 @@ export type {
   PausePreAuthorizationEventDataFields,
   PausePreAuthorizationEventDataJSON,
 } from "./PausePreAuthorizationEventData";
-export { DebitAuthorizationType };
+export { DebitEventVariant };
 
-export type DebitAuthorizationTypeKind =
-  | DebitAuthorizationType.OneTime
-  | DebitAuthorizationType.Recurring;
-export type DebitAuthorizationTypeJSON =
-  | DebitAuthorizationType.OneTimeJSON
-  | DebitAuthorizationType.RecurringJSON;
+export type DebitEventVariantKind =
+  | DebitEventVariant.OneTime
+  | DebitEventVariant.Recurring;
+export type DebitEventVariantJSON =
+  | DebitEventVariant.OneTimeJSON
+  | DebitEventVariant.RecurringJSON;
 
 export { InitPreAuthorizationVariant };
 

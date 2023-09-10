@@ -13,57 +13,23 @@ pub mod pre_authorized_debit_v1 {
     use super::*;
 
     /**
-    The `InitSmartDelegate` instruction will create a `smart_delegate` account.
+    The `InitSmartDelegate` instruction will create a global `smart_delegate` account.
 
     Initializes a new account (`smart_delegate`).
-    The `token_account.delegate` is set to the newly created `smart_delegate` account.
-    The `token_account.delegated_amount` is set to `u64::MAX`.
-    The `token_account.owner` remains un-changed.
     The `smart_delegate` PDA is used by the `pre_authorized_debit` program to sign for
-    valid pre-authorized debits to transfer funds from the token account.
+    valid pre-authorized debits to transfer funds from the `pre_authorization.token_account`.
+    The `smart_delegate` account can NEVER be closed.
 
     The `payer` MUST sign the transaction.
     The `payer` MUST have enough lamports to pay for the `smart_delegate` account.
-    The `owner` MUST sign the transaction.
-    The `owner` MUST be the `token_account.owner`.
-    The `payer` and `owner` may be the same account.
-    The `token_program` MUST be either the SPL Token program or SPL Token2022 program.
 
     Accounts expected by this instruction:
         0. `[writable]` payer
-        1. `[]`         owner
-        2. `[writable]` token_account
-        3. `[writable]` smart_delegate
-        4. `[]`         token_program
-        5. `[]`         system_program
+        1. `[writable]` smart_delegate
+        2. `[]`         system_program
     */
     pub fn init_smart_delegate(ctx: Context<InitSmartDelegate>) -> Result<()> {
         handle_init_smart_delegate(ctx)
-    }
-
-    /**
-    The `CloseSmartDelegate` instruction will create close a `smart_delegate` account.
-
-    Closes an existing `smart_delegate` account.
-    The token program `revoke` instruction will be called on the `token_account`.
-
-    The `receiver` can be any account.
-    The `owner` MUST sign the transaction.
-    The `owner` MUST be the `token_account.owner`.
-    The `receiver` and `owner` may be the same account.
-    The `token_account.owner` MUST be the `owner`.
-    The `smart_delegate.token_account` must be the same as `token_account`.
-    The `token_program` MUST be either the token program or token 22 program.
-
-    Accounts expected by this instruction:
-        0. `[writable]` receiver: The receiver of the `smart_delegate` lamports.
-        1. `[]`         owner
-        2. `[writable]` token_account
-        3. `[writable]` smart_delegate
-        4. `[]`         token_program
-    */
-    pub fn close_smart_delegate(ctx: Context<CloseSmartDelegate>) -> Result<()> {
-        handle_close_smart_delegate(ctx)
     }
 
     /**
@@ -144,7 +110,7 @@ pub mod pre_authorized_debit_v1 {
     For a one-time pre-authorization:
     - the validator time must be greater than or equal to the `pre_authorization.activation_unix_timestamp`
 
-    For a more in-depth understanding around the constraints in a debit, it is recomended to read through
+    For a more in-depth understanding around the constraints in a debit, it is recommended to read through
     the validation done for a `debit` instruction.
 
     The `debit_authority` MUST sign the transaction.
@@ -153,7 +119,6 @@ pub mod pre_authorized_debit_v1 {
     The `token_account.delegate` MUST equal the `smart_delegate`.
     The `token_account.mint` MUST equal the `mint`.
     The `destination_token_account.mint` MUST equal `mint`.
-    The `smart_delegate.token_account` MUST equal `token_account`.
     The `pre_authorization.token_account` MUST equal the `token_account`.
     The `token_program` MUST equal the token program matching the `token_account`.
 

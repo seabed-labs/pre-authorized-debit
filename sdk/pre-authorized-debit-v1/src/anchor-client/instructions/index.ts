@@ -1,7 +1,6 @@
 // This file was automatically generated. DO NOT MODIFY DIRECTLY.
 import { PublicKey } from "@solana/web3.js";
 import { InitSmartDelegate } from "./initSmartDelegate";
-import { CloseSmartDelegate } from "./closeSmartDelegate";
 import { InitPreAuthorization } from "./initPreAuthorization";
 import { ClosePreAuthorization } from "./closePreAuthorization";
 import { Debit } from "./debit";
@@ -9,8 +8,6 @@ import { UpdatePausePreAuthorization } from "./updatePausePreAuthorization";
 
 export * from "./initSmartDelegate";
 export type { InitSmartDelegateAccounts } from "./initSmartDelegate";
-export * from "./closeSmartDelegate";
-export type { CloseSmartDelegateAccounts } from "./closeSmartDelegate";
 export * from "./initPreAuthorization";
 export type {
   InitPreAuthorizationArgs,
@@ -28,7 +25,6 @@ export type {
 
 export enum PreAuthorizedDebitV1InstructionNames {
   initSmartDelegate = "initSmartDelegate",
-  closeSmartDelegate = "closeSmartDelegate",
   initPreAuthorization = "initPreAuthorization",
   closePreAuthorization = "closePreAuthorization",
   debit = "debit",
@@ -37,7 +33,6 @@ export enum PreAuthorizedDebitV1InstructionNames {
 
 export interface InstructionHandler<T> {
   initSmartDelegateIxHandler(ix: InitSmartDelegate): Promise<T>;
-  closeSmartDelegateIxHandler(ix: CloseSmartDelegate): Promise<T>;
   initPreAuthorizationIxHandler(ix: InitPreAuthorization): Promise<T>;
   closePreAuthorizationIxHandler(ix: ClosePreAuthorization): Promise<T>;
   debitIxHandler(ix: Debit): Promise<T>;
@@ -56,10 +51,6 @@ export async function processInstruction<T>(
   if (InitSmartDelegate.isIdentifierEqual(ixDataBuff)) {
     const decodedIx = InitSmartDelegate.decode(programId, accounts);
     return await instructionHandler.initSmartDelegateIxHandler(decodedIx);
-  }
-  if (CloseSmartDelegate.isIdentifierEqual(ixDataBuff)) {
-    const decodedIx = CloseSmartDelegate.decode(programId, accounts);
-    return await instructionHandler.closeSmartDelegateIxHandler(decodedIx);
   }
   if (InitPreAuthorization.isIdentifierEqual(ixDataBuff)) {
     const decodedIx = InitPreAuthorization.decode(

@@ -10,7 +10,6 @@ import {
 import { sha256 } from "@noble/hashes/sha256";
 import { assert } from "chai";
 import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
-
 export async function waitForTxToConfirm(
   signature: string,
   connection: Connection,
@@ -32,6 +31,26 @@ export async function waitForTxToConfirm(
   });
   assert(tx);
   return tx;
+}
+
+export async function initSmartDelegateIdempotent(
+  program: Program<PreAuthorizedDebitV1>,
+  provider: AnchorProvider,
+): Promise<PublicKey> {
+  const [smartDelegate] = deriveSmartDelegate(program.programId);
+  const accountInfo = await provider.connection.getAccountInfo(smartDelegate);
+  if (accountInfo !== null) {
+    return smartDelegate;
+  }
+  await program.methods
+    .initSmartDelegate()
+    .accounts({
+      payer: provider.publicKey,
+      smartDelegate,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc();
+  return smartDelegate;
 }
 
 export async function fundAccounts(
@@ -103,34 +122,25 @@ export function deriveInvalidPreAuthorization(
 
 /**
  * Derives the canonical public key for the smart-delegate
- * @param tokenAccount
  * @param programId
  * @returns [PDA Pubkey, PDA Bump]
  */
-export function deriveSmartDelegate(
-  tokenAccount: PublicKey,
-  programId: PublicKey,
-): [PublicKey, number] {
+export function deriveSmartDelegate(programId: PublicKey): [PublicKey, number] {
   const [pdaPubkey, pdaBump] = PublicKey.findProgramAddressSync(
-    [Buffer.from("smart-delegate"), tokenAccount.toBuffer()],
+    [Buffer.from("smart-delegate")],
     programId,
   );
-
   return [pdaPubkey, pdaBump];
 }
 
 /**
  * Derives the non-canonical public key for the smart-delegate
- * @param tokenAccount
  * @param programId
  * @returns
  */
-export function deriveInvalidSmartDelegate(
-  tokenAccount: PublicKey,
-  programId: PublicKey,
-): PublicKey {
+export function deriveInvalidSmartDelegate(programId: PublicKey): PublicKey {
   const [pdaPubkey] = deriveNthPda(
-    [Buffer.from("smart-delegate"), tokenAccount.toBuffer()],
+    [Buffer.from("smart-delegate")],
     programId,
     3,
   );

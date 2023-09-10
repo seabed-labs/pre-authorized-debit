@@ -11,19 +11,13 @@ import * as types from "../types";
 
 export interface InitSmartDelegateAccounts {
   payer: PublicKey;
-  owner: PublicKey;
-  tokenAccount: PublicKey;
   smartDelegate: PublicKey;
-  tokenProgram: PublicKey;
   systemProgram: PublicKey;
 }
 
 export interface InitSmartDelegateAccountsJSON {
   payer: string;
-  owner: string;
-  tokenAccount: string;
   smartDelegate: string;
-  tokenProgram: string;
   systemProgram: string;
 }
 
@@ -38,29 +32,20 @@ export interface InitSmartDelegateInstructionJSON {
 }
 
 /**
- * The `InitSmartDelegate` instruction will create a `smart_delegate` account.
+ * The `InitSmartDelegate` instruction will create a global `smart_delegate` account.
  *
  *     Initializes a new account (`smart_delegate`).
- *     The `token_account.delegate` is set to the newly created `smart_delegate` account.
- *     The `token_account.delegated_amount` is set to `u64::MAX`.
- *     The `token_account.owner` remains un-changed.
  *     The `smart_delegate` PDA is used by the `pre_authorized_debit` program to sign for
- *     valid pre-authorized debits to transfer funds from the token account.
+ *     valid pre-authorized debits to transfer funds from the `pre_authorization.token_account`.
+ *     The `smart_delegate` account can NEVER be closed.
  *
  *     The `payer` MUST sign the transaction.
  *     The `payer` MUST have enough lamports to pay for the `smart_delegate` account.
- *     The `owner` MUST sign the transaction.
- *     The `owner` MUST be the `token_account.owner`.
- *     The `payer` and `owner` may be the same account.
- *     The `token_program` MUST be either the SPL Token program or SPL Token2022 program.
  *
  *     Accounts expected by this instruction:
  *         0. `[writable]` payer
- *         1. `[]`         owner
- *         2. `[writable]` token_account
- *         3. `[writable]` smart_delegate
- *         4. `[]`         token_program
- *         5. `[]`         system_program
+ *         1. `[writable]` smart_delegate
+ *         2. `[]`         system_program
  */
 export class InitSmartDelegate {
   static readonly ixName = "initSmartDelegate";
@@ -84,11 +69,8 @@ export class InitSmartDelegate {
   ): InitSmartDelegate {
     const accounts = {
       payer: flattenedAccounts[0],
-      owner: flattenedAccounts[1],
-      tokenAccount: flattenedAccounts[2],
-      smartDelegate: flattenedAccounts[3],
-      tokenProgram: flattenedAccounts[4],
-      systemProgram: flattenedAccounts[5],
+      smartDelegate: flattenedAccounts[1],
+      systemProgram: flattenedAccounts[2],
     };
     return new InitSmartDelegate(programId, { args: null, accounts });
   }
@@ -108,24 +90,9 @@ export class InitSmartDelegate {
         isWritable: true,
       },
       {
-        pubkey: this.instructionData.accounts.owner,
-        isSigner: true,
-        isWritable: false,
-      },
-      {
-        pubkey: this.instructionData.accounts.tokenAccount,
-        isSigner: false,
-        isWritable: true,
-      },
-      {
         pubkey: this.instructionData.accounts.smartDelegate,
         isSigner: false,
         isWritable: true,
-      },
-      {
-        pubkey: this.instructionData.accounts.tokenProgram,
-        isSigner: false,
-        isWritable: false,
       },
       {
         pubkey: this.instructionData.accounts.systemProgram,
@@ -152,10 +119,7 @@ export class InitSmartDelegate {
   toAccountsJSON(): InitSmartDelegateAccountsJSON {
     return {
       payer: this.instructionData.accounts.payer.toString(),
-      owner: this.instructionData.accounts.owner.toString(),
-      tokenAccount: this.instructionData.accounts.tokenAccount.toString(),
       smartDelegate: this.instructionData.accounts.smartDelegate.toString(),
-      tokenProgram: this.instructionData.accounts.tokenProgram.toString(),
       systemProgram: this.instructionData.accounts.systemProgram.toString(),
     };
   }

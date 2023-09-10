@@ -9,7 +9,7 @@ export type CustomError =
   | PreAuthorizationTokenAccountMismatch
   | PreAuthorizationCloseUnauthorized
   | SmartDelegateCloseUnauthorized
-  | SmartDelegateTokenAccountMismatch
+  | UnusedError
   | DebitUnauthorized
   | InitPreAuthorizationUnauthorized
   | InitSmartDelegateUnauthorized
@@ -123,14 +123,14 @@ export class SmartDelegateCloseUnauthorized extends Error {
   }
 }
 
-export class SmartDelegateTokenAccountMismatch extends Error {
+export class UnusedError extends Error {
   static readonly code = 6009;
   readonly code = 6009;
-  readonly name = "SmartDelegateTokenAccountMismatch";
-  readonly msg = "Smart delegate and token account mismatch";
+  readonly name = "UnusedError";
+  readonly msg = "This Error is unused";
 
   constructor(readonly logs?: string[]) {
-    super("6009: Smart delegate and token account mismatch");
+    super("6009: This Error is unused");
   }
 }
 
@@ -202,7 +202,7 @@ export function fromCode(code: number, logs?: string[]): CustomError | null {
     case 6008:
       return new SmartDelegateCloseUnauthorized(logs);
     case 6009:
-      return new SmartDelegateTokenAccountMismatch(logs);
+      return new UnusedError(logs);
     case 6010:
       return new DebitUnauthorized(logs);
     case 6011:

@@ -7,39 +7,29 @@ import * as types from "../types";
 export interface SmartDelegateAccount {
   /**
    * The `bump` is the canonical PDA bump when derived with seeds:
-   *       ['smart-delegate', token_account].
+   *       ['smart-delegate'].
    *       This field is initialized in `init_smart_delegate`.
    *       This field is never updated in any instruction.
    */
   bump: number;
-  /**
-   * The `token_account` is initialized in `init_smart_delegate`.
-   *       This field is never updated in any instruction.
-   */
-  tokenAccount: PublicKey;
 }
 
 export interface SmartDelegateAccountJSON {
   /**
    * The `bump` is the canonical PDA bump when derived with seeds:
-   *       ['smart-delegate', token_account].
+   *       ['smart-delegate'].
    *       This field is initialized in `init_smart_delegate`.
    *       This field is never updated in any instruction.
    */
   bump: number;
-  /**
-   * The `token_account` is initialized in `init_smart_delegate`.
-   *       This field is never updated in any instruction.
-   */
-  tokenAccount: string;
 }
 
 /**
  * The `smart_delegate` is a PDA account derived with the seeds:
- *   ['smart-delegate', token_account].
- *   The `smart_delegate` is set as the delegate of
- *   the `token_account` in `init_smart_delegate` with u64::MAX as its delegated amount.
- *   A `smart_delegate` is associated 1:1 with a `token_account`.
+ *   ['smart-delegate'].
+ *   The `smart_delegate` should be set as the delegate of any
+ *   `token_account` specified in a `pre_authorization`.
+ *   The `smart_delegate` is a global account and is only initialized once.
  */
 export class SmartDelegate {
   readonly data: SmartDelegateAccount;
@@ -48,15 +38,11 @@ export class SmartDelegate {
     47, 189, 254, 31, 76, 172, 82, 107,
   ]);
 
-  static readonly layout = borsh.struct([
-    borsh.u8("bump"),
-    borsh.publicKey("tokenAccount"),
-  ]);
+  static readonly layout = borsh.struct([borsh.u8("bump")]);
 
   constructor(accountData: SmartDelegateAccount) {
     this.data = {
       bump: accountData.bump,
-      tokenAccount: accountData.tokenAccount,
     };
   }
 
@@ -73,7 +59,6 @@ export class SmartDelegate {
 
     return new SmartDelegate({
       bump: dec.bump,
-      tokenAccount: dec.tokenAccount,
     });
   }
 
@@ -148,11 +133,9 @@ export class SmartDelegate {
     // convert fields to classes if needed
     const account = {
       bump: data.bump,
-      tokenAccount: data.tokenAccount,
     };
     return {
       bump: account.bump,
-      tokenAccount: account.tokenAccount.toString(),
     };
   }
 
@@ -163,7 +146,6 @@ export class SmartDelegate {
   static fromJSON(obj: SmartDelegateAccountJSON): SmartDelegate {
     return new SmartDelegate({
       bump: obj.bump,
-      tokenAccount: new PublicKey(obj.tokenAccount),
     });
   }
 }
