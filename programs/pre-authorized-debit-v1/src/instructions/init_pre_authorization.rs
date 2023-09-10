@@ -79,15 +79,21 @@ pub fn handle_init_pre_authorization(
             recurring_amount_authorized,
             num_cycles,
             reset_every_cycle,
-        } => PreAuthorizationVariant::Recurring {
-            repeat_frequency_seconds,
-            recurring_amount_authorized,
-            amount_debited_last_cycle: 0,
-            amount_debited_total: 0,
-            last_debited_cycle: 1, // first cycle
-            num_cycles,
-            reset_every_cycle,
-        },
+        } => {
+            require!(
+                repeat_frequency_seconds <= i64::MAX as u64,
+                CustomProgramError::InvalidTimestamp
+            );
+            PreAuthorizationVariant::Recurring {
+                repeat_frequency_seconds,
+                recurring_amount_authorized,
+                amount_debited_last_cycle: 0,
+                amount_debited_total: 0,
+                last_debited_cycle: 1, // first cycle
+                num_cycles,
+                reset_every_cycle,
+            }
+        }
     };
 
     ctx.accounts.pre_authorization.paused = false;

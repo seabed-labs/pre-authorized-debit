@@ -1,9 +1,9 @@
 {
     "private": true,
     "workspaces": [
+        "sdk/**",
         "scripts",
-        "program-tests/**",
-        "sdk/**"
+        "program-tests/**"
     ],
     "packageManager": "yarn@3.6.0",
     "scripts": {
