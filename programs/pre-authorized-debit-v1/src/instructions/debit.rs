@@ -315,18 +315,35 @@ mod tests {
     use super::*;
     use test_case::test_case;
 
+    // recurring pre-auth (available amount accrues across cycles)
+    #[test_case(1, 1, false, 0, 0, 0, 0)]
     #[test_case(1, 1, false, 100, 0, 0, 100)]
+    #[test_case(1, 1, false, 100, 100, 100, 0)]
     #[test_case(5, 1, false, 100, 0, 0, 500)]
+    #[test_case(5, 1, false, 100, 100, 100, 400)]
     #[test_case(5, 4, false, 100, 100, 100, 400)]
-    #[test_case(5, 4, false, 100, 100, 300, 200)]
-    #[test_case(5, 4, false, 100, 300, 300, 200)]
-    #[test_case(5, 5, false, 100, 100, 500, 0)]
+    #[test_case(5, 4, false, 100, 100, 400, 100)]
+    #[test_case(5, 4, false, 100, 400, 400, 100)]
+    #[test_case(5, 5, false, 100, 100, 100, 400)]
+    #[test_case(5, 5, false, 100, 100, 400, 100)]
+    #[test_case(5, 5, false, 100, 400, 400, 100)]
+    #[test_case(5, 5, false, 100, 0, 500, 0)]
+    #[test_case(5, 5, false, 100, 400, 500, 0)]
+    #[test_case(5, 5, false, 100, 500, 500, 0)]
+    #[test_case(5, 5, false, 100, 0, 100, 400)]
+    // recurring pre-auth (available amount resets every cycle)
+    #[test_case(1, 1, true, 0, 0, 0, 0)]
     #[test_case(1, 1, true, 100, 0, 0, 100)]
+    #[test_case(1, 1, true, 100, 100, 100, 0)]
     #[test_case(5, 1, true, 100, 0, 0, 100)]
-    #[test_case(5, 1, true, 100, 0, 400, 100)]
-    #[test_case(5, 4, true, 100, 0, 500, 100)]
+    #[test_case(5, 1, true, 100, 100, 100, 100)]
+    #[test_case(5, 4, true, 100, 100, 100, 100)]
+    #[test_case(5, 4, true, 100, 100, 400, 100)]
+    #[test_case(5, 4, true, 100, 400, 400, 100)]
+    #[test_case(5, 5, true, 100, 100, 100, 0)]
+    #[test_case(5, 5, true, 100, 100, 400, 0)]
     #[test_case(5, 5, true, 100, 0, 500, 100)]
-    #[test_case(5, 5, true, 100, 100, 500, 0)]
+    #[test_case(5, 5, true, 100, 0, 100, 100)]
     fn compute_available_amount_for_recurring_debit_happy_path(
         current_cycle: u64,
         last_debited_cycle: u64,
@@ -349,11 +366,28 @@ mod tests {
         );
     }
 
-    #[test_case(0, 0, false, 1, 0, 0)]
-    #[test_case(4, 5, false, 100, 100, 500)]
-    #[test_case(5, 4, false, 100, 400, 300)]
-    #[test_case(0, 5, false, 100, 100, 500)]
-    #[test_case(4, 0, false, 100, 100, 500)]
+    // recurring pre-auth (available amount accrues across cycles)
+    // asserts
+    #[test_case(0, 1, false, 0, 0, 0)]
+    #[test_case(1, 0, false, 0, 0, 0)]
+    #[test_case(1, 2, false, 0, 0, 0)]
+    #[test_case(1, 1, false, 10, 10, 5)]
+    // other cases
+    #[test_case(1, 1, false, 100, 100, 0)]
+    #[test_case(5, 1, false, 100, 100, 0)]
+    #[test_case(5, 1, false, 100, 100, 600)]
+    #[test_case(5, 4, false, 100, 100, 600)]
+    #[test_case(5, 5, false, 100, 100, 600)]
+    // recurring pre-auth (available amount resets every cycle)
+    // asserts
+    #[test_case(0, 1, true, 0, 0, 0)]
+    #[test_case(1, 0, true, 0, 0, 0)]
+    #[test_case(1, 2, true, 0, 0, 0)]
+    #[test_case(1, 1, true, 10, 10, 5)]
+    // other cases
+    #[test_case(5, 5, true, 100, 400, 400)]
+    #[test_case(5, 5, true, 100, 400, 500)]
+    #[test_case(5, 5, true, 100, 500, 500)]
     #[should_panic]
     fn compute_available_amount_for_recurring_debit_panics(
         current_cycle: u64,
