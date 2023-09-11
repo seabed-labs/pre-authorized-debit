@@ -468,7 +468,7 @@ export function testOneTimeDebit(
           /Error Code: PreAuthorizationNotActive. Error Number: 6000/,
         );
       });
-      it("fails if activation is negative but quantitatively larger than past expiry", async () => {
+      it("fails when activation_timestamp < 0 && 0 < expiry_timestamp < now && abs(activation_timestamp) > expiry_timestamp", async () => {
         await program.methods
           .closePreAuthorization()
           .accounts({
@@ -511,7 +511,7 @@ export function testOneTimeDebit(
           /Error Code: PreAuthorizationNotActive. Error Number: 6000/,
         );
       });
-      it("allows debit if activation is negative but quantitatively larger than future expiry", async () => {
+      it("allows debit when activation_timestamp < 0 && expiry_timestamp > now  && abs(activation_timestamp) > expiry_timestamp", async () => {
         await program.methods
           .closePreAuthorization()
           .accounts({
@@ -524,9 +524,9 @@ export function testOneTimeDebit(
           .rpc();
 
         const activationUnixTimestamp = -(
-          Math.floor(new Date().getTime() / 1e3) -
-          24 * 60 * 60
-        ); // negative(-1 day before now)
+          Math.floor(new Date().getTime() / 1e3) +
+          20 * 24 * 60 * 60
+        ); // negative(+20 days from now)
 
         const expirationUnixTimestamp =
           Math.floor(new Date().getTime() / 1e3) + 10 * 24 * 60 * 60; // +10 days from now
