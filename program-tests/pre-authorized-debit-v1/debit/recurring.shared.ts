@@ -2,14 +2,8 @@ import "../setup";
 import { PreAuthorizedDebitV1 } from "../../../target/types/pre_authorized_debit_v1";
 import * as anchor from "@coral-xyz/anchor";
 import { assert, expect } from "chai";
+import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from "@solana/web3.js";
-import {
-  createApproveInstruction,
   createAssociatedTokenAccount,
   createMint,
   getAccount,
@@ -87,24 +81,14 @@ export function testRecurringDebit(
         .accounts({
           payer: provider.publicKey,
           owner: userKeypair.publicKey,
+          smartDelegate: smartDelegatePubkey,
           tokenAccount: tokenAccountPubkey,
           preAuthorization: preAuthorizationPubkey,
+          tokenProgram: tokenProgramId,
           systemProgram: SystemProgram.programId,
         })
         .signers([userKeypair])
         .rpc();
-
-      const approveTx = new Transaction().add(
-        createApproveInstruction(
-          tokenAccountPubkey,
-          smartDelegatePubkey,
-          userKeypair.publicKey,
-          BigInt(U64_MAX),
-          [],
-          tokenProgramId,
-        ),
-      );
-      await provider.sendAndConfirm(approveTx, [userKeypair]);
       return preAuthorizationPubkey;
     }
 
@@ -999,8 +983,10 @@ export function testRecurringDebit(
           .accounts({
             payer: provider.publicKey,
             owner: newUserKeypair.publicKey,
+            smartDelegate: smartDelegatePubkey,
             tokenAccount: newTokenAccountPubkey,
             preAuthorization: newPreAuthorizationPubkey,
+            tokenProgram: tokenProgramId,
             systemProgram: SystemProgram.programId,
           })
           .signers([newUserKeypair])

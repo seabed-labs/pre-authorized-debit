@@ -15,14 +15,23 @@ import {
   derivePreAuthorization,
   fundAccounts,
   waitForTxToConfirm,
+  initSmartDelegateIdempotent,
 } from "./utils";
 import { PausePreAuthorizationEventData } from "@dcaf/pad";
 
 describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
   let owner: Keypair, mintAuthority: Keypair, debitAuthority: Keypair;
+  let smartDelegatePublicKey: PublicKey;
 
   const activationUnixTimestamp = Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
   const expirationUnixTimestamp = activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
+
+  before(async () => {
+    smartDelegatePublicKey = await initSmartDelegateIdempotent(
+      program,
+      provider,
+    );
+  });
 
   async function verifyUpdatePausePreAuthorizationEvent(
     signature: string,
@@ -175,8 +184,10 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
               .accounts({
                 payer: provider.publicKey,
                 owner: owner.publicKey,
+                smartDelegate: smartDelegatePublicKey,
                 tokenAccount,
                 preAuthorization,
+                tokenProgram: tokenProgramId,
                 systemProgram: SystemProgram.programId,
               })
               .signers([owner])

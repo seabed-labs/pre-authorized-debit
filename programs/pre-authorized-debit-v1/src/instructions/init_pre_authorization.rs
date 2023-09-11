@@ -18,6 +18,7 @@ pub struct InitPreAuthorization<'info> {
     pub smart_delegate: Account<'info, SmartDelegate>,
 
     #[account(
+        mut,
         has_one = owner @ CustomProgramError::InitPreAuthorizationUnauthorized
     )]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
@@ -36,6 +37,7 @@ pub struct InitPreAuthorization<'info> {
     pub pre_authorization: Account<'info, PreAuthorization>,
 
     pub token_program: Interface<'info, TokenInterface>,
+
     pub system_program: Program<'info, System>,
 }
 

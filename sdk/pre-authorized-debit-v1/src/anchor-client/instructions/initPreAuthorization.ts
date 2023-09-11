@@ -143,7 +143,7 @@ export class InitPreAuthorization {
       {
         pubkey: this.instructionData.accounts.tokenAccount,
         isSigner: false,
-        isWritable: false,
+        isWritable: true,
       },
       {
         pubkey: this.instructionData.accounts.preAuthorization,
