@@ -9,7 +9,7 @@
     "scripts": {
         "lint:fix": "eslint \"*/**/*{.js,.ts}\" --fix && prettier \"*/**/*{.js,.ts}\" --write",
         "lint": "eslint \"*/**/*{.js,.ts}\" && prettier \"*/**/*{.js,.ts}\" --check",
-        "test": "cargo test && yarn test:batch2 && yarn test:batch1",
+        "test": "yarn test:batch2 && cargo test && yarn test:batch1",
         "test:batch1": "anchor test \"**\" .ts",
         "test:batch2": "anchor test \"**\" .2.ts"
     },

@@ -2,43 +2,25 @@ const { spawn } = require("node:child_process");
 const process = require("node:process");
 const console = require("node:console");
 
-let rustUnitTestsFailed = false;
-const rustUnitTestCommand = ["cargo", "test"];
+const isUnitTests = process.argv[2] === "unit";
 
-console.log("Running: ", "cargo test");
+if (isUnitTests) {
+  const rustUnitTestCommand = ["cargo", "test"];
 
-const rustUnitTests = spawn(
-  rustUnitTestCommand[0],
-  rustUnitTestCommand.slice(1),
-  {
+  console.log("Running: ", "cargo test");
+
+  spawn(rustUnitTestCommand[0], rustUnitTestCommand.slice(1), {
     cwd: process.cwd(),
     detached: false,
+    stdio: "inherit",
     env: {
       ...process.env,
       FORCE_COLOR: true,
     },
-  },
-);
+  });
 
-rustUnitTests.stdout.on("data", (data) => {
-  if (data.includes("FAILED")) {
-    rustUnitTestsFailed = true;
-  }
-  process.stdout.write(data);
-});
-
-rustUnitTests.stderr.on("data", (data) => {
-  if (data.includes("FAILED")) {
-    rustUnitTestsFailed = true;
-  }
-  process.stderr.write(data);
-});
-
-rustUnitTests.on("close", (code) => {
-  if (rustUnitTestsFailed || code !== 0) {
-    process.exit(code);
-  }
-});
+  return;
+}
 
 let integrationTestsFailed = false;
 // const isParallel = process.env.TEST_MODE !== "debug";
@@ -83,7 +65,7 @@ integrationTests.stderr.on("data", (data) => {
 
 integrationTests.on("close", (code) => {
   if (integrationTestsFailed || code !== 0) {
-    process.exit(code);
+    return process.exit(code);
   } else {
     process.exit(0);
   }

@@ -20,6 +20,7 @@ jobs:
             "pre-authorized-debit-v1 .ts",
             "pre-authorized-debit-v1 .2.ts",
             "pre-authorized-debit-v1/debit .ts",
+            "unit",
           ]
     steps:
       - name: Checkout Repo
