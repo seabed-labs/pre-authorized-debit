@@ -207,7 +207,7 @@ export async function testDevnet() {
     ...blockhashInfo,
   }).add(initSmartDelegateIx);
 
-  initSmartDelegateTx.sign(config.signer, userKeypair);
+  initSmartDelegateTx.sign(config.signer);
 
   const initSmartDelegateTxSig = await config.connection.sendRawTransaction(
     initSmartDelegateTx.serialize(),
