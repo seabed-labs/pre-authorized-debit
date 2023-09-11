@@ -28,7 +28,7 @@ import {
 dotenv.config();
 
 const PRE_AUTHORIZED_DEBIT_PROGRAM_ID = new PublicKey(
-  "Debit3fDrmgHiJpc5rhxi1YjsWtbupdSLaCRE1Xk7fhT",
+  "PadV1i1My8wazb6vi37UJ2s1yBDkFN5MYivYN6XgaaR",
 );
 
 interface Config {

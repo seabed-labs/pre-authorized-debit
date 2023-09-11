@@ -18,7 +18,7 @@ solana_security_txt::security_txt! {
     auditors: "None"
 }
 
-declare_id!("Debit3fDrmgHiJpc5rhxi1YjsWtbupdSLaCRE1Xk7fhT");
+declare_id!("PadV1i1My8wazb6vi37UJ2s1yBDkFN5MYivYN6XgaaR");
 
 #[program]
 pub mod pre_authorized_debit_v1 {
