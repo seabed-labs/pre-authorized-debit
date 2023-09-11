@@ -22,6 +22,7 @@ import {
   InitPreAuthorizationVariant,
   Debit,
   DebitParams,
+  SmartDelegate,
 } from "@dcaf/pad";
 
 dotenv.config();
@@ -70,12 +71,9 @@ function loadConfigFromEnv(): Config {
   };
 }
 
-function deriveSmartDelegate(
-  tokenAccount: PublicKey,
-  programId: PublicKey,
-): PublicKey {
+function deriveSmartDelegate(programId: PublicKey): PublicKey {
   const [pdaPubkey] = PublicKey.findProgramAddressSync(
-    [Buffer.from("smart-delegate"), tokenAccount.toBuffer()],
+    [Buffer.from("smart-delegate")],
     programId,
   );
 
@@ -183,45 +181,54 @@ export async function testDevnet() {
     `Created an ATA for the debit authority (for test mint): ${debitAuthorityAta.toBase58()}`,
   );
 
-  const smartDelegate = deriveSmartDelegate(
-    userTestMintAta,
+  let blockhashInfo: Awaited<
+    ReturnType<typeof config.connection.getLatestBlockhash>
+  >;
+  const smartDelegate = deriveSmartDelegate(PRE_AUTHORIZED_DEBIT_PROGRAM_ID);
+  const smartDelegateAccount = await SmartDelegate.fetch(
+    config.connection,
+    smartDelegate,
     PRE_AUTHORIZED_DEBIT_PROGRAM_ID,
   );
-  const initSmartDelegateIx = new InitSmartDelegate(
-    PRE_AUTHORIZED_DEBIT_PROGRAM_ID,
-    {
-      args: null,
-      accounts: {
-        payer: config.signer.publicKey,
-        smartDelegate,
-        systemProgram: SystemProgram.programId,
+  if (smartDelegateAccount === null) {
+    const initSmartDelegateIx = new InitSmartDelegate(
+      PRE_AUTHORIZED_DEBIT_PROGRAM_ID,
+      {
+        args: null,
+        accounts: {
+          payer: config.signer.publicKey,
+          smartDelegate,
+          systemProgram: SystemProgram.programId,
+        },
       },
-    },
-  ).build();
+    ).build();
 
-  let blockhashInfo = await config.connection.getLatestBlockhash({
-    commitment: "confirmed",
-  });
-  const initSmartDelegateTx = new Transaction({
-    feePayer: config.signer.publicKey,
-    ...blockhashInfo,
-  }).add(initSmartDelegateIx);
-
-  initSmartDelegateTx.sign(config.signer);
-
-  const initSmartDelegateTxSig = await config.connection.sendRawTransaction(
-    initSmartDelegateTx.serialize(),
-  );
-  await config.connection.confirmTransaction(
-    {
-      signature: initSmartDelegateTxSig,
+    blockhashInfo = await config.connection.getLatestBlockhash({
+      commitment: "confirmed",
+    });
+    const initSmartDelegateTx = new Transaction({
+      feePayer: config.signer.publicKey,
       ...blockhashInfo,
-    },
-    "confirmed",
-  );
-  console.log(
-    `Initialized smart delegate ${smartDelegate.toBase58()} (tx: ${initSmartDelegateTxSig})`,
-  );
+    }).add(initSmartDelegateIx);
+
+    initSmartDelegateTx.sign(config.signer);
+
+    const initSmartDelegateTxSig = await config.connection.sendRawTransaction(
+      initSmartDelegateTx.serialize(),
+    );
+    await config.connection.confirmTransaction(
+      {
+        signature: initSmartDelegateTxSig,
+        ...blockhashInfo,
+      },
+      "confirmed",
+    );
+    console.log(
+      `Initialized smart delegate ${smartDelegate.toBase58()} (tx: ${initSmartDelegateTxSig})`,
+    );
+  } else {
+    console.log(`Found smart delegate at ${smartDelegate.toBase58()}`);
+  }
 
   const preAuthorization = derivePreAuthorization(
     userTestMintAta,
