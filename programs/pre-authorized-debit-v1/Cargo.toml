@@ -18,6 +18,7 @@ default = []
 [dependencies]
 anchor-lang = "0.28.0"
 anchor-spl = "0.28.0"
+solana-security-txt = "1.0.1"
 
 [dev-dependencies]
 test-case = "3.1.0"
