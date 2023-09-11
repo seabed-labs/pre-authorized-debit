@@ -1,9 +1,10 @@
 # Security Policy
 
-1. [Reporting security problems](#reporting-security-problems-in-the-pre-authorized-debit-program)
-2. Security Bug Bounties (N/A)
-3. [Incident Response Process](#incident-process-response)
+1. [Reporting security problems](#reporting)
+4. [Security Bug Bounties](#bounty)
+2. [Incident Response Process](#process)
 
+<a name="reporting"></a>
 ## Reporting security problems in the Pre Authorized Debit Program
 
 **DO NOT CREATE A GITHUB ISSUE** to report a security problem.
@@ -24,6 +25,7 @@ If you do not receive a response in the advisory, email
 include attachments or provide detail sufficient for exploitation regarding the
 security issue in this email. **Only provide such details in the advisory**.
 
+<a name="process"></a>
 ## Incident Response Process
 
 In case an incident is discovered or reported, the following process will be
