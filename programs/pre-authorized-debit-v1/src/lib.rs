@@ -10,10 +10,11 @@ use instructions::*;
 solana_security_txt::security_txt! {
     name: "Pre Authorized Debit Program",
     project_url: "https://docs.seabed.so/open-source-primitives/pre-authorized-debit-v1",
-    contacts: "email:mocha@dcaf.so,email:matcha@dcaf.so,link:https://github.com/dcaf-labs/pre-authorized-debit/security/advisories/new",
-    policy: "https://github.com/dcaf-labs/pre-authorized-debit/blob/main/SECURITY.md",
+    contacts: "email:mocha@dcaf.so,email:matcha@dcaf.so,link:https://github.com/seabed-labs/pre-authorized-debit/security/advisories/new",
+    policy: "https://github.com/seabed-labs/pre-authorized-debit/blob/main/SECURITY.md",
     preferred_languages: "en",
-    source_code: "https://github.com/dcaf-labs/pre-authorized-debit",
+    source_code: "https://github.com/seabed-labs/pre-authorized-debit",
+    source_revision: "v1.0.0",
     auditors: "None"
 }
 
