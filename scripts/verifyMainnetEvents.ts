@@ -2,7 +2,6 @@ import { AnchorProvider, EventParser, Program } from "@coral-xyz/anchor";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
 import dotenv from "dotenv";
-import { IDL } from "../target/types/pre_authorized_debit_v1";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 dotenv.config();
@@ -23,10 +22,10 @@ const connection = new Connection(rpc, {
 const provider = new AnchorProvider(connection, new NodeWallet(new Keypair()), {
   commitment: "confirmed",
 });
-const program = new Program(IDL, PRE_AUTHORIZED_DEBIT_PROGRAM_ID, provider);
-const eventParser = new EventParser(program.programId, program.coder);
 
 async function main() {
+  const program = await Program.at(PRE_AUTHORIZED_DEBIT_PROGRAM_ID, provider);
+  const eventParser = new EventParser(program.programId, program.coder);
   const sigs = await connection.getSignaturesForAddress(
     PRE_AUTHORIZED_DEBIT_PROGRAM_ID,
   );
@@ -44,7 +43,7 @@ async function main() {
       }
       const eventGenerator = eventParser.parseLogs(tx.meta?.logMessages ?? []);
       const events = [...eventGenerator];
-      console.log(events);
+      console.log(JSON.stringify(events, null, 2));
     } catch (e) {
       console.log(`failed to parse logs from tx ${sig} with error ${e}`);
     }
