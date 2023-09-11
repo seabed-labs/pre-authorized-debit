@@ -35,16 +35,17 @@ export function testOneTimeDebit(
       program.coder,
     );
 
-    let fundedKeypair: Keypair;
-    let mintAuthorityKeypair: Keypair;
-    let debitAuthorityKeypair: Keypair;
-    let userKeypair: Keypair;
-    let tokenAccountPubkey: PublicKey;
-    let mintPubkey: PublicKey;
-    let smartDelegatePubkey: PublicKey;
-    let preAuthorizationPubkey: PublicKey;
-    let destinationTokenAccountOwnerPubkey: PublicKey;
-    let destinationTokenAccountPubkey: PublicKey;
+    let fundedKeypair: Keypair,
+      mintAuthorityKeypair: Keypair,
+      debitAuthorityKeypair: Keypair,
+      userKeypair: Keypair;
+
+    let tokenAccountPubkey: PublicKey,
+      mintPubkey: PublicKey,
+      smartDelegatePubkey: PublicKey,
+      preAuthorizationPubkey: PublicKey,
+      destinationTokenAccountOwnerPubkey: PublicKey,
+      destinationTokenAccountPubkey: PublicKey;
 
     async function setupOneTimePreAuthorization(
       activationUnixTimestamp: number,
@@ -138,7 +139,7 @@ export function testOneTimeDebit(
       await program.methods
         .initSmartDelegate()
         .accounts({
-          payer: provider.publicKey!,
+          payer: provider.publicKey,
           owner: userKeypair.publicKey,
           tokenAccount: tokenAccountPubkey,
           smartDelegate: smartDelegatePubkey,
@@ -943,7 +944,10 @@ export function testOneTimeDebit(
       expect(events.length).to.equal(1);
       expect(events[0].name).to.equal("DebitEvent");
       const [debitEvent] = events as [DebitEvent];
-      expect(Object.keys(debitEvent.data).length).to.equal(9);
+      expect(Object.keys(debitEvent.data).length).to.equal(10);
+      expect(debitEvent.data.debitAuthority.toString()).to.equal(
+        debitAuthorityKeypair.publicKey.toBase58(),
+      );
       expect(debitEvent.data.preAuthorization.toString()).to.equal(
         preAuthorizationPubkey.toBase58(),
       );
@@ -967,9 +971,15 @@ export function testOneTimeDebit(
         destinationTokenAccountPubkey.toBase58(),
       );
       expect(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (debitEvent.data.debitAuthorizationType as any).oneTime,
-      ).to.deep.equal({});
+        JSON.stringify(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (debitEvent.data.debitVariant as any).oneTime,
+        ),
+      ).to.deep.equal(
+        JSON.stringify({
+          debitAmount: new anchor.BN(50e6),
+        }),
+      );
     });
   });
 }
