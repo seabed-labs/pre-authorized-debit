@@ -15,6 +15,12 @@ pub struct InitPreAuthorization<'info> {
 
     pub owner: Signer<'info>,
 
+    #[account(
+        seeds = [
+            b"smart-delegate",
+        ],
+        bump = smart_delegate.bump,
+    )]
     pub smart_delegate: Account<'info, SmartDelegate>,
 
     #[account(
