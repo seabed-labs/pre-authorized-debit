@@ -193,10 +193,7 @@ export async function testDevnet() {
       args: null,
       accounts: {
         payer: config.signer.publicKey,
-        owner: userKeypair.publicKey,
-        tokenAccount: userTestMintAta,
         smartDelegate,
-        tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       },
     },
@@ -248,8 +245,10 @@ export async function testDevnet() {
       accounts: {
         payer: config.signer.publicKey,
         owner: userKeypair.publicKey,
+        smartDelegate,
         tokenAccount: userTestMintAta,
         preAuthorization,
+        tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       },
     },
