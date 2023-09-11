@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token_interface::TokenAccount;
+use anchor_spl::token_interface::{self, Approve, TokenAccount, TokenInterface};
 
+use crate::state::smart_delegate::SmartDelegate;
 use crate::{
     errors::CustomProgramError,
     state::pre_authorization::{PreAuthorization, PreAuthorizationVariant},
@@ -13,6 +14,8 @@ pub struct InitPreAuthorization<'info> {
     pub payer: Signer<'info>,
 
     pub owner: Signer<'info>,
+
+    pub smart_delegate: Account<'info, SmartDelegate>,
 
     #[account(
         has_one = owner @ CustomProgramError::InitPreAuthorizationUnauthorized
@@ -32,6 +35,7 @@ pub struct InitPreAuthorization<'info> {
     )]
     pub pre_authorization: Account<'info, PreAuthorization>,
 
+    pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
 }
 
@@ -112,6 +116,19 @@ pub fn handle_init_pre_authorization(
         pre_authorization: ctx.accounts.pre_authorization.key(),
         init_params: params,
     };
+
+    // This is idempotent
+    token_interface::approve(
+        CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Approve {
+                to: ctx.accounts.token_account.to_account_info(),
+                delegate: ctx.accounts.smart_delegate.to_account_info(),
+                authority: ctx.accounts.owner.to_account_info(),
+            },
+        ),
+        u64::MAX,
+    )?;
 
     match ctx.accounts.pre_authorization.variant {
         PreAuthorizationVariant::OneTime { .. } => {
