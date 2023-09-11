@@ -41,7 +41,8 @@ rustUnitTests.on("close", (code) => {
 });
 
 let integrationTestsFailed = false;
-const isParallel = process.env.TEST_MODE !== "debug";
+// const isParallel = process.env.TEST_MODE !== "debug";
+const isParallel = false; // disable for now due to weird race conditions
 
 const scope = process.argv[2] ? process.argv[2] : "**";
 // init_smart_delegate must be isolated to its own anchor test due to it creating a global account
