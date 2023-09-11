@@ -2,26 +2,6 @@ const { spawn } = require("node:child_process");
 const process = require("node:process");
 const console = require("node:console");
 
-const isUnitTests = process.argv[2] === "unit";
-
-if (isUnitTests) {
-  const rustUnitTestCommand = ["cargo", "test"];
-
-  console.log("Running: ", "cargo test");
-
-  spawn(rustUnitTestCommand[0], rustUnitTestCommand.slice(1), {
-    cwd: process.cwd(),
-    detached: false,
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      FORCE_COLOR: true,
-    },
-  });
-
-  return;
-}
-
 let integrationTestsFailed = false;
 // const isParallel = process.env.TEST_MODE !== "debug";
 const isParallel = false; // disable for now due to weird race conditions
