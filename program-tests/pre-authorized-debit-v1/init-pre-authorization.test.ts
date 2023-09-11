@@ -25,8 +25,10 @@ import {
   createAccount,
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
-import { PreAuthorizationCreatedEventData } from "../../sdk/pre-authorized-debit-v1/src";
-import { InitPreAuthorizationParams } from "@dcaf/pad";
+import {
+  PreAuthorizationCreatedEventData,
+  InitPreAuthorizationParams,
+} from "@dcaf/pad";
 
 describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   const program =
@@ -444,9 +446,7 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               systemProgram: SystemProgram.programId,
             })
             .signers([payer])
-            .rpc({
-              skipPreflight: true,
-            }),
+            .rpc(),
         ).to.eventually.be.rejectedWith(/Signature verification failed/);
       });
 

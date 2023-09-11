@@ -9,11 +9,10 @@ export type CustomError =
   | PreAuthorizationTokenAccountMismatch
   | PreAuthorizationCloseUnauthorized
   | SmartDelegateCloseUnauthorized
-  | SmartDelegateTokenAccountMismatch
+  | PausePreAuthorizationUnauthorized
   | DebitUnauthorized
   | InitPreAuthorizationUnauthorized
-  | InitSmartDelegateUnauthorized
-  | PausePreAuthorizationUnauthorized;
+  | InitSmartDelegateUnauthorized;
 
 export class PreAuthorizationNotActive extends Error {
   static readonly code = 6000;
@@ -123,14 +122,14 @@ export class SmartDelegateCloseUnauthorized extends Error {
   }
 }
 
-export class SmartDelegateTokenAccountMismatch extends Error {
+export class PausePreAuthorizationUnauthorized extends Error {
   static readonly code = 6009;
   readonly code = 6009;
-  readonly name = "SmartDelegateTokenAccountMismatch";
-  readonly msg = "Smart delegate and token account mismatch";
+  readonly name = "PausePreAuthorizationUnauthorized";
+  readonly msg = "Only token account owner can pause a pre-authorization";
 
   constructor(readonly logs?: string[]) {
-    super("6009: Smart delegate and token account mismatch");
+    super("6009: Only token account owner can pause a pre-authorization");
   }
 }
 
@@ -170,17 +169,6 @@ export class InitSmartDelegateUnauthorized extends Error {
   }
 }
 
-export class PausePreAuthorizationUnauthorized extends Error {
-  static readonly code = 6013;
-  readonly code = 6013;
-  readonly name = "PausePreAuthorizationUnauthorized";
-  readonly msg = "Only token account owner can pause a pre-authorization";
-
-  constructor(readonly logs?: string[]) {
-    super("6013: Only token account owner can pause a pre-authorization");
-  }
-}
-
 export function fromCode(code: number, logs?: string[]): CustomError | null {
   switch (code) {
     case 6000:
@@ -202,15 +190,13 @@ export function fromCode(code: number, logs?: string[]): CustomError | null {
     case 6008:
       return new SmartDelegateCloseUnauthorized(logs);
     case 6009:
-      return new SmartDelegateTokenAccountMismatch(logs);
+      return new PausePreAuthorizationUnauthorized(logs);
     case 6010:
       return new DebitUnauthorized(logs);
     case 6011:
       return new InitPreAuthorizationUnauthorized(logs);
     case 6012:
       return new InitSmartDelegateUnauthorized(logs);
-    case 6013:
-      return new PausePreAuthorizationUnauthorized(logs);
   }
 
   return null;

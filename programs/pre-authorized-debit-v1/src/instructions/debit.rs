@@ -23,11 +23,9 @@ pub struct Debit<'info> {
 
     #[account(
         seeds = [
-            b"smart-delegate",
-            token_account.key().as_ref(),
+            b"smart-delegate"
         ],
-        bump = smart_delegate.bump,
-        has_one = token_account @ CustomProgramError::SmartDelegateTokenAccountMismatch
+        bump = smart_delegate.bump
     )]
     pub smart_delegate: Account<'info, SmartDelegate>,
 
@@ -111,7 +109,6 @@ pub fn handle_debit(ctx: Context<Debit>, params: DebitParams) -> Result<()> {
             },
             &[&[
                 b"smart-delegate".as_ref(),
-                ctx.accounts.token_account.key().as_ref(),
                 &[ctx.accounts.smart_delegate.bump],
             ]],
         ),

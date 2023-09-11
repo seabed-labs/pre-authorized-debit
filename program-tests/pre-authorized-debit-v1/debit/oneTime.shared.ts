@@ -1,23 +1,28 @@
 import "../setup";
+import { PreAuthorizedDebitV1 } from "../../../target/types/pre_authorized_debit_v1";
 import * as anchor from "@coral-xyz/anchor";
 import { assert, expect } from "chai";
-
-import { PreAuthorizedDebitV1 } from "../../../target/types/pre_authorized_debit_v1";
-import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   createMint,
   getAccount,
   mintTo,
+  createApproveInstruction,
 } from "@solana/spl-token";
 import {
   DebitEvent,
   U64_MAX,
   derivePreAuthorization,
-  deriveSmartDelegate,
   fundAccounts,
   getCurrentUnixTimestamp,
   waitForTxToConfirm,
+  initSmartDelegateIdempotent,
 } from "../utils";
 
 export function testOneTimeDebit(
@@ -26,10 +31,8 @@ export function testOneTimeDebit(
 ) {
   describe(`pre-authorized-debit-v1#debit (one-time) ${testSuffix}`, () => {
     const provider = anchor.getProvider() as anchor.AnchorProvider;
-
     const program = anchor.workspace
       .PreAuthorizedDebitV1 as anchor.Program<PreAuthorizedDebitV1>;
-
     const eventParser = new anchor.EventParser(
       program.programId,
       program.coder,
@@ -46,6 +49,13 @@ export function testOneTimeDebit(
       preAuthorizationPubkey: PublicKey,
       destinationTokenAccountOwnerPubkey: PublicKey,
       destinationTokenAccountPubkey: PublicKey;
+
+    before(async () => {
+      smartDelegatePubkey = await initSmartDelegateIdempotent(
+        program,
+        provider,
+      );
+    });
 
     async function setupOneTimePreAuthorization(
       activationUnixTimestamp: number,
@@ -78,6 +88,17 @@ export function testOneTimeDebit(
         .signers([userKeypair])
         .rpc();
 
+      const approveTx = new Transaction().add(
+        createApproveInstruction(
+          tokenAccountPubkey,
+          smartDelegatePubkey,
+          userKeypair.publicKey,
+          BigInt(U64_MAX),
+          [],
+          tokenProgramId,
+        ),
+      );
+      await provider.sendAndConfirm(approveTx, [userKeypair]);
       return preAuthorizationPubkey;
     }
 
@@ -130,24 +151,6 @@ export function testOneTimeDebit(
         undefined,
         tokenProgramId,
       );
-
-      [smartDelegatePubkey] = deriveSmartDelegate(
-        tokenAccountPubkey,
-        program.programId,
-      );
-
-      await program.methods
-        .initSmartDelegate()
-        .accounts({
-          payer: provider.publicKey,
-          owner: userKeypair.publicKey,
-          tokenAccount: tokenAccountPubkey,
-          smartDelegate: smartDelegatePubkey,
-          tokenProgram: tokenProgramId,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([userKeypair])
-        .rpc();
 
       const activationUnixTimestamp =
         Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
@@ -758,68 +761,6 @@ export function testOneTimeDebit(
         })
         .signers([debitAuthorityKeypair])
         .rpc();
-    });
-
-    it("fails if smart_delegate doesn't match with token_account", async () => {
-      const newUserKeypair = Keypair.generate();
-      const newTokenAccountPubkey = await createAssociatedTokenAccount(
-        provider.connection,
-        fundedKeypair,
-        mintPubkey,
-        newUserKeypair.publicKey,
-        undefined,
-        tokenProgramId,
-      );
-
-      await mintTo(
-        provider.connection,
-        fundedKeypair,
-        mintPubkey,
-        newTokenAccountPubkey,
-        mintAuthorityKeypair,
-        1000e6,
-        undefined,
-        undefined,
-        tokenProgramId,
-      );
-
-      const [newSmartDelegatePubkey] = deriveSmartDelegate(
-        newTokenAccountPubkey,
-        program.programId,
-      );
-
-      await program.methods
-        .initSmartDelegate()
-        .accounts({
-          payer: provider.publicKey,
-          owner: newUserKeypair.publicKey,
-          tokenAccount: newTokenAccountPubkey,
-          smartDelegate: newSmartDelegatePubkey,
-          tokenProgram: tokenProgramId,
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([newUserKeypair])
-        .rpc();
-
-      // we don't see the actual validation error because the PDA error is hit first
-      // it is redundant but we'll leave it in there
-      await expect(
-        program.methods
-          .debit({ amount: new anchor.BN(50e6) })
-          .accounts({
-            debitAuthority: debitAuthorityKeypair.publicKey,
-            mint: mintPubkey,
-            tokenAccount: tokenAccountPubkey,
-            destinationTokenAccount: destinationTokenAccountPubkey,
-            smartDelegate: newSmartDelegatePubkey,
-            preAuthorization: preAuthorizationPubkey,
-            tokenProgram: tokenProgramId,
-          })
-          .signers([debitAuthorityKeypair])
-          .rpc(),
-      ).to.eventually.be.rejectedWith(
-        /AnchorError caused by account: smart_delegate\. Error Code: ConstraintSeeds\. Error Number: 2006\. Error Message: A seeds constraint was violated\./,
-      );
     });
 
     it("fails if pre_authorization doesn't match with token_account", async () => {

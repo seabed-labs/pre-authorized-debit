@@ -24,7 +24,7 @@ import {
   fundAccounts,
   waitForTxToConfirm,
 } from "./utils";
-import { PreAuthorizationClosedEventDataFields } from "../../sdk/pre-authorized-debit-v1/src";
+import { PreAuthorizationClosedEventDataFields } from "@dcaf/pad";
 
 describe("pre-authorized-debit-v1#close-pre-authorization", () => {
   const program =

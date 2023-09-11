@@ -69,7 +69,7 @@ const layout = borsh.struct([types.DebitParams.layout("params")]);
  *     For a one-time pre-authorization:
  *     - the validator time must be greater than or equal to the `pre_authorization.activation_unix_timestamp`
  *
- *     For a more in-depth understanding around the constraints in a debit, it is recomended to read through
+ *     For a more in-depth understanding around the constraints in a debit, it is recommended to read through
  *     the validation done for a `debit` instruction.
  *
  *     The `debit_authority` MUST sign the transaction.
@@ -78,7 +78,6 @@ const layout = borsh.struct([types.DebitParams.layout("params")]);
  *     The `token_account.delegate` MUST equal the `smart_delegate`.
  *     The `token_account.mint` MUST equal the `mint`.
  *     The `destination_token_account.mint` MUST equal `mint`.
- *     The `smart_delegate.token_account` MUST equal `token_account`.
  *     The `pre_authorization.token_account` MUST equal the `token_account`.
  *     The `token_program` MUST equal the token program matching the `token_account`.
  *

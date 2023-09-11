@@ -1,9 +1,3 @@
-import {
-  AnchorProvider,
-  EventParser,
-  Program,
-  workspace,
-} from "@coral-xyz/anchor";
 import { assert, expect } from "chai";
 import { Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
@@ -14,23 +8,17 @@ import {
   createAccount,
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
-import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 
-import "./setup";
+import { program, provider, eventParser } from "./setup";
 import {
   PreAuthTestVariant,
   derivePreAuthorization,
   fundAccounts,
   waitForTxToConfirm,
 } from "./utils";
-import { PausePreAuthorizationEventData } from "../../sdk/pre-authorized-debit-v1/src";
+import { PausePreAuthorizationEventData } from "@dcaf/pad";
 
 describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
-  const program =
-    workspace.PreAuthorizedDebitV1 as Program<PreAuthorizedDebitV1>;
-  const provider = program.provider as AnchorProvider;
-  const eventParser = new EventParser(program.programId, program.coder);
-
   let owner: Keypair, mintAuthority: Keypair, debitAuthority: Keypair;
 
   const activationUnixTimestamp = Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
@@ -348,7 +336,7 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
                 .signers([debitAuthority])
                 .rpc(),
             ).to.eventually.be.rejectedWith(
-              /AnchorError caused by account: token_account. Error Code: PausePreAuthorizationUnauthorized. Error Number: 6013. Error Message: Only token account owner can pause a pre-authorization./,
+              /AnchorError caused by account: token_account. Error Code: PausePreAuthorizationUnauthorized. Error Number: 6009. Error Message: Only token account owner can pause a pre-authorization./,
             );
           });
         });
