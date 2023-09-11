@@ -1133,7 +1133,10 @@ export function testRecurringDebit(
         expect(events.length).to.equal(1);
         expect(events[0].name).to.equal("DebitEvent");
         const [debitEvent] = events as [DebitEvent];
-        expect(Object.keys(debitEvent.data).length).to.equal(9);
+        expect(Object.keys(debitEvent.data).length).to.equal(10);
+        expect(debitEvent.data.debitAuthority.toString()).to.equal(
+          debitAuthorityKeypair.publicKey.toBase58(),
+        );
         expect(debitEvent.data.preAuthorization.toString()).to.equal(
           preAuthorizationPubkey.toBase58(),
         );
@@ -1157,9 +1160,16 @@ export function testRecurringDebit(
           destinationTokenAccountPubkey.toBase58(),
         );
         expect(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (debitEvent.data.debitAuthorizationType as any).recurring,
-        ).to.deep.equal({});
+          JSON.stringify(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (debitEvent.data.debitVariant as any).recurring,
+          ),
+        ).to.deep.equal(
+          JSON.stringify({
+            debitAmount: new anchor.BN(50e6),
+            cycle: new anchor.BN(1),
+          }),
+        );
       });
     });
 
