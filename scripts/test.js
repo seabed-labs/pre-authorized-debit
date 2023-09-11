@@ -2,44 +2,6 @@ const { spawn } = require("node:child_process");
 const process = require("node:process");
 const console = require("node:console");
 
-let rustUnitTestsFailed = false;
-const rustUnitTestCommand = ["cargo", "test"];
-
-console.log("Running: ", "cargo test");
-
-const rustUnitTests = spawn(
-  rustUnitTestCommand[0],
-  rustUnitTestCommand.slice(1),
-  {
-    cwd: process.cwd(),
-    detached: false,
-    env: {
-      ...process.env,
-      FORCE_COLOR: true,
-    },
-  },
-);
-
-rustUnitTests.stdout.on("data", (data) => {
-  if (data.includes("FAILED")) {
-    rustUnitTestsFailed = true;
-  }
-  process.stdout.write(data);
-});
-
-rustUnitTests.stderr.on("data", (data) => {
-  if (data.includes("FAILED")) {
-    rustUnitTestsFailed = true;
-  }
-  process.stderr.write(data);
-});
-
-rustUnitTests.on("close", (code) => {
-  if (rustUnitTestsFailed || code !== 0) {
-    process.exit(code);
-  }
-});
-
 let integrationTestsFailed = false;
 const isParallel = process.env.TEST_MODE !== "debug";
 

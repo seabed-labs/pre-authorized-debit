@@ -4,29 +4,47 @@ on:
     branches:
       - main
   pull_request:
-    types: [ready_for_review]
-jobs:
-  program-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-      - name: Solana Anchor Test
-        uses: dcaf-labs/anchor-test-action@v1.1.0
-        with:
-          # add anchor test args, e.g. "--skip-lint"
-          args: ""
-          # path to the anchor workspace, e.g. "./my_workspace"
-          workspace_dir: "."
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
 
-  # TODO: this is wasting some credits as it is re-compiling and re-installing packages
-  program-tests-2:
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
     runs-on: ubuntu-latest
+    container: backpackapp/build:v0.28.0
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-      - name: Solana Anchor Test
-        uses: dcaf-labs/anchor-test-action@v1.1.0
+      - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+      - run: rustup default stable
+      - run: cargo test
+
+  program-integration-tests:
+    runs-on: ubuntu-latest
+    container: backpackapp/build:v0.28.0
+    strategy:
+      matrix:
+        testSuffix: [ ".ts", ".2.ts" ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Yarn cache
+        uses: actions/cache@v2
         with:
-          args: 'pre-authorized-debit-v1 .2.ts'
-          workspace_dir: "."
+          path: |
+            **/node_modules
+            **/.eslintcache
+            ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - uses: Swatinem/rust-cache@v2
+      - run: rustup default stable
+      - run: solana-keygen new --no-bip39-passphrase
+      - run: solana config set --url http:localhost:8899
+      - run: yarn install
+      - run: anchor test --arch sbf "**" ${{ matrix.testSuffix }}
