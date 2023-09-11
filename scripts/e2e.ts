@@ -106,6 +106,7 @@ export async function testDevnet() {
         rpcEndpoint: config.connection.rpcEndpoint,
         signer: config.signer.publicKey,
         signerKeypairPath: ENV_CONFIG.SOLANA_KEYPAIR_PATH as string,
+        padProgramId: PRE_AUTHORIZED_DEBIT_PROGRAM_ID.toBase58(),
       },
       null,
       2,

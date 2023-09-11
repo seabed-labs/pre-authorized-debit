@@ -44,6 +44,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@coral-xyz/anchor@npm:^0.28.1-beta.2":
+  version: 0.28.1-beta.2
+  resolution: "@coral-xyz/anchor@npm:0.28.1-beta.2"
+  dependencies:
+    "@coral-xyz/borsh": ^0.28.0
+    "@noble/hashes": ^1.3.1
+    "@solana/web3.js": ^1.68.0
+    base64-js: ^1.5.1
+    bn.js: ^5.1.2
+    bs58: ^4.0.1
+    buffer-layout: ^1.2.2
+    camelcase: ^6.3.0
+    cross-fetch: ^3.1.5
+    crypto-hash: ^1.3.0
+    eventemitter3: ^4.0.7
+    pako: ^2.0.3
+    snake-case: ^3.0.4
+    superstruct: ^0.15.4
+    toml: ^3.0.0
+  checksum: 5d286277b7401105c77cea2c83758e0dedbf583377593e4546a97024d83dd1279d43cef37c7162c948d79421bfd995fb19e11680581aa1e00ddf20221411aaa8
+  languageName: node
+  linkType: hard
+
 "@coral-xyz/borsh@npm:^0.28.0":
   version: 0.28.0
   resolution: "@coral-xyz/borsh@npm:0.28.0"
@@ -111,6 +134,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@dcaf/pad-library-scripts@workspace:scripts"
   dependencies:
+    "@coral-xyz/anchor": ^0.28.1-beta.2
     "@dcaf/pad": 1.0.0
     "@solana/spl-token": ^0.3.8
     "@solana/web3.js": ^1.78.4

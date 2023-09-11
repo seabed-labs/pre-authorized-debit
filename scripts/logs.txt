@@ -1,0 +1,10 @@
+Program logged: "Instruction: InitPreAuthorization"
+Program invoked: System Program
+Program returned success
+Program invoked: Token Program
+Program logged: "Instruction: Approve"
+Program consumed: 2904 of 183008 compute units
+Program returned success
+Program data: U+LPG2BljqJTgli4Sz1aDSHm95cJxzN/yzxNmFyCLaxSlzaCxzNhM6WPekAOS/Tg4KLbrmUkymks1/MgO0yLpT8abAlD9GVfhLeszPIKoIJ5JBPmiu15iOQbSQGEh7KN8JS0xGJY4OM37bFC5a9uuN/g0KD/ILaKDE2XfrkX9WyFTthDDcCIFY3GJiIrcpD/xEnvbr0q/RgUihwWMOwSDu4SqO9IS93oAADh9QUAAAAADacAZQAAAABTgli4Sz1aDSHm95cJxzN/yzxNmFyCLaxSlzaCxzNhM31H/2QAAAAA
+Program consumed: 22086 of 200000 compute units
+Program returned success
