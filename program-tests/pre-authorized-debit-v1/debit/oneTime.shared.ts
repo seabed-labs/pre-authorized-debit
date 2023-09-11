@@ -423,6 +423,154 @@ export function testOneTimeDebit(
       });
     });
 
+    context("negative timestamps", () => {
+      it("fails if expiry is negative", async () => {
+        await program.methods
+          .closePreAuthorization()
+          .accounts({
+            receiver: userKeypair.publicKey,
+            authority: userKeypair.publicKey,
+            tokenAccount: tokenAccountPubkey,
+            preAuthorization: preAuthorizationPubkey,
+          })
+          .signers([userKeypair])
+          .rpc();
+
+        const activationUnixTimestamp =
+          Math.floor(new Date().getTime() / 1e3) - 24 * 60 * 60; // -1 day before now
+
+        const expirationUnixTimestamp = -(
+          activationUnixTimestamp +
+          10 * 24 * 60 * 60 -
+          1
+        ); // negative(+10 days from now) (so thousands of year before epoch 0)
+
+        await setupOneTimePreAuthorization(
+          activationUnixTimestamp,
+          expirationUnixTimestamp,
+        );
+
+        await expect(
+          program.methods
+            .debit({ amount: new anchor.BN(50e6) })
+            .accounts({
+              debitAuthority: debitAuthorityKeypair.publicKey,
+              mint: mintPubkey,
+              tokenAccount: tokenAccountPubkey,
+              destinationTokenAccount: destinationTokenAccountPubkey,
+              smartDelegate: smartDelegatePubkey,
+              preAuthorization: preAuthorizationPubkey,
+              tokenProgram: tokenProgramId,
+            })
+            .signers([debitAuthorityKeypair])
+            .rpc(),
+        ).to.eventually.be.rejectedWith(
+          /Error Code: PreAuthorizationNotActive. Error Number: 6000/,
+        );
+      });
+      it("fails when activation_timestamp < 0 && 0 < expiry_timestamp < now && abs(activation_timestamp) > expiry_timestamp", async () => {
+        await program.methods
+          .closePreAuthorization()
+          .accounts({
+            receiver: userKeypair.publicKey,
+            authority: userKeypair.publicKey,
+            tokenAccount: tokenAccountPubkey,
+            preAuthorization: preAuthorizationPubkey,
+          })
+          .signers([userKeypair])
+          .rpc();
+
+        const activationUnixTimestamp = -(
+          Math.floor(new Date().getTime() / 1e3) -
+          24 * 60 * 60
+        ); // negative(-1 day before now)
+
+        const expirationUnixTimestamp =
+          Math.floor(new Date().getTime() / 1e3) - 2 * 24 * 60 * 60; // -2 days before now
+
+        await setupOneTimePreAuthorization(
+          activationUnixTimestamp,
+          expirationUnixTimestamp,
+        );
+
+        await expect(
+          program.methods
+            .debit({ amount: new anchor.BN(50e6) })
+            .accounts({
+              debitAuthority: debitAuthorityKeypair.publicKey,
+              mint: mintPubkey,
+              tokenAccount: tokenAccountPubkey,
+              destinationTokenAccount: destinationTokenAccountPubkey,
+              smartDelegate: smartDelegatePubkey,
+              preAuthorization: preAuthorizationPubkey,
+              tokenProgram: tokenProgramId,
+            })
+            .signers([debitAuthorityKeypair])
+            .rpc(),
+        ).to.eventually.be.rejectedWith(
+          /Error Code: PreAuthorizationNotActive. Error Number: 6000/,
+        );
+      });
+      it("allows debit when activation_timestamp < 0 && expiry_timestamp > now  && abs(activation_timestamp) > expiry_timestamp", async () => {
+        await program.methods
+          .closePreAuthorization()
+          .accounts({
+            receiver: userKeypair.publicKey,
+            authority: userKeypair.publicKey,
+            tokenAccount: tokenAccountPubkey,
+            preAuthorization: preAuthorizationPubkey,
+          })
+          .signers([userKeypair])
+          .rpc();
+
+        const activationUnixTimestamp = -(
+          Math.floor(new Date().getTime() / 1e3) +
+          20 * 24 * 60 * 60
+        ); // negative(+20 days from now)
+
+        const expirationUnixTimestamp =
+          Math.floor(new Date().getTime() / 1e3) + 10 * 24 * 60 * 60; // +10 days from now
+
+        await setupOneTimePreAuthorization(
+          activationUnixTimestamp,
+          expirationUnixTimestamp,
+        );
+
+        const destinationTokenAccountBefore = await getAccount(
+          provider.connection,
+          destinationTokenAccountPubkey,
+          undefined,
+          tokenProgramId,
+        );
+
+        await program.methods
+          .debit({ amount: new anchor.BN(50e6) })
+          .accounts({
+            debitAuthority: debitAuthorityKeypair.publicKey,
+            mint: mintPubkey,
+            tokenAccount: tokenAccountPubkey,
+            destinationTokenAccount: destinationTokenAccountPubkey,
+            smartDelegate: smartDelegatePubkey,
+            preAuthorization: preAuthorizationPubkey,
+            tokenProgram: tokenProgramId,
+          })
+          .signers([debitAuthorityKeypair])
+          .rpc();
+
+        const destinationTokenAccountAfter = await getAccount(
+          provider.connection,
+          destinationTokenAccountPubkey,
+          undefined,
+          tokenProgramId,
+        );
+
+        expect(
+          destinationTokenAccountAfter.amount -
+            destinationTokenAccountBefore.amount,
+        ).to.equal(BigInt(50e6));
+      });
+    });
+
     it("fails if pre_authorization is paused", async () => {
       await program.methods
         .updatePausePreAuthorization({

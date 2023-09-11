@@ -2,6 +2,45 @@ const { spawn } = require("node:child_process");
 const process = require("node:process");
 const console = require("node:console");
 
+let rustUnitTestsFailed = false;
+const rustUnitTestCommand = ["cargo", "test"];
+
+console.log("Running: ", "cargo test");
+
+const rustUnitTests = spawn(
+  rustUnitTestCommand[0],
+  rustUnitTestCommand.slice(1),
+  {
+    cwd: process.cwd(),
+    detached: false,
+    env: {
+      ...process.env,
+      FORCE_COLOR: true,
+    },
+  },
+);
+
+rustUnitTests.stdout.on("data", (data) => {
+  if (data.includes("FAILED")) {
+    rustUnitTestsFailed = true;
+  }
+  process.stdout.write(data);
+});
+
+rustUnitTests.stderr.on("data", (data) => {
+  if (data.includes("FAILED")) {
+    rustUnitTestsFailed = true;
+  }
+  process.stderr.write(data);
+});
+
+rustUnitTests.on("close", (code) => {
+  if (rustUnitTestsFailed || code !== 0) {
+    process.exit(code);
+  }
+});
+
+let integrationTestsFailed = false;
 const isParallel = process.env.TEST_MODE !== "debug";
 const scope = process.argv[2] ? process.argv[2] : "**";
 const testCommand = `yarn run ts-mocha -p ./tsconfig.json -t 1000000 ${
@@ -11,9 +50,7 @@ const testCommand = `yarn run ts-mocha -p ./tsconfig.json -t 1000000 ${
 console.log("Running:", testCommand);
 const [command, ...args] = testCommand.split(" ");
 
-let testsFailed = false;
-
-const tests = spawn(command, args, {
+const integrationTests = spawn(command, args, {
   cwd: process.cwd(),
   detached: false,
   env: {
@@ -22,23 +59,23 @@ const tests = spawn(command, args, {
   },
 });
 
-tests.stdout.on("data", (data) => {
+integrationTests.stdout.on("data", (data) => {
   if (data.includes("failing")) {
-    testsFailed = true;
+    integrationTestsFailed = true;
   }
   process.stdout.write(data);
 });
 
-tests.stderr.on("data", (data) => {
+integrationTests.stderr.on("data", (data) => {
   if (data.includes("failing")) {
-    testsFailed = true;
+    integrationTestsFailed = true;
   }
   process.stderr.write(data);
 });
 
-tests.on("close", (code) => {
-  if (testsFailed || code !== 0) {
-    process.exit(1);
+integrationTests.on("close", (code) => {
+  if (integrationTestsFailed || code !== 0) {
+    process.exit(code);
   } else {
     process.exit(0);
   }
