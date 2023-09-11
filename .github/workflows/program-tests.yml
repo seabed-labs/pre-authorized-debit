@@ -19,7 +19,7 @@ jobs:
           [
             "pre-authorized-debit-v1 .ts",
             "pre-authorized-debit-v1 .2.ts",
-            pre-authorized-debit-v1/debit .ts,
+            "pre-authorized-debit-v1/debit .ts",
           ]
     steps:
       - name: Checkout Repo
@@ -28,6 +28,6 @@ jobs:
         uses: dcaf-labs/anchor-test-action@v1.1.0
         with:
           # add anchor test args, e.g. "--skip-lint"
-          args: "${{ matrix.testSuffix }}"
+          args: "${{ matrix.testArgs }}"
           # path to the anchor workspace, e.g. "./my_workspace"
           workspace_dir: "."
