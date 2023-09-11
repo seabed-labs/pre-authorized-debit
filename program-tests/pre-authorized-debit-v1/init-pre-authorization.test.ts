@@ -15,6 +15,8 @@ import {
   derivePreAuthorization,
   fundAccounts,
   waitForTxToConfirm,
+  initSmartDelegateIdempotent,
+  U64_MAX,
 } from "./utils";
 import {
   createMint,
@@ -36,10 +38,19 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   const provider = program.provider as AnchorProvider;
   const eventParser = new EventParser(program.programId, program.coder);
 
+  let smartDelegatePublicKey: PublicKey;
+
   let payer: Keypair,
     owner: Keypair,
     mintAuthority: Keypair,
     debitAuthority: Keypair;
+
+  before(async () => {
+    smartDelegatePublicKey = await initSmartDelegateIdempotent(
+      program,
+      provider,
+    );
+  });
 
   beforeEach(async () => {
     mintAuthority = Keypair.generate();
@@ -113,6 +124,10 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             expect(tokenAccountDataBefore.amount.toString()).to.equal(
               (1e6).toString(),
             );
+            expect(tokenAccountDataBefore.delegate).to.equal(null);
+            expect(tokenAccountDataBefore.delegatedAmount.toString()).to.equal(
+              "0",
+            );
 
             const [payerAccountInfoBefore, ownerAccountInfoBefore] =
               await provider.connection.getMultipleAccountsInfo([
@@ -155,8 +170,10 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               .accounts({
                 payer: payer.publicKey,
                 owner: owner.publicKey,
+                smartDelegate: smartDelegatePublicKey,
                 tokenAccount: validTokenAccount,
                 preAuthorization,
+                tokenProgram: tokenProgramId,
                 systemProgram: SystemProgram.programId,
               })
               .signers([owner, payer])
@@ -342,6 +359,12 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             expect(tokenAccountDataAfter.amount.toString()).to.equal(
               (1e6).toString(),
             );
+            expect(tokenAccountDataAfter.delegate!.toString()).to.equal(
+              smartDelegatePublicKey.toString(),
+            );
+            expect(tokenAccountDataAfter.delegatedAmount.toString()).to.equal(
+              U64_MAX,
+            );
           });
         });
       });
@@ -367,8 +390,10 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           .accounts({
             payer: payer.publicKey,
             owner: owner.publicKey,
+            smartDelegate: smartDelegatePublicKey,
             tokenAccount: validTokenAccount,
             preAuthorization,
+            tokenProgram: tokenProgramId,
             systemProgram: SystemProgram.programId,
           })
           .signers([owner, payer])
@@ -408,8 +433,10 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             .accounts({
               payer: payer.publicKey,
               owner: owner.publicKey,
+              smartDelegate: smartDelegatePublicKey,
               tokenAccount: validTokenAccount,
               preAuthorization,
+              tokenProgram: tokenProgramId,
               systemProgram: SystemProgram.programId,
             })
             .signers([owner, payer])
@@ -441,8 +468,10 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             .accounts({
               payer: payer.publicKey,
               owner: owner.publicKey,
+              smartDelegate: smartDelegatePublicKey,
               tokenAccount: validTokenAccount,
               preAuthorization,
+              tokenProgram: tokenProgramId,
               systemProgram: SystemProgram.programId,
             })
             .signers([payer])
@@ -473,8 +502,10 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             .accounts({
               payer: payer.publicKey,
               owner: newOwner.publicKey,
+              smartDelegate: smartDelegatePublicKey,
               tokenAccount: validTokenAccount,
               preAuthorization,
+              tokenProgram: tokenProgramId,
               systemProgram: SystemProgram.programId,
             })
             .signers([newOwner, payer])
@@ -506,8 +537,10 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             .accounts({
               payer: payer.publicKey,
               owner: owner.publicKey,
+              smartDelegate: smartDelegatePublicKey,
               tokenAccount: validTokenAccount,
               preAuthorization,
+              tokenProgram: tokenProgramId,
               systemProgram: SystemProgram.programId,
             })
             .signers([owner, payer])
@@ -539,8 +572,10 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             .accounts({
               payer: payer.publicKey,
               owner: owner.publicKey,
+              smartDelegate: smartDelegatePublicKey,
               tokenAccount: validTokenAccount,
               preAuthorization,
+              tokenProgram: tokenProgramId,
               systemProgram: tokenProgramId,
             })
             .signers([owner, payer])

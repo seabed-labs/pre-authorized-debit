@@ -20,16 +20,20 @@ export interface InitPreAuthorizationArgsJSON {
 export interface InitPreAuthorizationAccounts {
   payer: PublicKey;
   owner: PublicKey;
+  smartDelegate: PublicKey;
   tokenAccount: PublicKey;
   preAuthorization: PublicKey;
+  tokenProgram: PublicKey;
   systemProgram: PublicKey;
 }
 
 export interface InitPreAuthorizationAccountsJSON {
   payer: string;
   owner: string;
+  smartDelegate: string;
   tokenAccount: string;
   preAuthorization: string;
+  tokenProgram: string;
   systemProgram: string;
 }
 
@@ -98,9 +102,11 @@ export class InitPreAuthorization {
     const accounts = {
       payer: flattenedAccounts[0],
       owner: flattenedAccounts[1],
-      tokenAccount: flattenedAccounts[2],
-      preAuthorization: flattenedAccounts[3],
-      systemProgram: flattenedAccounts[4],
+      smartDelegate: flattenedAccounts[2],
+      tokenAccount: flattenedAccounts[3],
+      preAuthorization: flattenedAccounts[4],
+      tokenProgram: flattenedAccounts[5],
+      systemProgram: flattenedAccounts[6],
     };
     return new InitPreAuthorization(programId, { args, accounts });
   }
@@ -130,14 +136,24 @@ export class InitPreAuthorization {
         isWritable: false,
       },
       {
-        pubkey: this.instructionData.accounts.tokenAccount,
+        pubkey: this.instructionData.accounts.smartDelegate,
         isSigner: false,
         isWritable: false,
+      },
+      {
+        pubkey: this.instructionData.accounts.tokenAccount,
+        isSigner: false,
+        isWritable: true,
       },
       {
         pubkey: this.instructionData.accounts.preAuthorization,
         isSigner: false,
         isWritable: true,
+      },
+      {
+        pubkey: this.instructionData.accounts.tokenProgram,
+        isSigner: false,
+        isWritable: false,
       },
       {
         pubkey: this.instructionData.accounts.systemProgram,
@@ -184,9 +200,11 @@ export class InitPreAuthorization {
     return {
       payer: this.instructionData.accounts.payer.toString(),
       owner: this.instructionData.accounts.owner.toString(),
+      smartDelegate: this.instructionData.accounts.smartDelegate.toString(),
       tokenAccount: this.instructionData.accounts.tokenAccount.toString(),
       preAuthorization:
         this.instructionData.accounts.preAuthorization.toString(),
+      tokenProgram: this.instructionData.accounts.tokenProgram.toString(),
       systemProgram: this.instructionData.accounts.systemProgram.toString(),
     };
   }
