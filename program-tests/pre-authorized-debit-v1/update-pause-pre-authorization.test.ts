@@ -336,7 +336,7 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
                 .signers([debitAuthority])
                 .rpc(),
             ).to.eventually.be.rejectedWith(
-              /AnchorError caused by account: token_account. Error Code: PausePreAuthorizationUnauthorized. Error Number: 6013. Error Message: Only token account owner can pause a pre-authorization./,
+              /AnchorError caused by account: token_account. Error Code: PausePreAuthorizationUnauthorized. Error Number: 6009. Error Message: Only token account owner can pause a pre-authorization./,
             );
           });
         });
