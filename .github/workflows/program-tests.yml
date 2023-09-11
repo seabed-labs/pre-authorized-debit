@@ -15,7 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        testSuffix: [".ts", ".2.ts"]
+        testArgs:
+          [
+            "pre-authorized-debit-v1 .ts",
+            "pre-authorized-debit-v1 .2.ts",
+            pre-authorized-debit-v1/debit .ts,
+          ]
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
@@ -23,6 +28,6 @@ jobs:
         uses: dcaf-labs/anchor-test-action@v1.1.0
         with:
           # add anchor test args, e.g. "--skip-lint"
-          args: "'**' ${{ matrix.testSuffix }}"
+          args: "${{ matrix.testSuffix }}"
           # path to the anchor workspace, e.g. "./my_workspace"
           workspace_dir: "."
