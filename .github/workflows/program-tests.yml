@@ -16,3 +16,15 @@ jobs:
         with:
           args: "" # add anchor test args, e.g. "--skip-lint"
           workspace_dir: "." # path to the anchor workspace, e.g. "./my_workspace"
+
+  # TODO: this is wasting some credits as it is re-compiling and re-installing packages
+  program-tests-2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Solana Anchor Test
+        uses: dcaf-labs/anchor-test-action@v1.1.0
+        with:
+          args: '** .2.ts' # add anchor test args, e.g. "--skip-lint"
+          workspace_dir: "." # path to the anchor workspace, e.g. "./my_workspace"
