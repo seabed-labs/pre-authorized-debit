@@ -65,9 +65,7 @@ All SDK's live under `sdk`, and their tests live in their nested sdk folder (`sd
 
 ```bash
 yarn install
-anchor test
-# To make use of a ".only" in a test
-# TEST_MODE=debug anchor test
+yarn test
 ```
 
 
