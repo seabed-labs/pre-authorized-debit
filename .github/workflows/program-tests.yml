@@ -1,18 +1,67 @@
 name: Program Tests
+
 on:
   push:
+    paths:
+      - "programs/**/*.rs"
+      - "**/*.toml"
+      - "**/Cargo.lock"
+      - "program-tests/**/*.ts"
     branches:
       - main
+      - feat/**/*
+
   pull_request:
-    types: [ready_for_review]
 
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  program-tests:
-    runs-on: ubuntu-latest
+  unit-tests:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: metaplex-foundation/actions/install-rust@v1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "unit-tests"
+      - run: cargo test
+
+  build-deps:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Setup | checkout
+        uses: actions/checkout@v3
+      - name: Setup | rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "integration-tests"
+          shared-key: "integration-tests"
+      - name: Setup | cache crates
+        uses: metaplex-foundation/actions/cache-crates@v1
+      - name: Setup | node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.17.1
+          cache: "yarn"
+      - name: Setup | rust
+        uses: metaplex-foundation/actions/install-rust@v1
+      - name: Setup | anchor
+        run: yarn global add @coral-xyz/anchor-cli@0.28.0
+      - name: Setup | solana
+        uses: metaplex-foundation/actions/install-solana@v1
+        with:
+          version: 1.16.10
+          cache: true
+      - name: Setup | yarn deps
+        run: yarn install
+      - name: Build Programs
+        run: anchor build
+
+  program-integration-tests:
+    needs: ["build-deps"]
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         command:
@@ -20,15 +69,36 @@ jobs:
             "anchor test pre-authorized-debit-v1 .ts",
             "anchor test pre-authorized-debit-v1 .2.ts",
             "anchor test pre-authorized-debit-v1/debit .ts",
-            "cargo test",
           ]
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-      - name: Test
-        uses: dcaf-labs/anchor-test-action@v2.0.0
+      - name: Setup | checkout
+        uses: actions/checkout@v3
+      - name: Setup | rust cache
+        uses: Swatinem/rust-cache@v2
         with:
-          # add anchor test args, e.g. "--skip-lint"
-          command: "${{ matrix.command }}"
-          # path to the anchor workspace, e.g. "./my_workspace"
-          workspace_dir: "."
+          prefix-key: "integration-tests"
+          shared-key: "integration-tests"
+      - name: Setup | cache crates
+        uses: metaplex-foundation/actions/cache-crates@v1
+      - name: Setup | node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.17.1
+          cache: "yarn"
+      - name: Setup | rust
+        uses: metaplex-foundation/actions/install-rust@v1
+      - name: Setup | anchor
+        run: yarn global add @coral-xyz/anchor-cli@0.28.0
+      - name: Setup | solana
+        uses: metaplex-foundation/actions/install-solana@v1
+        with:
+          version: 1.16.10
+          cache: true
+      - name: Setup | solana keypair
+        run: solana-keygen new --no-bip39-passphrase
+      - name: Setup | solaan url
+        run: solana config set --url http:localhost:8899
+      - name: Setup | yarn deps
+        run: yarn install
+      - name: Test
+        run: ${{ matrix.command }}

@@ -17,3 +17,6 @@ wallet = "./test-keypair.json"
 
 [scripts]
 test = "node scripts/test.js"
+
+[test]
+startup_wait=10000
