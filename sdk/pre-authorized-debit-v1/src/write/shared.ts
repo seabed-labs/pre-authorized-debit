@@ -1,4 +1,5 @@
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { Provider } from "@coral-xyz/anchor";
+import { PublicKey, Signer, TransactionInstruction } from "@solana/web3.js";
 
 export type ProgramAccount<T> = {
   pubkey: PublicKey;
@@ -18,6 +19,11 @@ export type TransactionWithData<T> = {
   cleanupInstructions: TransactionInstruction[];
   expectedSigners: PublicKey[];
   data: T;
+  execute(
+    signers: Signer[],
+    // if provider is not given, signers[0] will pay for TX fees
+    provider?: Provider,
+  ): Promise<TransactionResultWithData<T>>;
 };
 
 // Write Client Return Type Wrapper
