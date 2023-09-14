@@ -15,7 +15,8 @@ export type InstructionWithData<T> = {
 
 // Transaction Factory Return Type Wrapper
 export type TransactionWithData<T> = {
-  instructions: TransactionInstruction[];
+  setupInstructions: TransactionInstruction[];
+  coreInstructions: TransactionInstruction[];
   cleanupInstructions: TransactionInstruction[];
   expectedSigners: PublicKey[];
   data: T;
