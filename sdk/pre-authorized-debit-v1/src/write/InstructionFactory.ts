@@ -49,4 +49,9 @@ export interface InstructionFactory {
     amount: bigint;
     destinationTokenAccount: PublicKey;
   }): Promise<InstructionWithData<null>>;
+
+  // sets delegate to smartDelegate and amount to u64::max
+  buildActivateSmartDelegateIx(params: {
+    tokenAccount: PublicKey;
+  }): Promise<InstructionWithData<null>>;
 }
