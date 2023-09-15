@@ -1,57 +1,70 @@
-import { PublicKey } from "@solana/web3.js";
 import { InstructionWithData } from "./shared";
+import {
+  ApproveSmartDelegateParams,
+  ApproveSmartDelegateResult,
+  ClosePreAuthorizationAsDebitAuthorityParams,
+  ClosePreAuthorizationAsDebitAuthorityResult,
+  ClosePreAuthorizationAsOwnerParams,
+  ClosePreAuthorizationAsOwnerResult,
+  DebitResult,
+  InitOneTimePreAuthorizationParams,
+  InitOneTimePreAuthorizationResult,
+  InitRecurringPreAuthorizationParams,
+  InitRecurringPreAuthorizationResult,
+  InitSmartDelegateParams,
+  InitSmartDelegateResult,
+  PausePreAuthorizationParams,
+  PausePreAuthorizationResult,
+  UnpausePreAuthorizationParams,
+  UnpausePreAuthorizationResult,
+} from "./params";
+import { DebitParams } from "../anchor-client";
 
-type InitPreAuthIxSharedParams = {
-  payer: PublicKey;
-  tokenAccount: PublicKey;
-  debitAuthority: PublicKey;
-  activation: Date;
-};
+type IxFactoryFn<Params, Result> = (
+  params: Params,
+) => Promise<InstructionWithData<Result>>;
 
 export interface InstructionFactory {
-  buildInitSmartDelegateIx(param: {
-    payer: PublicKey;
-  }): Promise<InstructionWithData<{ smartDelegate: PublicKey }>>;
+  buildInitSmartDelegateIx: IxFactoryFn<
+    InitSmartDelegateParams,
+    InitSmartDelegateResult
+  >;
 
-  buildInitOneTimePreAuthorizationIx(
-    params: InitPreAuthIxSharedParams & {
-      amountAuthorized: bigint;
-      // if not set, will default to i64::max (i.e. never expires)
-      expiry?: Date;
-    },
-  ): Promise<InstructionWithData<{ preAuthorization: PublicKey }>>;
+  buildInitOneTimePreAuthorizationIx: IxFactoryFn<
+    InitOneTimePreAuthorizationParams,
+    InitOneTimePreAuthorizationResult
+  >;
 
-  buildInitRecurringPreAuthorizationIx(
-    params: InitPreAuthIxSharedParams & {
-      repeatFrequencySeconds: bigint;
-      recurringAmountAuthorized: bigint;
-      numCycles: bigint | null;
-      resetEveryCycle: boolean;
-    },
-  ): Promise<InstructionWithData<{ preAuthorization: PublicKey }>>;
+  buildInitRecurringPreAuthorizationIx: IxFactoryFn<
+    InitRecurringPreAuthorizationParams,
+    InitRecurringPreAuthorizationResult
+  >;
 
-  buildUpdatePausePreAuthorizationIx(params: {
-    preAuthorization: PublicKey;
-    pause: boolean;
-  }): Promise<InstructionWithData<null>>;
+  buildPausePreAuthorizationIx: IxFactoryFn<
+    PausePreAuthorizationParams,
+    PausePreAuthorizationResult
+  >;
 
-  buildClosePreAuthorizationAsOwnerIx(params: {
-    preAuthorization: PublicKey;
-    lamportsReceiver?: PublicKey;
-  }): Promise<InstructionWithData<null>>;
+  buildUnpausePreAuthorizationIx: IxFactoryFn<
+    UnpausePreAuthorizationParams,
+    UnpausePreAuthorizationResult
+  >;
 
-  buildClosePreAuthorizationAsDebitAuthorityIx(params: {
-    preAuthorization: PublicKey;
-  }): Promise<InstructionWithData<null>>;
+  buildClosePreAuthorizationAsOwnerIx: IxFactoryFn<
+    ClosePreAuthorizationAsOwnerParams,
+    ClosePreAuthorizationAsOwnerResult
+  >;
 
-  buildDebitIx(params: {
-    preAuthorization: PublicKey;
-    amount: bigint;
-    destinationTokenAccount: PublicKey;
-  }): Promise<InstructionWithData<null>>;
+  buildClosePreAuthorizationAsDebitAuthorityIx: IxFactoryFn<
+    ClosePreAuthorizationAsDebitAuthorityParams,
+    ClosePreAuthorizationAsDebitAuthorityResult
+  >;
+
+  buildDebitIx: IxFactoryFn<DebitParams, DebitResult>;
 
   // sets delegate to smartDelegate and amount to u64::max
-  buildActivateSmartDelegateIx(params: {
-    tokenAccount: PublicKey;
-  }): Promise<InstructionWithData<null>>;
+  buildApproveSmartDelegateIx: IxFactoryFn<
+    ApproveSmartDelegateParams,
+    ApproveSmartDelegateResult
+  >;
 }
