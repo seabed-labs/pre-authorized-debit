@@ -15,6 +15,12 @@ export type TransactionWithData<T> = {
   cleanupInstructions: TransactionInstruction[];
   expectedSigners: PublicKey[];
   data: T;
+  // TODO: How do we implement this?
+  simulate(
+    signers: Signer[],
+    // if provider is not given, signers[0] will pay for TX fees
+    provider?: Provider,
+  ): Promise<TransactionResultWithData<T>>;
   execute(
     signers: Signer[],
     // if provider is not given, signers[0] will pay for TX fees

@@ -1,4 +1,4 @@
-import { ProgramAccount } from "@coral-xyz/anchor";
+import { Idl, ProgramAccount } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { PreAuthorization, SmartDelegate } from "../../anchor-client";
 
@@ -18,6 +18,9 @@ type FetchMaxDebitAmountParams = {
 };
 
 export interface PreAuthorizedDebitReadClient {
+  // TODO: Can we add more typing to this?
+  fetchIdl(): Promise<Idl>;
+
   getSmartDelegatePubkey(): PublicKey;
 
   fetchSmartDelegate(): Promise<ProgramAccount<SmartDelegate> | null>;
