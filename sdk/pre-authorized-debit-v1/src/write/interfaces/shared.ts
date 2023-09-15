@@ -1,11 +1,6 @@
 import { Provider } from "@coral-xyz/anchor";
 import { PublicKey, Signer, TransactionInstruction } from "@solana/web3.js";
 
-export type ProgramAccount<T> = {
-  pubkey: PublicKey;
-  data: T;
-};
-
 // Instruction Factory Return Type Wrapper
 export type InstructionWithData<T> = {
   instruction: TransactionInstruction;

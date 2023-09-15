@@ -18,7 +18,7 @@ import {
   UnpausePreAuthorizationParams,
   UnpausePreAuthorizationResult,
 } from "./params";
-import { DebitParams } from "../anchor-client";
+import { DebitParams } from "../../anchor-client";
 
 type IxFactoryFn<Params, Result> = (
   params: Params,
