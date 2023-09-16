@@ -1,0 +1,102 @@
+name: SDK Tests
+
+on:
+  push:
+    paths:
+      - "sdk/**/*"
+      - "package.json"
+      - "yarn.lock"
+      - ".github/workflows/sdk-tests.yaml"
+    branches:
+      - main
+      - feat/**/*
+
+  pull_request:
+
+concurrency:
+  group: ${{ github.ref }}-sdk-tests
+  cancel-in-progress: true
+
+jobs:
+  install:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Setup | checkout
+        uses: actions/checkout@v3
+      - name: Setup | node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.17.1
+          cache: "yarn"
+      - name: Caching node modules
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: node-modules-${{ hashFiles('**/package.json', 'yarn.lock') }}
+      - name: Setup | yarn deps
+        run: yarn install
+
+  lint:
+    needs: ["install"]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Setup | checkout
+        uses: actions/checkout@v3
+      - name: Setup | node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.17.1
+          cache: "yarn"
+      - name: Setup | cache node modules
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: node-modules-${{ hashFiles('**/package.json', 'yarn.lock') }}
+      - name: Setup | yarn deps
+        run: yarn lint
+
+  build:
+    needs: ["install", "lint"]
+    # If we have more SDK's we can build them in a matrix
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        sdk: ["pre-authorized-debit-v1"]
+    steps:
+      - name: Setup | checkout
+        uses: actions/checkout@v3
+      - name: Setup | node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.17.1
+          cache: "yarn"
+      - name: Setup | cache node modules
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: node-modules-${{ hashFiles('**/package.json', 'yarn.lock') }}
+      - name: Setup | yarn deps
+        run: cd ${{ matrix.sdk }} && yarn build
+
+  test:
+    # If we have more SDK's we can test in a matrix
+    needs: ["build"]
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        sdk: ["pre-authorized-debit-v1"]
+    steps:
+      - name: Setup | checkout
+        uses: actions/checkout@v3
+      - name: Setup | node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.17.1
+          cache: "yarn"
+      - name: Setup | cache node modules
+        uses: actions/cache@v2
+        with:
+          path: "**/node_modules"
+          key: node-modules-${{ hashFiles('**/package.json', 'yarn.lock') }}
+      - name: Setup | yarn deps
+        run: cd ${{ matrix.sdk }} && yarn test
