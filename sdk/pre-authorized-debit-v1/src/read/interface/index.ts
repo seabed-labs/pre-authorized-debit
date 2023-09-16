@@ -1,54 +1,58 @@
 import { Idl, ProgramAccount } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { PreAuthorization, SmartDelegate } from "../../anchor-client";
+import {
+  PreAuthorizationAccount,
+  SmartDelegateAccount,
+} from "../../anchor-client";
 
-type FetchPreAuthorizationParams =
-  | { pubkey: PublicKey }
+export type FetchPreAuthorizationParams =
+  | { publicKey: PublicKey }
   | { tokenAccount: PublicKey; debitAuthority: PublicKey };
 
-type CheckDebitAmountParams = {
+export type CheckDebitAmountParams = {
   tokenAccount: PublicKey;
   debitAuthority: PublicKey;
   amount: bigint;
 };
 
-type FetchMaxDebitAmountParams = {
+export type FetchMaxDebitAmountParams = {
   tokenAccount: PublicKey;
   debitAuthority: PublicKey;
 };
+
+export type PDA = {
+  publicKey: PublicKey;
+  bump: number;
+};
+
+export type PreAuthorizationType = "oneTime" | "recurring" | "all";
 
 export interface PreAuthorizedDebitReadClient {
   // TODO: Can we add more typing to this?
   fetchIdl(): Promise<Idl>;
 
-  getSmartDelegatePubkey(): PublicKey;
+  getSmartDelegatePDA(): PDA;
 
-  fetchSmartDelegate(): Promise<ProgramAccount<SmartDelegate> | null>;
-
-  derivePreAuthorizationPubkey(
+  derivePreAuthorizationPDA(
     tokenAccount: PublicKey,
     debitAuthority: PublicKey,
-  ): PublicKey;
+  ): PDA;
+
+  fetchSmartDelegate(): Promise<ProgramAccount<SmartDelegateAccount> | null>;
 
   fetchPreAuthorization(
     params: FetchPreAuthorizationParams,
-  ): Promise<ProgramAccount<PreAuthorization> | null>;
+  ): Promise<ProgramAccount<PreAuthorizationAccount> | null>;
 
   fetchPreAuthorizationsForTokenAccount(
     tokenAccount: PublicKey,
-  ): Promise<ProgramAccount<PreAuthorization>[]>;
-
-  fetchOneTimePreAuthorizationsForTokenAccount(
-    tokenAccount: PublicKey,
-  ): Promise<ProgramAccount<PreAuthorization>[]>;
-
-  fetchRecurringPreAuthorizationsForTokenAccount(
-    tokenAccount: PublicKey,
-  ): Promise<ProgramAccount<PreAuthorization>[]>;
+    type?: PreAuthorizationType,
+  ): Promise<ProgramAccount<PreAuthorizationAccount>[]>;
 
   fetchPreAuthorizationsForDebitAuthority(
     debitAuthority: PublicKey,
-  ): Promise<ProgramAccount<PreAuthorization>[]>;
+    type?: PreAuthorizationType,
+  ): Promise<ProgramAccount<PreAuthorizationAccount>[]>;
 
   // Checks whether the given debit will go through right now (based on current state of pre-auth if any)
   // Returns true if so
