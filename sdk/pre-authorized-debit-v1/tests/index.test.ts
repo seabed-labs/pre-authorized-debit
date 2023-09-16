@@ -1,8 +1,8 @@
 import { expect } from "chai";
+import { randomFunctionToTestCodeCoverage } from "../src";
 
 describe("example test", () => {
   it("should pass", () => {
-    const num = 1;
-    expect(num.toString()).to.equal("1");
+    expect(randomFunctionToTestCodeCoverage().toString()).to.equal("2");
   });
 });
