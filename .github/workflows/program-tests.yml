@@ -1,20 +1,21 @@
 name: Program Tests
 
 on:
+  pull_request:
   push:
     paths:
-      - "programs/**/*.rs"
-      - "**/*.toml"
-      - "**/Cargo.lock"
-      - "program-tests/**/*.ts"
+      - "programs/**/*"
+      - "Anchor.toml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "program-tests/**/*"
+      - ".github/workflows/program-tests.yml"
     branches:
       - main
       - feat/**/*
 
-  pull_request:
-
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.ref }}-program-tests
   cancel-in-progress: true
 
 jobs:
