@@ -1,7 +1,7 @@
 // TODO: Remove this after impl
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  AnchorProvider,
+  AnchorProvider, Idl,
   Program,
   ProgramAccount,
   utils,
@@ -67,10 +67,22 @@ export class PreAuthorizedDebitReadClientImpl
     );
   }
 
+  public async fetchIdl(): Promise<Idl> {
+    const idl = await Program.fetchIdl(this.programId, {
+      connection: this.connection,
+    });
+
+    if (!idl) {
+      throw new IdlNotFoundOnChainError(this.programId);
+    }
+
+    return idl;
+  }
+
   public async fetchIdlFromChain(): Promise<PreAuthorizedDebitProgramIDL> {
-    const idl = await Program.fetchIdl<PreAuthorizedDebitProgramIDL>(
-      this.programId,
-    );
+    const idl = await Program.fetchIdl<PreAuthorizedDebitProgramIDL>(this.programId, {
+      connection: this.connection,
+    });
 
     if (!idl) {
       throw new IdlNotFoundOnChainError(this.programId);

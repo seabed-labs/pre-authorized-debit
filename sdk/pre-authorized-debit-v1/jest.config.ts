@@ -43,12 +43,7 @@ const config: Config = {
   coverageProvider: "v8",
 
   // A list of reporter names that Jest uses when writing coverage reports
-  // coverageReporters: [
-  //   "json",
-  //   "text",
-  //   "lcov",
-  //   "clover"
-  // ],
+  coverageReporters: ["json", "json-summary", "text", "lcov", "clover", "html"],
 
   // An object that configures minimum threshold enforcement for coverage results
   // coverageThreshold: undefined,
@@ -68,10 +63,10 @@ const config: Config = {
   // forceCoverageMatch: [],
 
   // A path to a module which exports an async function that is triggered once before all test suites
-  globalSetup: "./tests/integration/setup.js",
+  globalSetup: "./tests/setup.js",
 
   // A path to a module which exports an async function that is triggered once after all test suites
-  globalTeardown: "./tests/integration/teardown.js",
+  globalTeardown: "./tests/teardown.js",
 
   // A set of global variables that need to be available in all test environments
   // globals: {},
