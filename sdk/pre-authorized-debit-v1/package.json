@@ -4,20 +4,23 @@
   "packageManager": "yarn@3.6.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "yarn run tsc",
     "build:program": "cd ../../ && anchor build -p pre_authorized_debit_v1",
     "clean:anchor-client": "rm -rf ./src/anchor-client/accounts && rm -rf ./src/anchor-client/errors && rm -rf ./src/anchor-client/instructions && rm -rf ./src/anchor-client/types",
     "build:anchor-client": "yarn clean:anchor-client && yarn run anchor-client-gen ../../target/idl/pre_authorized_debit_v1.json ./src/anchor-client && yarn lint:fix",
     "regenerate:anchor-client": "yarn clean:anchor-client && yarn build:program && yarn build:anchor-client",
-    "test": "jest --coverage --coverageReporters=\"json-summary\" --coverageReporters=\"html\""
+    "test": "jest --coverage --coverageReporters=\"json-summary\" --coverageReporters=\"html\" --runInBand --detectOpenHandles --forceExit"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
     "@coral-xyz/borsh": "^0.28.0",
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.78.4",
-    "bn.js": "^5.2.1"
+    "axios": "^1.5.0",
+    "bn.js": "^5.2.1",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.22.20",

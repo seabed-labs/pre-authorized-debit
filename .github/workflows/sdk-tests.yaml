@@ -95,9 +95,31 @@ jobs:
         with:
           path: "**/node_modules"
           key: node-modules-${{ hashFiles('**/package.json', 'yarn.lock') }}
-      - name: Test | Run Jest
+      - name: Setup | rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "sdk-tests"
+          shared-key: "sdk-tests"
+      - name: Setup | cache crates
+        uses: metaplex-foundation/actions/cache-crates@v1
+      - name: Setup | rust
+        uses: metaplex-foundation/actions/install-rust@v1
+      - name: Setup | anchor
+        run: yarn global add @coral-xyz/anchor-cli@0.28.0
+      - name: Setup | solana
+        uses: metaplex-foundation/actions/install-solana@v1
+        with:
+          version: 1.16.10
+          cache: true
+      - name: Setup | solana keypair
+        run: solana-keygen new --no-bip39-passphrase
+      - name: Setup | solana url
+        run: solana config set --url http:localhost:8899
+      - name: Setup | anchor build
+        run: anchor build
+      - name: Test | run jest
         run: cd ./sdk/${{ matrix.sdk }} && yarn test
-      - name: Test | Code Coverage
+      - name: Test | code coverage
         uses: jpb06/jest-badges-action@latest
         with:
           coverage-summary-path: ./sdk/${{ matrix.sdk }}/coverage/coverage-summary.json
