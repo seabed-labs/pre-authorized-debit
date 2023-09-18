@@ -32,7 +32,7 @@ import {
   getAccount,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1.ts";
+import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
 
 export class PreAuthorizedDebitReadClientImpl
   implements PreAuthorizedDebitReadClient
@@ -184,9 +184,7 @@ export class PreAuthorizedDebitReadClientImpl
     const { publicKey: smartDelegtePubkey } = this.getSmartDelegatePDA();
 
     const smartDelegateAccount =
-      await this.program.account.smartDelegate.fetchNullable(
-        smartDelegtePubkey,
-      );
+      await this.program.account.smartDelegate.fetch(smartDelegtePubkey);
 
     return (
       smartDelegateAccount && {
@@ -218,9 +216,7 @@ export class PreAuthorizedDebitReadClientImpl
       ).publicKey;
 
     const preAuthorizationAccount =
-      await this.program.account.preAuthorization.fetchNullable(
-        preAuthorizationPubkey,
-      );
+      await this.program.account.preAuthorization.fetch(preAuthorizationPubkey);
 
     return (
       preAuthorizationAccount && {
