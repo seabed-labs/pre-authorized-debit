@@ -67,9 +67,10 @@ jobs:
       matrix:
         command:
           [
-            "anchor test pre-authorized-debit-v1 .ts",
-            "anchor test pre-authorized-debit-v1 .2.ts",
-            "anchor test pre-authorized-debit-v1/debit .ts",
+            "anchor test program-tests/pre-authorized-debit-v1 .ts",
+            "anchor test program-tests/pre-authorized-debit-v1 .2.ts",
+            "anchor test program-tests/pre-authorized-debit-v1/debit .ts",
+            "anchor test psdk/pre-authorized-debit-v1/tests/**",
           ]
     steps:
       - name: Setup | checkout
