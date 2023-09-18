@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { PreAuthorizedDebitReadClientImpl } from "../src";
 
-describe("PreAuthorizedDebitReadClientImpl", () => {
+describe("PreAuthorizedDebitReadClientImpl unit", () => {
   const connection: Connection = new Connection("http://my.rpc");
   const readClient = PreAuthorizedDebitReadClientImpl.mainnet(connection);
 

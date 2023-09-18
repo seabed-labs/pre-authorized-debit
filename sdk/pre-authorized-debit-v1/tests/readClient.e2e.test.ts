@@ -4,7 +4,7 @@ import { devnetValidatorUrl, mainnetValidatorUrl } from "./constants";
 import { PreAuthorizedDebitReadClientImpl } from "../src";
 import idlJson from "./fixtures/pre_authorized_debit_v1.json";
 
-describe("PreAuthorizedDebitReadClientImpl", () => {
+describe("PreAuthorizedDebitReadClientImpl e2e", () => {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   const idlWithoutMetadata: any = {
     ...idlJson,
