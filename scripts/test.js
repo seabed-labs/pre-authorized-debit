@@ -9,7 +9,7 @@ const isParallel = false; // disable for now due to weird race conditions
 const scope = process.argv[2] ? process.argv[2] : "program-tests/**";
 // init_smart_delegate must be isolated to its own anchor test due to it creating a global account
 const testSuffix = process.argv[3] ? process.argv[3] : ".ts";
-const testCommand = `yarn run ts-mocha -p ./tsconfig.json -t 1000000 ${
+const testCommand = `yarn run nyc ts-mocha -p ./tsconfig.json -t 1000000 ${
   isParallel ? "--parallel" : ""
 } ${scope}/*.test${testSuffix}`;
 
