@@ -182,7 +182,9 @@ export class PreAuthorizedDebitReadClientImpl
     const { publicKey: smartDelegtePubkey } = this.getSmartDelegatePDA();
 
     const smartDelegateAccount =
-      await this.program.account.smartDelegate.fetch(smartDelegtePubkey);
+      await this.program.account.smartDelegate.fetchNullable(
+        smartDelegtePubkey,
+      );
 
     return (
       smartDelegateAccount && {
@@ -214,7 +216,9 @@ export class PreAuthorizedDebitReadClientImpl
       ).publicKey;
 
     const preAuthorizationAccount =
-      await this.program.account.preAuthorization.fetch(preAuthorizationPubkey);
+      await this.program.account.preAuthorization.fetchNullable(
+        preAuthorizationPubkey,
+      );
 
     return (
       preAuthorizationAccount && {
