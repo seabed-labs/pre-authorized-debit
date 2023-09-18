@@ -13,9 +13,6 @@ import {
   PreAuthTestVariant,
   deriveInvalidPreAuthorization,
   derivePreAuthorization,
-  fundAccounts,
-  waitForTxToConfirm,
-  initSmartDelegateIdempotent,
   U64_MAX,
 } from "./utils";
 import {
@@ -31,6 +28,11 @@ import {
   PreAuthorizationCreatedEventData,
   InitPreAuthorizationParams,
 } from "@dcaf/pad";
+import {
+  fundAccounts,
+  initSmartDelegateIdempotent,
+  waitForTxToConfirm,
+} from "@dcaf/pad-test-utils";
 
 describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   const program =

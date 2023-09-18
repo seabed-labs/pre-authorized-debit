@@ -3,13 +3,6 @@ name: Program Tests
 on:
   pull_request:
   push:
-    paths:
-      - "programs/**/*"
-      - "Anchor.toml"
-      - "Cargo.toml"
-      - "Cargo.lock"
-      - "program-tests/**/*"
-      - ".github/workflows/program-tests.yml"
     branches:
       - main
       - feat/**/*
@@ -65,12 +58,12 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        command:
-          [
-            "anchor test program-tests/pre-authorized-debit-v1 .ts",
-            "anchor test program-tests/pre-authorized-debit-v1 .2.ts",
-            "anchor test program-tests/pre-authorized-debit-v1/debit .ts",
-          ]
+        test: [
+          {scope: "program-tests/pre-authorized-debit-v1", testSuffix: "**/*test.ts"},
+          {scope: "program-tests/pre-authorized-debit-v1", testSuffix: "**/*test.2.ts"},
+          {scope: "program-tests/pre-authorized-debit-v1", testSuffix: "**/debit/*.test.ts"},
+          {scope: "sdk/pre-authorized-debit-v1", testSuffix: "tests/**/*.test.ts"},
+        ]
     steps:
       - name: Setup | checkout
         uses: actions/checkout@v3
@@ -101,8 +94,19 @@ jobs:
         run: solana config set --url http:localhost:8899
       - name: Setup | yarn deps
         run: yarn install
+      - name: Setup | pacakge deps
+        run: cd ${{ matrix.test.scope }} && yarn install
       - name: Test
         env:
           DEVNET_VALIDATOR_URL: ${{ secrets.DEVNET_VALIDATOR_URL }}
           MAINNET_VALIDATOR_URL: ${{ secrets.MAINNET_VALIDATOR_URL }}
-        run: ${{ matrix.command }}
+        run: anchor test ${{ matrix.test.scope }} ${{ matrix.test.testSuffix }}
+      - name: Test | code coverage
+        if: ${{ contains(matrix.test.scope, 'sdk') }}
+        uses: jpb06/jest-badges-action@latest
+        with:
+          coverage-summary-path: ./${{ matrix.test.scope }}/coverage/coverage-summary.json
+          branches: main,feat/sdk
+          commit-user: Seabed CI
+          commit-user-email: devtools@dcaf.so
+          output-folder: ./${{ matrix.test.scope }}/badges

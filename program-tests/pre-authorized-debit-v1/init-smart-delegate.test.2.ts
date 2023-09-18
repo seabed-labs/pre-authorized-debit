@@ -2,13 +2,13 @@ import { program, eventParser, provider } from "./setup";
 
 import { assert, expect } from "chai";
 import { Keypair, SystemProgram } from "@solana/web3.js";
+import { deriveInvalidSmartDelegate } from "./utils";
+import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import {
-  deriveInvalidSmartDelegate,
   deriveSmartDelegate,
   fundAccounts,
   waitForTxToConfirm,
-} from "./utils";
-import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+} from "@dcaf/pad-test-utils";
 
 describe("pre-authorized-debit-v1#init-smart-delegate", () => {
   const [canonicalSmartDelegatePublicKey, canonicalSmartDelegateBump] =

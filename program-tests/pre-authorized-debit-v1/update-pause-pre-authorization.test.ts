@@ -10,14 +10,13 @@ import {
 import * as anchor from "@coral-xyz/anchor";
 
 import { program, provider, eventParser } from "./setup";
-import {
-  PreAuthTestVariant,
-  derivePreAuthorization,
-  fundAccounts,
-  waitForTxToConfirm,
-  initSmartDelegateIdempotent,
-} from "./utils";
+import { PreAuthTestVariant, derivePreAuthorization } from "./utils";
 import { PausePreAuthorizationEventData } from "@dcaf/pad";
+import {
+  fundAccounts,
+  initSmartDelegateIdempotent,
+  waitForTxToConfirm,
+} from "@dcaf/pad-test-utils";
 
 describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
   let owner: Keypair, mintAuthority: Keypair, debitAuthority: Keypair;
