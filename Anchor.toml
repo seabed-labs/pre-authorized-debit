@@ -12,7 +12,7 @@ pre_authorized_debit_v1 = "PadV1i1My8wazb6vi37UJ2s1yBDkFN5MYivYN6XgaaR"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "localnet"
 wallet = "./test-keypair.json"
 
 [scripts]

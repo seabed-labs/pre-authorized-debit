@@ -67,9 +67,9 @@ jobs:
       matrix:
         command:
           [
-            "anchor test pre-authorized-debit-v1 .ts",
-            "anchor test pre-authorized-debit-v1 .2.ts",
-            "anchor test pre-authorized-debit-v1/debit .ts",
+            "anchor test program-tests/pre-authorized-debit-v1 .ts",
+            "anchor test program-tests/pre-authorized-debit-v1 .2.ts",
+            "anchor test program-tests/pre-authorized-debit-v1/debit .ts",
           ]
     steps:
       - name: Setup | checkout
@@ -102,4 +102,7 @@ jobs:
       - name: Setup | yarn deps
         run: yarn install
       - name: Test
+        env:
+          DEVNET_VALIDATOR_URL: ${{ secrets.DEVNET_VALIDATOR_URL }}
+          MAINNET_VALIDATOR_URL: ${{ secrets.MAINNET_VALIDATOR_URL }}
         run: ${{ matrix.command }}

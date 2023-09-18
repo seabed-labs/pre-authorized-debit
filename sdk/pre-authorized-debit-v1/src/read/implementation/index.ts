@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   AnchorProvider,
+  Idl,
   Program,
   ProgramAccount,
   utils,
@@ -70,6 +71,9 @@ export class PreAuthorizedDebitReadClientImpl
   public async fetchIdlFromChain(): Promise<PreAuthorizedDebitProgramIDL> {
     const idl = await Program.fetchIdl<PreAuthorizedDebitProgramIDL>(
       this.programId,
+      {
+        connection: this.connection,
+      },
     );
 
     if (!idl) {

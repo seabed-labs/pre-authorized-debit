@@ -5,6 +5,7 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
+  TransactionConfirmationStrategy,
   VersionedTransactionResponse,
 } from "@solana/web3.js";
 import { sha256 } from "@noble/hashes/sha256";
@@ -57,7 +58,7 @@ export async function fundAccounts(
   provider: AnchorProvider,
   addresses: PublicKey[],
   amount: number | bigint,
-): Promise<void> {
+): Promise<TransactionConfirmationStrategy> {
   const transfers = addresses.map((address) =>
     SystemProgram.transfer({
       fromPubkey: provider.publicKey,
@@ -70,7 +71,8 @@ export async function fundAccounts(
   const fundTx = new Transaction({ ...blockhashInfo });
   fundTx.add(...transfers);
 
-  await provider.sendAndConfirm(fundTx);
+  const txSig = await provider.sendAndConfirm(fundTx, []);
+  return { signature: txSig, ...blockhashInfo };
 }
 
 /**
