@@ -1,26 +1,14 @@
 // TODO: Remove this after impl
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  AnchorProvider,
-  BN,
-  BorshCoder,
-  Idl,
-  Program,
-  ProgramAccount,
-  ProgramErrorStack,
-  utils,
-} from "@coral-xyz/anchor";
+import { Idl, Program, ProgramAccount, utils } from "@coral-xyz/anchor";
 import {
   Connection,
   GetProgramAccountsFilter,
-  Keypair,
-  MemcmpFilter,
   PublicKey,
 } from "@solana/web3.js";
 import {
   SmartDelegate,
   PreAuthorization,
-  processAccount,
   SmartDelegateAccount,
   PreAuthorizationAccount,
 } from "../../anchor-client";
@@ -31,8 +19,6 @@ import {
 } from "../interface";
 import { DEVNET_PAD_PROGRAM_ID, MAINNET_PAD_PROGRAM_ID } from "../../constants";
 import { IdlNotFoundOnChainError } from "../../errors";
-import { Layout, u64 } from "@coral-xyz/borsh";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
 export class PreAuthorizedDebitReadClientImpl
   implements PreAuthorizedDebitReadClient
@@ -124,14 +110,13 @@ export class PreAuthorizedDebitReadClientImpl
       | { publicKey: PublicKey }
       | { tokenAccount: PublicKey; debitAuthority: PublicKey },
   ): Promise<ProgramAccount<PreAuthorizationAccount> | null> {
-    const maybePublicKeyParam = params as Extract<
-      typeof params,
-      { publicKey: PublicKey }
+    const maybePublicKeyParam = params as Partial<
+      Extract<typeof params, { publicKey: PublicKey }>
     >;
 
     const maybeComponentParams = params as Exclude<
       typeof params,
-      { publicKey: PublicKey }
+      typeof maybePublicKeyParam
     >;
 
     const preAuthorizationPubkey =
@@ -139,7 +124,7 @@ export class PreAuthorizedDebitReadClientImpl
       this.derivePreAuthorizationPDA(
         maybeComponentParams.tokenAccount,
         maybeComponentParams.debitAuthority,
-      );
+      ).publicKey;
 
     const preAuthorizationAccount = await PreAuthorization.fetch(
       this.connection,
