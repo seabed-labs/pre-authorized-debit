@@ -1,5 +1,3 @@
-// TODO: Remove this after impl
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   AnchorProvider,
   BN,
