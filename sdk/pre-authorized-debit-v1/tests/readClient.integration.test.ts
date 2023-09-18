@@ -1,24 +1,32 @@
-import { expect } from "chai";
-import axios from "axios";
+import { assert, expect } from "chai";
 import { Connection } from "@solana/web3.js";
 import { localValidatorUrl } from "./constants";
-import { PreAuthorizedDebitReadClientImpl } from "../src";
-
+import {
+  IDL,
+  MAINNET_PAD_PROGRAM_ID,
+  PreAuthorizedDebitReadClientImpl,
+} from "../src";
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { getProviderNodeWallet, initSmartDelegateIdempotent } from "./util";
 describe("PreAuthorizedDebitReadClientImpl", () => {
-  xit("should fetch health from solana", async () => {
-    const res = await axios({
-      method: "get",
-      url: "http://127.0.0.1:8899/health",
-    });
-    console.log(res.status);
-    expect(res.status).to.equal(200);
-  });
-
   const connection: Connection = new Connection(localValidatorUrl);
+  const provider = new AnchorProvider(connection, getProviderNodeWallet(), {
+    commitment: "confirmed",
+  });
+  const program = new Program(IDL, MAINNET_PAD_PROGRAM_ID, provider);
+  console.log(program.programId.toString());
   const readClient = PreAuthorizedDebitReadClientImpl.mainnet(connection);
 
-  xit("should be able to fetch the on chain idl", async () => {
-    const idl = await readClient.fetchIdl();
-    expect(idl).to.not.equal(null);
+  beforeAll(async () => {
+    await initSmartDelegateIdempotent(program);
+  });
+
+  it("should fetch smartDelegate", async () => {
+    const smartDelegate = await readClient.fetchSmartDelegate();
+    assert.isNotEmpty(smartDelegate);
+    expect(smartDelegate!.publicKey.toString()).to.equal(
+      "5xwfb7dPwdbgnMFABbF9mqYaD79ocSngiR9GMSY9Tfzb",
+    );
+    expect(smartDelegate!.account.bump).to.equal(255);
   });
 });

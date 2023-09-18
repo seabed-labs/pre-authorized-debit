@@ -117,11 +117,19 @@ jobs:
         run: solana config set --url http:localhost:8899
       - name: Setup | anchor build
         run: anchor build
+      - name: Setup | Start Validator
+        run: solana-test-validator --reset&
+      - name: Setup | airdrop local provider
+        run: solana airdrop 500000 8QauqZxeMf3apzvQ8hYxSD1SAdb5VfL92eT63WHnZmzZ
+      - name: Setup | deploy local programs
+        run: anchor deploy --provider.cluster "http://localhost:8899" --provider.wallet ./test-keypair.json
       - name: Test | run jest
         env:
           DEVNET_VALIDATOR_URL: ${{ secrets.DEVNET_VALIDATOR_URL }}
           MAINNET_VALIDATOR_URL: ${{ secrets.MAINNET_VALIDATOR_URL }}
         run: cd ./sdk/${{ matrix.sdk }} && yarn test
+      - name: Test | stop validator
+        run: kill $(lsof -t -i:9900)
       - name: Test | code coverage
         uses: jpb06/jest-badges-action@latest
         with:

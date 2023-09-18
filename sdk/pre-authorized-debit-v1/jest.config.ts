@@ -6,6 +6,7 @@
 import type { Config } from "jest";
 
 const config: Config = {
+  testTimeout: 10000,
   moduleNameMapper: {
     // Force module uuid to resolve with the CJS entry point, because Jest does not support package.json.exports. See https://github.com/uuidjs/uuid/issues/451
     uuid: require.resolve("uuid"),
@@ -63,10 +64,10 @@ const config: Config = {
   // forceCoverageMatch: [],
 
   // A path to a module which exports an async function that is triggered once before all test suites
-  globalSetup: "./tests/setup.js",
+  // globalSetup: "./tests/setup.js",
 
   // A path to a module which exports an async function that is triggered once after all test suites
-  globalTeardown: "./tests/teardown.js",
+  // globalTeardown: "./tests/teardown.js",
 
   // A set of global variables that need to be available in all test environments
   // globals: {},
