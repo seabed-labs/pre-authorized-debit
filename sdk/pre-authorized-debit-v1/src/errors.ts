@@ -14,6 +14,22 @@ export class IdlNotFoundOnChainError extends CustomError {
 
 export class TokenAccountDoesNotExist extends CustomError {
   constructor(rpcUrl: string, tokenAccountPubkey: PublicKey) {
-    super(rpcUrl, `Token account doesn't exist: ${tokenAccountPubkey}`);
+    super(
+      rpcUrl,
+      `Token account doesn't exist: ${tokenAccountPubkey.toBase58()}`,
+    );
+  }
+}
+
+export class NoPreAuthorizationFound extends CustomError {
+  constructor(
+    rpcUrl: string,
+    tokenAccountPubkey: PublicKey,
+    debitAuthorityPubkey: PublicKey,
+  ) {
+    super(
+      rpcUrl,
+      `Pre-authorization not found for (tokenAccount: ${tokenAccountPubkey.toBase58()}, debitAuthority: ${debitAuthorityPubkey.toBase58()})`,
+    );
   }
 }

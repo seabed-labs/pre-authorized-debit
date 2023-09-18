@@ -22,6 +22,7 @@ import {
 import { DEVNET_PAD_PROGRAM_ID, MAINNET_PAD_PROGRAM_ID } from "../../constants";
 import {
   IdlNotFoundOnChainError,
+  NoPreAuthorizationFound,
   TokenAccountDoesNotExist,
 } from "../../errors";
 import { PreAuthorizedDebitProgramIDL } from "../idl.ts";
@@ -144,38 +145,34 @@ export class PreAuthorizedDebitReadClientImpl
       const oneTimeVariant = preAuthorizationAnchorType.variant.oneTime;
 
       variant = {
-        oneTime: {
-          amountAuthorized: BigInt(oneTimeVariant.amountAuthorized.toString()),
-          amountDebited: BigInt(oneTimeVariant.amountDebited.toString()),
-          expiryUnixTimestamp: BigInt(
-            oneTimeVariant.expiryUnixTimestamp.toString(),
-          ),
-        },
+        type: "oneTime",
+        amountAuthorized: BigInt(oneTimeVariant.amountAuthorized.toString()),
+        amountDebited: BigInt(oneTimeVariant.amountDebited.toString()),
+        expiryUnixTimestamp: BigInt(
+          oneTimeVariant.expiryUnixTimestamp.toString(),
+        ),
       };
     } else {
       const recurringVariant = preAuthorizationAnchorType.variant.recurring;
       const numCycles = recurringVariant.numCycles;
 
       variant = {
-        recurring: {
-          recurringAmountAuthorized: BigInt(
-            recurringVariant.recurringAmountAuthorized.toString(),
-          ),
-          repeatFrequencySeconds: BigInt(
-            recurringVariant.repeatFrequencySeconds.toString(),
-          ),
-          resetEveryCycle: recurringVariant.resetEveryCycle,
-          amountDebitedTotal: BigInt(
-            recurringVariant.amountDebitedTotal.toString(),
-          ),
-          amountDebitedLastCycle: BigInt(
-            recurringVariant.amountDebitedLastCycle.toString(),
-          ),
-          lastDebitedCycle: BigInt(
-            recurringVariant.lastDebitedCycle.toString(),
-          ),
-          numCycles: numCycles && BigInt(numCycles.toString()),
-        },
+        type: "recurring",
+        recurringAmountAuthorized: BigInt(
+          recurringVariant.recurringAmountAuthorized.toString(),
+        ),
+        repeatFrequencySeconds: BigInt(
+          recurringVariant.repeatFrequencySeconds.toString(),
+        ),
+        resetEveryCycle: recurringVariant.resetEveryCycle,
+        amountDebitedTotal: BigInt(
+          recurringVariant.amountDebitedTotal.toString(),
+        ),
+        amountDebitedLastCycle: BigInt(
+          recurringVariant.amountDebitedLastCycle.toString(),
+        ),
+        lastDebitedCycle: BigInt(recurringVariant.lastDebitedCycle.toString()),
+        numCycles: numCycles && BigInt(numCycles.toString()),
       };
     }
 
@@ -389,11 +386,91 @@ export class PreAuthorizedDebitReadClientImpl
     return debitOccured;
   }
 
-  fetchMaxDebitAmount(params: {
+  public async fetchMaxDebitAmount(params: {
     tokenAccount: PublicKey;
     debitAuthority: PublicKey;
   }): Promise<bigint> {
-    // TODO
-    throw new Error("Method not implemented.");
+    const { tokenAccount, debitAuthority } = params;
+    const preAuthorization = await this.fetchPreAuthorization({
+      tokenAccount,
+      debitAuthority,
+    });
+
+    if (!preAuthorization) {
+      throw new NoPreAuthorizationFound(
+        this.connection.rpcEndpoint,
+        tokenAccount,
+        debitAuthority,
+      );
+    }
+
+    if (preAuthorization.account.paused) {
+      return BigInt(0);
+    }
+
+    const activationUnixTimestamp = Number(
+      preAuthorization.account.activationUnixTimestamp,
+    );
+
+    const activationDate = new Date(activationUnixTimestamp * 1e3);
+    const latestSlot = await this.connection.getSlot();
+    const latestSlotTimestamp = await this.connection.getBlockTime(latestSlot);
+    const solanaNowDate = latestSlotTimestamp
+      ? new Date(latestSlotTimestamp * 1e3)
+      : new Date(); // fallback to client side current timestamp
+
+    if (activationDate > solanaNowDate) {
+      return BigInt(0);
+    }
+
+    const variant = preAuthorization.account.variant;
+
+    if (variant.type === "oneTime") {
+      const { amountAuthorized, amountDebited, expiryUnixTimestamp } = variant;
+      const expiryDate = new Date(Number(expiryUnixTimestamp) * 1e3);
+
+      if (solanaNowDate >= expiryDate) {
+        return BigInt(0);
+      }
+
+      if (amountAuthorized <= amountDebited) {
+        return BigInt(0);
+      }
+
+      return amountAuthorized - amountDebited;
+    } else {
+      const {
+        recurringAmountAuthorized,
+        repeatFrequencySeconds,
+        numCycles,
+        resetEveryCycle,
+        amountDebitedLastCycle,
+        amountDebitedTotal,
+        lastDebitedCycle,
+      } = variant;
+
+      const secondsSinceActivation =
+        Math.floor(solanaNowDate.getTime() / 1e3) -
+        Math.floor(activationDate.getTime() / 1e3);
+
+      const currentCycle =
+        1 + Number(BigInt(secondsSinceActivation) / repeatFrequencySeconds);
+
+      if (numCycles != null && currentCycle > numCycles) {
+        return BigInt(0);
+      }
+
+      if (!resetEveryCycle) {
+        return (
+          recurringAmountAuthorized * BigInt(currentCycle) - amountDebitedTotal
+        );
+      }
+
+      if (lastDebitedCycle === BigInt(currentCycle)) {
+        return recurringAmountAuthorized - amountDebitedLastCycle;
+      }
+
+      return recurringAmountAuthorized;
+    }
   }
 }

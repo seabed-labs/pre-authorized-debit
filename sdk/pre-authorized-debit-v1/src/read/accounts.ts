@@ -12,22 +12,20 @@ export type PreAuthorizationAccount = {
   paused: boolean;
   variant:
     | {
-        oneTime: {
-          amountAuthorized: bigint;
-          amountDebited: bigint;
-          expiryUnixTimestamp: bigint;
-        };
+        type: "oneTime";
+        amountAuthorized: bigint;
+        amountDebited: bigint;
+        expiryUnixTimestamp: bigint;
       }
     | {
-        recurring: {
-          recurringAmountAuthorized: bigint;
-          repeatFrequencySeconds: bigint;
-          resetEveryCycle: boolean;
-          amountDebitedTotal: bigint;
-          numCycles: bigint | null;
-          amountDebitedLastCycle: bigint;
-          lastDebitedCycle: bigint;
-        };
+        type: "recurring";
+        recurringAmountAuthorized: bigint;
+        repeatFrequencySeconds: bigint;
+        resetEveryCycle: boolean;
+        numCycles: bigint | null;
+        amountDebitedTotal: bigint;
+        amountDebitedLastCycle: bigint;
+        lastDebitedCycle: bigint;
       };
 };
 
