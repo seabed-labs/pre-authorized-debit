@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   AnchorProvider,
+  BN,
   Idl,
   Program,
   ProgramAccount,
@@ -19,11 +20,20 @@ import {
   PreAuthorizedDebitReadClient,
 } from "../interface";
 import { DEVNET_PAD_PROGRAM_ID, MAINNET_PAD_PROGRAM_ID } from "../../constants";
-import { IdlNotFoundOnChainError } from "../../errors";
+import {
+  IdlNotFoundOnChainError,
+  TokenAccountDoesNotExist,
+} from "../../errors";
 import { PreAuthorizedDebitProgramIDL } from "../idl.ts";
 import IDL from "../idl.json";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { PreAuthorizationAccount, SmartDelegateAccount } from "../accounts.ts";
+import {
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  getAccount,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 
 export class PreAuthorizedDebitReadClientImpl
   implements PreAuthorizedDebitReadClient
@@ -77,7 +87,10 @@ export class PreAuthorizedDebitReadClientImpl
     );
 
     if (!idl) {
-      throw new IdlNotFoundOnChainError(this.programId);
+      throw new IdlNotFoundOnChainError(
+        this.connection.rpcEndpoint,
+        this.programId,
+      );
     }
 
     return idl;
@@ -305,13 +318,75 @@ export class PreAuthorizedDebitReadClientImpl
     return this.fetchPreAuthorizations(type, { debitAuthority });
   }
 
-  checkDebitAmount(params: {
+  public async checkDebitAmount(params: {
     tokenAccount: PublicKey;
     debitAuthority: PublicKey;
     amount: bigint;
   }): Promise<boolean> {
-    // TODO
-    throw new Error("Method not implemented.");
+    const { tokenAccount: tokenAccountPubkey, debitAuthority, amount } = params;
+    const preAuthorization = await this.fetchPreAuthorization({
+      tokenAccount: tokenAccountPubkey,
+      debitAuthority,
+    });
+
+    const tokenAccountInfo =
+      await this.connection.getAccountInfo(tokenAccountPubkey);
+
+    const tokenProgramId = tokenAccountInfo?.owner;
+
+    if (
+      tokenAccountInfo == null ||
+      tokenProgramId == null || // for typescript
+      ![TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].includes(tokenProgramId)
+    ) {
+      throw new TokenAccountDoesNotExist(
+        this.connection.rpcEndpoint,
+        tokenAccountPubkey,
+      );
+    }
+
+    if (preAuthorization == null) {
+      return false;
+    }
+
+    const tokenAccount = await getAccount(
+      this.connection,
+      tokenAccountPubkey,
+      undefined,
+      tokenProgramId,
+    );
+
+    // NOTE: The debit authority can debit to any token account.
+    //       But, we just use the ATA to keep this method's interface simple.
+    const debitAuthortyAta = getAssociatedTokenAddressSync(
+      tokenAccount.mint,
+      debitAuthority,
+      true,
+      tokenProgramId,
+    );
+
+    const { publicKey: smartDelegate } = this.getSmartDelegatePDA();
+
+    const simulationRes = await this.program.methods
+      .debit({
+        amount: new BN(amount.toString()),
+      })
+      .accounts({
+        debitAuthority,
+        mint: tokenAccount.mint,
+        tokenAccount: tokenAccountPubkey,
+        destinationTokenAccount: debitAuthortyAta,
+        smartDelegate,
+        preAuthorization: preAuthorization.publicKey,
+        tokenProgram: tokenProgramId,
+      })
+      .simulate();
+
+    const debitOccured = simulationRes.events.some(
+      (event) => event.name === "DebitEvent",
+    );
+
+    return debitOccured;
   }
 
   fetchMaxDebitAmount(params: {
