@@ -65,13 +65,19 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        command:
-          [
-            "anchor test program-tests/pre-authorized-debit-v1 .ts",
-            "anchor test program-tests/pre-authorized-debit-v1 .2.ts",
-            "anchor test program-tests/pre-authorized-debit-v1/debit .ts",
-            "anchor test \"sdk/pre-authorized-debit-v1/tests/**\"",
-          ]
+        test: [
+          {scope: "program-tests/pre-authorized-debit-v1", testSuffix: "**/*test.ts"},
+          {scope: "program-tests/pre-authorized-debit-v1", testSuffix: "**/*test.2.ts"},
+          {scope: "program-tests/pre-authorized-debit-v1", testSuffix: "**/debit/*.test.ts"},
+          {scope: "sdk/pre-authorized-debit-v1", testSuffix: "tests/**/*.test.ts"},
+        ]
+#        command:
+#          [
+#            "anchor test program-tests/pre-authorized-debit-v1 .ts",
+#            "anchor test program-tests/pre-authorized-debit-v1 .2.ts",
+#            "anchor test program-tests/pre-authorized-debit-v1/debit .ts",
+#            "anchor test \"sdk/pre-authorized-debit-v1/tests/**\"",
+#          ]
     steps:
       - name: Setup | checkout
         uses: actions/checkout@v3
@@ -102,17 +108,19 @@ jobs:
         run: solana config set --url http:localhost:8899
       - name: Setup | yarn deps
         run: yarn install
+      - name: Setup | pacakge deps
+        run: cd ${{ matrix.test.scope }} && yarn install
       - name: Test
         env:
           DEVNET_VALIDATOR_URL: ${{ secrets.DEVNET_VALIDATOR_URL }}
           MAINNET_VALIDATOR_URL: ${{ secrets.MAINNET_VALIDATOR_URL }}
-        run: ${{ matrix.command }}
+        run: anchor test ${{ matrix.test.scope }} ${{ matrix.test.testSuffix }}
       - name: Test | code coverage
-        if: ${{ contains(matrix.command, 'sdk') }}
+        if: ${{ contains(matrix.test.scope, 'sdk') }}
         uses: jpb06/jest-badges-action@latest
         with:
-          coverage-summary-path: ./sdk/pre-authorized-debit-v1/coverage/coverage-summary.json
+          coverage-summary-path: ./${{ matrix.test.scope }}/coverage/coverage-summary.json
           branches: main,feat/sdk
           commit-user: Seabed CI
           commit-user-email: devtools@dcaf.so
-          output-folder: ./sdk/pre-authorized-debit-v1/badges
+          output-folder: ./${{ matrix.test.scope }}/badges
