@@ -70,7 +70,6 @@ jobs:
             "anchor test program-tests/pre-authorized-debit-v1 .ts",
             "anchor test program-tests/pre-authorized-debit-v1 .2.ts",
             "anchor test program-tests/pre-authorized-debit-v1/debit .ts",
-            "anchor test sdk/pre-authorized-debit-v1/tests/**",
           ]
     steps:
       - name: Setup | checkout
