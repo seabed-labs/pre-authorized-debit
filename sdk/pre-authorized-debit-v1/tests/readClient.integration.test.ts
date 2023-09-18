@@ -94,6 +94,14 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       tokenAccount,
       debitAuthority: debitAuthority.publicKey,
     });
-    assert.isNotEmpty(preAuthorization);
+    assert.isNotEmpty(preAuthorization?.account);
+  });
+
+  it("should return null preAuthorization", async () => {
+    const preAuthorization = await readClient.fetchPreAuthorization({
+      tokenAccount,
+      debitAuthority: new Keypair().publicKey,
+    });
+    assert.isNull(preAuthorization);
   });
 });
