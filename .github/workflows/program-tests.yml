@@ -103,4 +103,7 @@ jobs:
       - name: Setup | yarn deps
         run: yarn install
       - name: Test
+        env:
+          DEVNET_VALIDATOR_URL: ${{ secrets.DEVNET_VALIDATOR_URL }}
+          MAINNET_VALIDATOR_URL: ${{ secrets.MAINNET_VALIDATOR_URL }}
         run: ${{ matrix.command }}
