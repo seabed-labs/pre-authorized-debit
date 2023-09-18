@@ -68,18 +68,6 @@ export class PreAuthorizedDebitReadClientImpl
     );
   }
 
-  public async fetchIdl(): Promise<Idl> {
-    const idl = await Program.fetchIdl(this.programId, {
-      connection: this.connection,
-    });
-
-    if (!idl) {
-      throw new IdlNotFoundOnChainError(this.programId);
-    }
-
-    return idl;
-  }
-
   public async fetchIdlFromChain(): Promise<PreAuthorizedDebitProgramIDL> {
     const idl = await Program.fetchIdl<PreAuthorizedDebitProgramIDL>(
       this.programId,
