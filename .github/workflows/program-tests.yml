@@ -107,3 +107,12 @@ jobs:
           DEVNET_VALIDATOR_URL: ${{ secrets.DEVNET_VALIDATOR_URL }}
           MAINNET_VALIDATOR_URL: ${{ secrets.MAINNET_VALIDATOR_URL }}
         run: ${{ matrix.command }}
+      - name: Test | code coverage
+        if: ${{ contains(matrix.command, 'sdk') }}
+        uses: jpb06/jest-badges-action@latest
+        with:
+          coverage-summary-path: ./sdk/pre-authorized-debit-v1/coverage/coverage-summary.json
+          branches: main,feat/sdk
+          commit-user: Seabed CI
+          commit-user-email: devtools@dcaf.so
+          output-folder: ./sdk/pre-authorized-debit-v1/badges
