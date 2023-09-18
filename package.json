@@ -1,6 +1,7 @@
 {
     "private": true,
     "workspaces": [
+        "testutils",
         "sdk/**",
         "scripts",
         "program-tests/**"

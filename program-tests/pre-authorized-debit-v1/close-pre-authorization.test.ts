@@ -18,14 +18,13 @@ import * as anchor from "@coral-xyz/anchor";
 import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1";
 
 import "./setup";
-import {
-  PreAuthTestVariant,
-  derivePreAuthorization,
-  fundAccounts,
-  waitForTxToConfirm,
-  initSmartDelegateIdempotent,
-} from "./utils";
+import { PreAuthTestVariant, derivePreAuthorization } from "./utils";
 import { PreAuthorizationClosedEventDataFields } from "@dcaf/pad";
+import {
+  fundAccounts,
+  initSmartDelegateIdempotent,
+  waitForTxToConfirm,
+} from "@dcaf/pad-test-utils";
 
 describe("pre-authorized-debit-v1#close-pre-authorization", () => {
   const program =

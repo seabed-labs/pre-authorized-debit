@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { assert, expect } from "chai";
+import { expect } from "chai";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { localValidatorUrl } from "./constants";
 import {
@@ -13,7 +13,7 @@ import { TOKEN_PROGRAM_ID, createMint } from "@solana/spl-token";
 import {
   fundAccounts,
   initSmartDelegateIdempotent,
-} from "@dcaf/pad-integration-tests/utils";
+} from "@dcaf/pad-test-utils";
 
 describe("PreAuthorizedDebitReadClientImpl integration", () => {
   const connection: Connection = new Connection(localValidatorUrl, "processed");
@@ -32,11 +32,7 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     const payerKeypair = new Keypair();
     debitAuthority = new Keypair();
     const tx = await fundAccounts(provider, [payerKeypair.publicKey], 5000e6);
-
     await connection.confirmTransaction(tx);
-
-    const accountInfo = await connection.getAccountInfo(payerKeypair.publicKey);
-    console.log(accountInfo);
     mint = await createMint(
       connection,
       payerKeypair,
