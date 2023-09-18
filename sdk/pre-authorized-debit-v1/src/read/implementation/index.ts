@@ -50,7 +50,7 @@ export class PreAuthorizedDebitReadClientImpl
       { commitment: this.connection.commitment },
     );
 
-    this.program = new Program(IDL, this.programId);
+    this.program = new Program(IDL, this.programId, readonlyProvider);
   }
 
   public static custom(
