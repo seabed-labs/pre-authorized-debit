@@ -5,7 +5,10 @@
     "outDir": "./dist" /* Specify an output folder for all emitted files. */,
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
   "exclude": ["jest.config.ts", "tests/**/*", "dist/**/*"]
 }
