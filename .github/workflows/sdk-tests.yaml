@@ -118,6 +118,9 @@ jobs:
       - name: Setup | anchor build
         run: anchor build
       - name: Test | run jest
+        env:
+          DEVNET_VALIDATOR_URL: ${{ secrets.DEVNET_VALIDATOR_URL }}
+          MAINNET_VALIDATOR_URL: ${{ secrets.MAINNET_VALIDATOR_URL }}
         run: cd ./sdk/${{ matrix.sdk }} && yarn test
       - name: Test | code coverage
         uses: jpb06/jest-badges-action@latest
