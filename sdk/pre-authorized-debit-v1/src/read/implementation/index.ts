@@ -3,7 +3,6 @@
 import {
   AnchorProvider,
   BN,
-  Idl,
   Program,
   ProgramAccount,
   utils,
@@ -25,8 +24,6 @@ import {
   NoPreAuthorizationFound,
   TokenAccountDoesNotExist,
 } from "../../errors";
-import { PreAuthorizedDebitProgramIDL } from "../idl.ts";
-import IDL from "../idl.json";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { PreAuthorizationAccount, SmartDelegateAccount } from "../accounts.ts";
 import {
@@ -35,11 +32,12 @@ import {
   getAccount,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
+import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1.ts";
 
 export class PreAuthorizedDebitReadClientImpl
   implements PreAuthorizedDebitReadClient
 {
-  private readonly program: Program<PreAuthorizedDebitProgramIDL>;
+  private readonly program: Program<PreAuthorizedDebitV1>;
 
   // eslint-disable-next-line no-useless-constructor
   private constructor(
@@ -52,10 +50,7 @@ export class PreAuthorizedDebitReadClientImpl
       { commitment: this.connection.commitment },
     );
 
-    this.program = new Program(
-      IDL as PreAuthorizedDebitProgramIDL,
-      this.programId,
-    );
+    this.program = new Program(IDL, this.programId);
   }
 
   public static custom(
@@ -79,13 +74,10 @@ export class PreAuthorizedDebitReadClientImpl
     );
   }
 
-  public async fetchIdlFromChain(): Promise<PreAuthorizedDebitProgramIDL> {
-    const idl = await Program.fetchIdl<PreAuthorizedDebitProgramIDL>(
-      this.programId,
-      {
-        connection: this.connection,
-      },
-    );
+  public async fetchIdlFromChain(): Promise<PreAuthorizedDebitV1> {
+    const idl = await Program.fetchIdl<PreAuthorizedDebitV1>(this.programId, {
+      connection: this.connection,
+    });
 
     if (!idl) {
       throw new IdlNotFoundOnChainError(
@@ -127,7 +119,7 @@ export class PreAuthorizedDebitReadClientImpl
 
   private smartDelegateToNativeType(
     smartDelegateAnchorType: Awaited<
-      ReturnType<typeof this.program.account.SmartDelegate.fetch>
+      ReturnType<typeof this.program.account.smartDelegate.fetch>
     >,
   ): SmartDelegateAccount {
     return {
@@ -137,7 +129,7 @@ export class PreAuthorizedDebitReadClientImpl
 
   private preAuthorizationToNativeType(
     preAuthorizationAnchorType: Awaited<
-      ReturnType<typeof this.program.account.PreAuthorization.fetch>
+      ReturnType<typeof this.program.account.preAuthorization.fetch>
     >,
   ): PreAuthorizationAccount {
     let variant: PreAuthorizationAccount["variant"];
@@ -192,7 +184,7 @@ export class PreAuthorizedDebitReadClientImpl
     const { publicKey: smartDelegtePubkey } = this.getSmartDelegatePDA();
 
     const smartDelegateAccount =
-      await this.program.account.SmartDelegate.fetchNullable(
+      await this.program.account.smartDelegate.fetchNullable(
         smartDelegtePubkey,
       );
 
@@ -226,7 +218,7 @@ export class PreAuthorizedDebitReadClientImpl
       ).publicKey;
 
     const preAuthorizationAccount =
-      await this.program.account.PreAuthorization.fetchNullable(
+      await this.program.account.preAuthorization.fetchNullable(
         preAuthorizationPubkey,
       );
 
@@ -291,7 +283,7 @@ export class PreAuthorizedDebitReadClientImpl
     }
 
     const programAccounts =
-      await this.program.account.PreAuthorization.all(filters);
+      await this.program.account.preAuthorization.all(filters);
 
     return programAccounts.map((programAccount) => ({
       publicKey: programAccount.publicKey,

@@ -1,7 +1,7 @@
 import { ProgramAccount } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { PreAuthorizedDebitProgramIDL } from "../idl";
 import { PreAuthorizationAccount, SmartDelegateAccount } from "../accounts";
+import { PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
 
 export type FetchPreAuthorizationParams =
   | { publicKey: PublicKey }
@@ -26,7 +26,7 @@ export type PDA = {
 export type PreAuthorizationType = "oneTime" | "recurring" | "all";
 
 export interface PreAuthorizedDebitReadClient {
-  fetchIdlFromChain(): Promise<PreAuthorizedDebitProgramIDL>;
+  fetchIdlFromChain(): Promise<PreAuthorizedDebitV1>;
 
   getSmartDelegatePDA(): PDA;
 
