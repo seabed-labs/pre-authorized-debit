@@ -1,9 +1,7 @@
-import { Idl, ProgramAccount } from "@coral-xyz/anchor";
+import { ProgramAccount } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import {
-  PreAuthorizationAccount,
-  SmartDelegateAccount,
-} from "../../anchor-client";
+import { PreAuthorizedDebitProgramIDL } from "../idl";
+import { PreAuthorizationAccount, SmartDelegateAccount } from "../accounts";
 
 export type FetchPreAuthorizationParams =
   | { publicKey: PublicKey }
@@ -28,8 +26,7 @@ export type PDA = {
 export type PreAuthorizationType = "oneTime" | "recurring" | "all";
 
 export interface PreAuthorizedDebitReadClient {
-  // TODO: Can we add more typing to this?
-  fetchIdl(): Promise<Idl>;
+  fetchIdlFromChain(): Promise<PreAuthorizedDebitProgramIDL>;
 
   getSmartDelegatePDA(): PDA;
 

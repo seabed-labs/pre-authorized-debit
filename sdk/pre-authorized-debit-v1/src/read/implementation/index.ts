@@ -1,17 +1,17 @@
 // TODO: Remove this after impl
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Idl, Program, ProgramAccount, utils } from "@coral-xyz/anchor";
+import {
+  AnchorProvider,
+  Program,
+  ProgramAccount,
+  utils,
+} from "@coral-xyz/anchor";
 import {
   Connection,
   GetProgramAccountsFilter,
+  Keypair,
   PublicKey,
 } from "@solana/web3.js";
-import {
-  SmartDelegate,
-  PreAuthorization,
-  SmartDelegateAccount,
-  PreAuthorizationAccount,
-} from "../../anchor-client";
 import {
   PDA,
   PreAuthorizationType,
@@ -19,15 +19,32 @@ import {
 } from "../interface";
 import { DEVNET_PAD_PROGRAM_ID, MAINNET_PAD_PROGRAM_ID } from "../../constants";
 import { IdlNotFoundOnChainError } from "../../errors";
+import { PreAuthorizedDebitProgramIDL } from "../idl.ts";
+import IDL from "../idl.json";
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+import { PreAuthorizationAccount, SmartDelegateAccount } from "../accounts.ts";
 
 export class PreAuthorizedDebitReadClientImpl
   implements PreAuthorizedDebitReadClient
 {
+  private readonly program: Program<PreAuthorizedDebitProgramIDL>;
+
   // eslint-disable-next-line no-useless-constructor
   private constructor(
     private readonly connection: Connection,
     private readonly programId: PublicKey,
-  ) {}
+  ) {
+    const readonlyProvider = new AnchorProvider(
+      this.connection,
+      new NodeWallet(Keypair.generate()),
+      { commitment: this.connection.commitment },
+    );
+
+    this.program = new Program(
+      IDL as PreAuthorizedDebitProgramIDL,
+      this.programId,
+    );
+  }
 
   public static custom(
     connection: Connection,
@@ -50,8 +67,10 @@ export class PreAuthorizedDebitReadClientImpl
     );
   }
 
-  public async fetchIdl(): Promise<Idl> {
-    const idl = await Program.fetchIdl(this.programId);
+  public async fetchIdlFromChain(): Promise<PreAuthorizedDebitProgramIDL> {
+    const idl = await Program.fetchIdl<PreAuthorizedDebitProgramIDL>(
+      this.programId,
+    );
 
     if (!idl) {
       throw new IdlNotFoundOnChainError(this.programId);
@@ -88,19 +107,85 @@ export class PreAuthorizedDebitReadClientImpl
     };
   }
 
+  private smartDelegateToNativeType(
+    smartDelegateAnchorType: Awaited<
+      ReturnType<typeof this.program.account.SmartDelegate.fetch>
+    >,
+  ): SmartDelegateAccount {
+    return {
+      bump: smartDelegateAnchorType.bump,
+    };
+  }
+
+  private preAuthorizationToNativeType(
+    preAuthorizationAnchorType: Awaited<
+      ReturnType<typeof this.program.account.PreAuthorization.fetch>
+    >,
+  ): PreAuthorizationAccount {
+    let variant: PreAuthorizationAccount["variant"];
+    if (preAuthorizationAnchorType.variant.oneTime) {
+      const oneTimeVariant = preAuthorizationAnchorType.variant.oneTime;
+
+      variant = {
+        oneTime: {
+          amountAuthorized: BigInt(oneTimeVariant.amountAuthorized.toString()),
+          amountDebited: BigInt(oneTimeVariant.amountDebited.toString()),
+          expiryUnixTimestamp: BigInt(
+            oneTimeVariant.expiryUnixTimestamp.toString(),
+          ),
+        },
+      };
+    } else {
+      const recurringVariant = preAuthorizationAnchorType.variant.recurring;
+      const numCycles = recurringVariant.numCycles;
+
+      variant = {
+        recurring: {
+          recurringAmountAuthorized: BigInt(
+            recurringVariant.recurringAmountAuthorized.toString(),
+          ),
+          repeatFrequencySeconds: BigInt(
+            recurringVariant.repeatFrequencySeconds.toString(),
+          ),
+          resetEveryCycle: recurringVariant.resetEveryCycle,
+          amountDebitedTotal: BigInt(
+            recurringVariant.amountDebitedTotal.toString(),
+          ),
+          amountDebitedLastCycle: BigInt(
+            recurringVariant.amountDebitedLastCycle.toString(),
+          ),
+          lastDebitedCycle: BigInt(
+            recurringVariant.lastDebitedCycle.toString(),
+          ),
+          numCycles: numCycles && BigInt(numCycles.toString()),
+        },
+      };
+    }
+
+    return {
+      bump: preAuthorizationAnchorType.bump,
+      tokenAccount: preAuthorizationAnchorType.tokenAccount,
+      debitAuthority: preAuthorizationAnchorType.debitAuthority,
+      activationUnixTimestamp: BigInt(
+        preAuthorizationAnchorType.activationUnixTimestamp.toString(),
+      ),
+      paused: preAuthorizationAnchorType.paused,
+      variant,
+    };
+  }
+
   public async fetchSmartDelegate(): Promise<ProgramAccount<SmartDelegateAccount> | null> {
     const { publicKey: smartDelegtePubkey } = this.getSmartDelegatePDA();
 
-    const smartDelegateAccount = await SmartDelegate.fetch(
-      this.connection,
-      smartDelegtePubkey,
-      this.programId,
-    );
+    const smartDelegateAccount =
+      await this.program.account.SmartDelegate.fetchNullable(
+        smartDelegtePubkey,
+      );
 
     return (
       smartDelegateAccount && {
         publicKey: smartDelegtePubkey,
-        account: smartDelegateAccount.data,
+        account: this.smartDelegateToNativeType(smartDelegateAccount),
       }
     );
   }
@@ -126,16 +211,15 @@ export class PreAuthorizedDebitReadClientImpl
         maybeComponentParams.debitAuthority,
       ).publicKey;
 
-    const preAuthorizationAccount = await PreAuthorization.fetch(
-      this.connection,
-      preAuthorizationPubkey,
-      this.programId,
-    );
+    const preAuthorizationAccount =
+      await this.program.account.PreAuthorization.fetchNullable(
+        preAuthorizationPubkey,
+      );
 
     return (
       preAuthorizationAccount && {
         publicKey: preAuthorizationPubkey,
-        account: preAuthorizationAccount.data,
+        account: this.preAuthorizationToNativeType(preAuthorizationAccount),
       }
     );
   }
@@ -152,18 +236,7 @@ export class PreAuthorizedDebitReadClientImpl
 
     // TODO: After test, make this code more dynamic (i.e. use IDL and anchor convenience functions instead of doing it raw)
 
-    const filters: GetProgramAccountsFilter[] = [
-      {
-        dataSize: 133,
-      },
-      {
-        // discriminator
-        memcmp: {
-          offset: 0,
-          bytes: utils.bytes.bs58.encode(PreAuthorization.discriminator),
-        },
-      },
-    ];
+    const filters: GetProgramAccountsFilter[] = [];
 
     if (filterBy.tokenAccount) {
       filters.push({
@@ -203,36 +276,13 @@ export class PreAuthorizedDebitReadClientImpl
       });
     }
 
-    // TODO: Is it really better to do 2 RPC calls rather than 1 (just getProgramAccounts) here?
+    const programAccounts =
+      await this.program.account.PreAuthorization.all(filters);
 
-    // TODO: Abstract some of this out
-    const accounts = await this.connection.getProgramAccounts(this.programId, {
-      // we don't want any data since we just care about pubkeys for now
-      dataSlice: {
-        offset: 0,
-        length: 0,
-      },
-      filters,
-    });
-
-    const accountPubkeys = accounts.map((a) => a.pubkey);
-    const accountInfos =
-      await this.connection.getMultipleAccountsInfo(accountPubkeys);
-
-    const parsedProgramAccounts = accountInfos
-      .map((info, i): ProgramAccount<PreAuthorizationAccount> | null => {
-        return (
-          info && {
-            publicKey: accountPubkeys[i],
-            account: PreAuthorization.decode(info.data).data,
-          }
-        );
-      })
-      .filter(
-        (val): val is ProgramAccount<PreAuthorizationAccount> => val !== null,
-      );
-
-    return parsedProgramAccounts;
+    return programAccounts.map((programAccount) => ({
+      publicKey: programAccount.publicKey,
+      account: this.preAuthorizationToNativeType(programAccount.account),
+    }));
   }
 
   // TODO: Support pagination?
