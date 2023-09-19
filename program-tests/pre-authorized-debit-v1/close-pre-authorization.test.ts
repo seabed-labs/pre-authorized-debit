@@ -19,7 +19,6 @@ import { PreAuthorizedDebitV1 } from "../../target/types/pre_authorized_debit_v1
 
 import "./setup";
 import { PreAuthTestVariant, derivePreAuthorization } from "./utils";
-import { PreAuthorizationClosedEventDataFields } from "@dcaf/pad";
 import {
   fundAccounts,
   initSmartDelegateIdempotent,
@@ -82,8 +81,8 @@ describe("pre-authorized-debit-v1#close-pre-authorization", () => {
       );
     }
     expect(Object.keys(closePreAuthEvent.data).length).to.equal(1);
-    const closePreAuthEventData = closePreAuthEvent.data
-      .data as PreAuthorizationClosedEventDataFields;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const closePreAuthEventData = closePreAuthEvent.data.data as any;
     expect(closePreAuthEventData).to.not.equal(null);
     expect(Object.keys(closePreAuthEventData).length).to.equal(6);
 
