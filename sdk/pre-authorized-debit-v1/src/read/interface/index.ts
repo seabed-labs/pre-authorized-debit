@@ -57,4 +57,8 @@ export interface PreAuthorizedDebitReadClient {
   // Returns the maximum debitable amount given the current state of pre-auth given params (if any)
 
   fetchMaxDebitAmount(params: FetchMaxDebitAmountParams): Promise<bigint>;
+
+  fetchCurrentOwnerOfPreAuthTokenAccount(
+    preAuthorizationPubkey: PublicKey,
+  ): Promise<PublicKey>;
 }

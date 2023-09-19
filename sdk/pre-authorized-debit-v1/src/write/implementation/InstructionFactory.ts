@@ -4,6 +4,7 @@ import { DebitParams } from "../../anchor-client";
 import {
   ApproveSmartDelegateParams,
   ClosePreAuthorizationAsOwnerParams,
+  ClosePreAuthorizationAsOwnerResult,
   InitOneTimePreAuthorizationParams,
   InitOneTimePreAuthorizationResult,
   InitRecurringPreAuthorizationParams,
@@ -48,11 +49,13 @@ export class InstructionFactoryImpl implements InstructionFactory {
   public static custom(
     connection: Connection,
     programId: PublicKey,
+    readClient?: PreAuthorizedDebitReadClient,
   ): InstructionFactory {
     return new InstructionFactoryImpl(
       connection,
       programId,
-      PreAuthorizedDebitReadClientImpl.custom(connection, programId),
+      readClient ??
+        PreAuthorizedDebitReadClientImpl.custom(connection, programId),
     );
   }
 
@@ -111,32 +114,19 @@ export class InstructionFactoryImpl implements InstructionFactory {
   ): Promise<InstructionWithMetadata<PausePreAuthorizationResult>> {
     const { preAuthorization: preAuthorizationPubkey } = params;
 
-    const preAuthorization = await this.readClient.fetchPreAuthorization({
-      publicKey: preAuthorizationPubkey,
-    });
+    const preAuthorization = await this.fetchPreAuthorizationOrThrow(
+      preAuthorizationPubkey,
+    );
 
-    if (preAuthorization == null) {
-      throw NoPreAuthorizationFound.givenPubkey(
-        this.connection.rpcEndpoint,
+    const tokenAccountOwner =
+      await this.readClient.fetchCurrentOwnerOfPreAuthTokenAccount(
         preAuthorizationPubkey,
       );
-    }
-
-    const tokenAccountInfo = await this.connection.getAccountInfo(
-      preAuthorization.account.tokenAccount,
-    );
-
-    const tokenAccount = await getAccount(
-      this.connection,
-      preAuthorization.account.tokenAccount,
-      undefined,
-      tokenAccountInfo?.owner,
-    );
 
     const pausePreAuthIx = await this.program.methods
       .updatePausePreAuthorization({ pause: true })
       .accounts({
-        owner: tokenAccount.owner,
+        owner: tokenAccountOwner,
         tokenAccount: preAuthorization.account.tokenAccount,
         preAuthorization: preAuthorizationPubkey,
       })
@@ -146,7 +136,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
       instruction: pausePreAuthIx,
       expectedSigners: [
         {
-          publicKey: tokenAccount.owner,
+          publicKey: tokenAccountOwner,
           reason:
             "The pre-authorization's token account's owner needs to sign to pause it",
         },
@@ -161,32 +151,19 @@ export class InstructionFactoryImpl implements InstructionFactory {
   ): Promise<InstructionWithMetadata<UnpausePreAuthorizationResult>> {
     const { preAuthorization: preAuthorizationPubkey } = params;
 
-    const preAuthorization = await this.readClient.fetchPreAuthorization({
-      publicKey: preAuthorizationPubkey,
-    });
+    const preAuthorization = await this.fetchPreAuthorizationOrThrow(
+      preAuthorizationPubkey,
+    );
 
-    if (preAuthorization == null) {
-      throw NoPreAuthorizationFound.givenPubkey(
-        this.connection.rpcEndpoint,
+    const tokenAccountOwner =
+      await this.readClient.fetchCurrentOwnerOfPreAuthTokenAccount(
         preAuthorizationPubkey,
       );
-    }
-
-    const tokenAccountInfo = await this.connection.getAccountInfo(
-      preAuthorization.account.tokenAccount,
-    );
-
-    const tokenAccount = await getAccount(
-      this.connection,
-      preAuthorization.account.tokenAccount,
-      undefined,
-      tokenAccountInfo?.owner,
-    );
 
     const unpausePreAuthIx = await this.program.methods
       .updatePausePreAuthorization({ pause: false })
       .accounts({
-        owner: tokenAccount.owner,
+        owner: tokenAccountOwner,
         tokenAccount: preAuthorization.account.tokenAccount,
         preAuthorization: preAuthorizationPubkey,
       })
@@ -196,7 +173,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
       instruction: unpausePreAuthIx,
       expectedSigners: [
         {
-          publicKey: tokenAccount.owner,
+          publicKey: tokenAccountOwner,
           reason:
             "The pre-authorization's token account's owner needs to sign to unpause it",
         },
@@ -207,8 +184,38 @@ export class InstructionFactoryImpl implements InstructionFactory {
 
   public async buildClosePreAuthorizationAsOwnerIx(
     params: ClosePreAuthorizationAsOwnerParams,
-  ): Promise<InstructionWithMetadata<void>> {
-    throw new Error("Method not implemented");
+  ): Promise<InstructionWithMetadata<ClosePreAuthorizationAsOwnerResult>> {
+    const { preAuthorization: preAuthorizationPubkey, rentReceiver } = params;
+
+    const preAuthorization = await this.fetchPreAuthorizationOrThrow(
+      preAuthorizationPubkey,
+    );
+
+    const tokenAccountOwner =
+      await this.readClient.fetchCurrentOwnerOfPreAuthTokenAccount(
+        preAuthorizationPubkey,
+      );
+
+    const closePreAuthIx = await this.program.methods
+      .closePreAuthorization()
+      .accounts({
+        receiver: rentReceiver ?? tokenAccountOwner,
+        authority: tokenAccountOwner,
+        tokenAccount: preAuthorization.account.tokenAccount,
+      })
+      .instruction();
+
+    return {
+      instruction: closePreAuthIx,
+      expectedSigners: [
+        {
+          publicKey: tokenAccountOwner,
+          reason:
+            "The pre-authorization's token account's owner needs to sign to close it as the owner",
+        },
+      ],
+      meta: undefined,
+    };
   }
 
   public async buildClosePreAuthorizationAsDebitAuthorityIx(params: {
@@ -227,5 +234,20 @@ export class InstructionFactoryImpl implements InstructionFactory {
     params: ApproveSmartDelegateParams,
   ): Promise<InstructionWithMetadata<void>> {
     throw new Error("Method not implemented");
+  }
+
+  private async fetchPreAuthorizationOrThrow(pubkey: PublicKey) {
+    const preAuthorization = await this.readClient.fetchPreAuthorization({
+      publicKey: pubkey,
+    });
+
+    if (preAuthorization == null) {
+      throw NoPreAuthorizationFound.givenPubkey(
+        this.connection.rpcEndpoint,
+        pubkey,
+      );
+    }
+
+    return preAuthorization;
   }
 }

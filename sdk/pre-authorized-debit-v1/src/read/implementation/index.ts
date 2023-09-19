@@ -459,4 +459,32 @@ export class PreAuthorizedDebitReadClientImpl
       return recurringAmountAuthorized;
     }
   }
+
+  public async fetchCurrentOwnerOfPreAuthTokenAccount(
+    preAuthorizationPubkey: PublicKey,
+  ): Promise<PublicKey> {
+    const preAuthorization = await this.fetchPreAuthorization({
+      publicKey: preAuthorizationPubkey,
+    });
+
+    if (!preAuthorization) {
+      throw NoPreAuthorizationFound.givenPubkey(
+        this.connection.rpcEndpoint,
+        preAuthorizationPubkey,
+      );
+    }
+
+    const tokenAccountInfo = await this.connection.getAccountInfo(
+      preAuthorization.account.tokenAccount,
+    );
+
+    const tokenAccount = await getAccount(
+      this.connection,
+      preAuthorization.account.tokenAccount,
+      undefined,
+      tokenAccountInfo?.owner,
+    );
+
+    return tokenAccount.owner;
+  }
 }
