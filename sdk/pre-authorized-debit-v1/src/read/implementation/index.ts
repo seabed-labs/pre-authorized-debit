@@ -383,7 +383,7 @@ export class PreAuthorizedDebitReadClientImpl
     });
 
     if (!preAuthorization) {
-      throw new NoPreAuthorizationFound(
+      throw NoPreAuthorizationFound.givenTokenAccountAndDebitAuthority(
         this.connection.rpcEndpoint,
         tokenAccount,
         debitAuthority,

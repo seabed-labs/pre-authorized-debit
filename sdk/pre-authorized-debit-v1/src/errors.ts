@@ -22,14 +22,22 @@ export class TokenAccountDoesNotExist extends CustomError {
 }
 
 export class NoPreAuthorizationFound extends CustomError {
-  constructor(
+  private constructor(rpcUrl: string, innerMsg: string) {
+    super(rpcUrl, `Pre-authorization not found (${innerMsg})`);
+  }
+
+  static givenTokenAccountAndDebitAuthority(
     rpcUrl: string,
     tokenAccountPubkey: PublicKey,
     debitAuthorityPubkey: PublicKey,
   ) {
-    super(
+    return new NoPreAuthorizationFound(
       rpcUrl,
-      `Pre-authorization not found for (tokenAccount: ${tokenAccountPubkey.toBase58()}, debitAuthority: ${debitAuthorityPubkey.toBase58()})`,
+      `tokenAccount: ${tokenAccountPubkey.toBase58()}, debitAuthority: ${debitAuthorityPubkey.toBase58()}`,
     );
+  }
+
+  static givenPubkey(rpcUrl: string, pubkey: PublicKey) {
+    return new NoPreAuthorizationFound(rpcUrl, `pubkey: ${pubkey.toBase58()}`);
   }
 }
