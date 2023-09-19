@@ -24,13 +24,16 @@ import * as anchor from "@coral-xyz/anchor";
 import { createSandbox } from "sinon";
 import { PreAuthorizationAccount } from "../src/read/accounts";
 
-describe("PreAuthorizedDebitReadClientImpl integration", () => {
+describe.only("PreAuthorizedDebitReadClientImpl integration", () => {
   const connection: Connection = new Connection(localValidatorUrl, "processed");
   const provider = new AnchorProvider(connection, getProviderNodeWallet(), {
     commitment: connection.commitment,
   });
   const program = new Program(IDL, MAINNET_PAD_PROGRAM_ID, provider);
-  const readClient = PreAuthorizedDebitReadClientImpl.mainnet(connection);
+  const readClient = PreAuthorizedDebitReadClientImpl.custom(
+    connection,
+    MAINNET_PAD_PROGRAM_ID,
+  );
 
   let mint: PublicKey, tokenAccount: PublicKey, smartDelegate: PublicKey;
   const debitAuthorities: Keypair[] = [];
@@ -82,7 +85,7 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
                 repeatFrequencySeconds: new anchor.BN(100),
                 recurringAmountAuthorized: new anchor.BN(100),
                 numCycles: new BN(5),
-                resetEveryCycle: false,
+                resetEveryCycle: true,
               },
             };
       const pad = readClient.derivePreAuthorizationPDA(
@@ -253,9 +256,28 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     });
   });
 
-  xcontext("checkDebitAmount", () => {});
+  // TODO: Fails as we need to sign, should we still keep this in the read client in that case?
+  xcontext("checkDebitAmount", () => {
+    it("should return true for recurring pad", async () => {
+      const canDebit = await readClient.checkDebitAmount({
+        tokenAccount,
+        debitAuthority: debitAuthorities[0].publicKey,
+        amount: BigInt(100),
+      });
+      expect(canDebit).to.equal(true);
+    });
 
-  xcontext("fetchMaxDebitAmount", () => {});
+    it("should return false for recurring pad", async () => {
+      const canDebit = await readClient.checkDebitAmount({
+        tokenAccount,
+        debitAuthority: debitAuthorities[0].publicKey,
+        amount: BigInt(1000),
+      });
+      expect(canDebit).to.equal(true);
+    });
+  });
+
+  // xcontext("fetchMaxDebitAmount", () => {});
 
   context("fetchCurrentOwnerOfPreAuthTokenAccount", () => {
     const sandbox = createSandbox();

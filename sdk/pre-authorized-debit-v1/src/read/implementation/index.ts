@@ -337,7 +337,9 @@ export class PreAuthorizedDebitReadClientImpl
     if (
       tokenAccountInfo == null ||
       tokenProgramId == null || // for typescript
-      ![TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].includes(tokenProgramId)
+      ![TOKEN_PROGRAM_ID.toString(), TOKEN_2022_PROGRAM_ID.toString()].includes(
+        tokenProgramId.toString(),
+      )
     ) {
       throw new TokenAccountDoesNotExist(
         this.connection.rpcEndpoint,
