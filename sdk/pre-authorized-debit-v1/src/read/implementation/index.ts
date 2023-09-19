@@ -430,6 +430,8 @@ export class PreAuthorizedDebitReadClientImpl
 
     const variant = preAuthorization.account.variant;
 
+    // TODO: Extract the business logic out to a fn that does not depend on chain data
+    // for better testability
     if (variant.type === "oneTime") {
       const { amountAuthorized, amountDebited, expiryUnixTimestamp } = variant;
       const expiryDate = new Date(Number(expiryUnixTimestamp) * 1e3);

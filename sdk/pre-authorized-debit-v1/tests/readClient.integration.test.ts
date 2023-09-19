@@ -24,7 +24,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { createSandbox } from "sinon";
 import { PreAuthorizationAccount } from "../src/read/accounts";
 
-describe.only("PreAuthorizedDebitReadClientImpl integration", () => {
+describe("PreAuthorizedDebitReadClientImpl integration", () => {
   const connection: Connection = new Connection(localValidatorUrl, "processed");
   const provider = new AnchorProvider(connection, getProviderNodeWallet(), {
     commitment: connection.commitment,
@@ -277,7 +277,91 @@ describe.only("PreAuthorizedDebitReadClientImpl integration", () => {
     });
   });
 
-  // xcontext("fetchMaxDebitAmount", () => {});
+  context("fetchMaxDebitAmount", () => {
+    const sandbox = createSandbox();
+
+    afterEach(() => {
+      sandbox.reset();
+      sandbox.restore();
+    });
+
+    it("should throw NoPreAuthorizationFound", async () => {
+      await expect(
+        readClient.fetchMaxDebitAmount({
+          tokenAccount: Keypair.generate().publicKey,
+          debitAuthority: debitAuthorities[0].publicKey,
+        }),
+      ).to.eventually.be.rejectedWith(
+        /Pre-authorization not found \(tokenAccount: .*, debitAuthority: .*\) \(rpc: http:\/\/127.0.0.1:8899\)/,
+      );
+    });
+
+    it("should return 0 if the pad is paused", async () => {
+      const stub = sandbox
+        .stub(
+          PreAuthorizedDebitReadClientImpl.prototype,
+          "fetchPreAuthorization",
+        )
+        .returns(
+          Promise.resolve({
+            publicKey: new PublicKey(
+              "3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3",
+            ),
+            account: {
+              paused: true,
+            } as unknown as PreAuthorizationAccount,
+          }),
+        );
+      const maxDebit = await readClient.fetchMaxDebitAmount({
+        tokenAccount,
+        debitAuthority: debitAuthorities[0].publicKey,
+      });
+      expect(maxDebit).to.equal(BigInt(0));
+      expect(stub.calledOnce).to.equal(true);
+    });
+
+    it("should return 0 if activationDate > chain time", async () => {
+      const stub = sandbox
+        .stub(
+          PreAuthorizedDebitReadClientImpl.prototype,
+          "fetchPreAuthorization",
+        )
+        .returns(
+          Promise.resolve({
+            publicKey: new PublicKey(
+              "3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3",
+            ),
+            account: {
+              paused: false,
+              activationUnixTimestamp:
+                Math.floor(new Date().getTime() / 1e3) + 10000,
+            } as unknown as PreAuthorizationAccount,
+          }),
+        );
+      const maxDebit = await readClient.fetchMaxDebitAmount({
+        tokenAccount,
+        debitAuthority: debitAuthorities[0].publicKey,
+      });
+      expect(maxDebit).to.equal(BigInt(0));
+      expect(stub.calledOnce).to.equal(true);
+    });
+
+    it("should return expected amount for recurring pad", async () => {
+      const maxDebit = await readClient.fetchMaxDebitAmount({
+        tokenAccount,
+        debitAuthority: debitAuthorities[0].publicKey,
+      });
+      expect(maxDebit).to.equal(BigInt(100));
+    });
+
+    it("should return expected amount for oneTime pad", async () => {
+      const maxDebit = await readClient.fetchMaxDebitAmount({
+        tokenAccount,
+        debitAuthority: debitAuthorities[1].publicKey,
+      });
+      expect(maxDebit).to.equal(BigInt(100e6));
+    });
+  });
 
   context("fetchCurrentOwnerOfPreAuthTokenAccount", () => {
     const sandbox = createSandbox();
