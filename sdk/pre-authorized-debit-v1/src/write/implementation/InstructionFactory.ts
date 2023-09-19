@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
-import { DebitParams } from "../../anchor-client";
 import {
   ApproveSmartDelegateParams,
   ClosePreAuthorizationAsDebitAuthorityParams,
   ClosePreAuthorizationAsDebitAuthorityResult,
   ClosePreAuthorizationAsOwnerParams,
   ClosePreAuthorizationAsOwnerResult,
+  DebitParams,
   InitOneTimePreAuthorizationParams,
   InitOneTimePreAuthorizationResult,
   InitRecurringPreAuthorizationParams,

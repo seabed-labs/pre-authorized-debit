@@ -6,6 +6,7 @@ import {
   ClosePreAuthorizationAsDebitAuthorityResult,
   ClosePreAuthorizationAsOwnerParams,
   ClosePreAuthorizationAsOwnerResult,
+  DebitParams,
   DebitResult,
   InitOneTimePreAuthorizationParams,
   InitOneTimePreAuthorizationResult,
@@ -18,7 +19,6 @@ import {
   UnpausePreAuthorizationParams,
   UnpausePreAuthorizationResult,
 } from "./params";
-import { DebitParams } from "../../anchor-client";
 import { PublicKey } from "@solana/web3.js";
 
 type TxFactoryFn<Params, Result> = (
