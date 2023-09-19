@@ -3,6 +3,8 @@ import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { DebitParams } from "../../anchor-client";
 import {
   ApproveSmartDelegateParams,
+  ClosePreAuthorizationAsDebitAuthorityParams,
+  ClosePreAuthorizationAsDebitAuthorityResult,
   ClosePreAuthorizationAsOwnerParams,
   ClosePreAuthorizationAsOwnerResult,
   InitOneTimePreAuthorizationParams,
@@ -211,17 +213,49 @@ export class InstructionFactoryImpl implements InstructionFactory {
         {
           publicKey: tokenAccountOwner,
           reason:
-            "The pre-authorization's token account's owner needs to sign to close it as the owner",
+            "The pre-authorization's token account's owner needs to sign to close it",
         },
       ],
       meta: undefined,
     };
   }
 
-  public async buildClosePreAuthorizationAsDebitAuthorityIx(params: {
-    preAuthorization: PublicKey;
-  }): Promise<InstructionWithMetadata<void>> {
-    throw new Error("Method not implemented");
+  public async buildClosePreAuthorizationAsDebitAuthorityIx(
+    params: ClosePreAuthorizationAsDebitAuthorityParams,
+  ): Promise<
+    InstructionWithMetadata<ClosePreAuthorizationAsDebitAuthorityResult>
+  > {
+    const { preAuthorization: preAuthorizationPubkey } = params;
+
+    const preAuthorization = await this.fetchPreAuthorizationOrThrow(
+      preAuthorizationPubkey,
+    );
+
+    const tokenAccountOwner =
+      await this.readClient.fetchCurrentOwnerOfPreAuthTokenAccount(
+        preAuthorizationPubkey,
+      );
+
+    const closePreAuthIx = await this.program.methods
+      .closePreAuthorization()
+      .accounts({
+        receiver: tokenAccountOwner,
+        authority: preAuthorization.account.debitAuthority,
+        tokenAccount: preAuthorization.account.tokenAccount,
+      })
+      .instruction();
+
+    return {
+      instruction: closePreAuthIx,
+      expectedSigners: [
+        {
+          publicKey: preAuthorization.account.debitAuthority,
+          reason:
+            "The pre-authorization's debit authority needs to sign to close it",
+        },
+      ],
+      meta: undefined,
+    };
   }
 
   public async buildDebitIx(
