@@ -12,8 +12,8 @@ const scope = process.argv[2]
 // init_smart_delegate must be isolated to its own anchor test due to it creating a global account
 const testSuffix = process.argv[3] ? process.argv[3] : "**/*.test.ts";
 const testCommand = `yarn run nyc --nycrc-path=${scope}/.nycrc ts-mocha -p ./tsconfig.json -t 1000000 ${
-  isParallel ? "--parallel" : ""
-} ${scope}/${testSuffix}`;
+  isParallel ? "--parallel " : ""
+}${scope}/${testSuffix}`;
 
 console.log("Running:", testCommand);
 const [command, ...args] = testCommand.split(" ");
