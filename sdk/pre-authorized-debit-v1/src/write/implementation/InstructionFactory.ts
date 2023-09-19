@@ -13,6 +13,8 @@ import {
   InstructionWithMetadata,
   PausePreAuthorizationParams,
   PausePreAuthorizationResult,
+  UnpausePreAuthorizationParams,
+  UnpausePreAuthorizationResult,
 } from "../interface";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
@@ -103,6 +105,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
     throw new Error("Method not implemented");
   }
 
+  // TODO: De-dupe this with unpause method
   public async buildPausePreAuthorizationIx(
     params: PausePreAuthorizationParams,
   ): Promise<InstructionWithMetadata<PausePreAuthorizationResult>> {
@@ -152,10 +155,54 @@ export class InstructionFactoryImpl implements InstructionFactory {
     };
   }
 
-  public async buildUnpausePreAuthorizationIx(params: {
-    preAuthorization: PublicKey;
-  }): Promise<InstructionWithMetadata<void>> {
-    throw new Error("Method not implemented");
+  // TODO: De-dupe this with pause method
+  public async buildUnpausePreAuthorizationIx(
+    params: UnpausePreAuthorizationParams,
+  ): Promise<InstructionWithMetadata<UnpausePreAuthorizationResult>> {
+    const { preAuthorization: preAuthorizationPubkey } = params;
+
+    const preAuthorization = await this.readClient.fetchPreAuthorization({
+      publicKey: preAuthorizationPubkey,
+    });
+
+    if (preAuthorization == null) {
+      throw NoPreAuthorizationFound.givenPubkey(
+        this.connection.rpcEndpoint,
+        preAuthorizationPubkey,
+      );
+    }
+
+    const tokenAccountInfo = await this.connection.getAccountInfo(
+      preAuthorization.account.tokenAccount,
+    );
+
+    const tokenAccount = await getAccount(
+      this.connection,
+      preAuthorization.account.tokenAccount,
+      undefined,
+      tokenAccountInfo?.owner,
+    );
+
+    const unpausePreAuthIx = await this.program.methods
+      .updatePausePreAuthorization({ pause: false })
+      .accounts({
+        owner: tokenAccount.owner,
+        tokenAccount: preAuthorization.account.tokenAccount,
+        preAuthorization: preAuthorizationPubkey,
+      })
+      .instruction();
+
+    return {
+      instruction: unpausePreAuthIx,
+      expectedSigners: [
+        {
+          publicKey: tokenAccount.owner,
+          reason:
+            "The pre-authorization's token account's owner needs to sign to unpause it",
+        },
+      ],
+      meta: undefined,
+    };
   }
 
   public async buildClosePreAuthorizationAsOwnerIx(
