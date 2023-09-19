@@ -1,20 +1,25 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import { DebitParams } from "../../anchor-client";
 import {
   ApproveSmartDelegateParams,
   ClosePreAuthorizationAsOwnerParams,
   InitOneTimePreAuthorizationParams,
+  InitOneTimePreAuthorizationResult,
   InitRecurringPreAuthorizationParams,
   InitSmartDelegateParams,
   InitSmartDelegateResult,
   InstructionFactory,
-  InstructionWithData,
+  InstructionWithMetadata,
 } from "../interface";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { DEVNET_PAD_PROGRAM_ID, MAINNET_PAD_PROGRAM_ID } from "../../constants";
+import {
+  PreAuthorizedDebitReadClient,
+  PreAuthorizedDebitReadClientImpl,
+} from "../../read";
 
 export class InstructionFactoryImpl implements InstructionFactory {
   private readonly program: Program<PreAuthorizedDebitV1>;
@@ -23,6 +28,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
   private constructor(
     private readonly connection: Connection,
     private readonly programId: PublicKey,
+    private readonly readClient: PreAuthorizedDebitReadClient,
   ) {
     const readonlyProvider = new AnchorProvider(
       this.connection,
@@ -37,7 +43,11 @@ export class InstructionFactoryImpl implements InstructionFactory {
     connection: Connection,
     programId: PublicKey,
   ): InstructionFactory {
-    return new InstructionFactoryImpl(connection, programId);
+    return new InstructionFactoryImpl(
+      connection,
+      programId,
+      PreAuthorizedDebitReadClientImpl.custom(connection, programId),
+    );
   }
 
   public static mainnet(connection: Connection): InstructionFactory {
@@ -50,55 +60,72 @@ export class InstructionFactoryImpl implements InstructionFactory {
 
   public async buildInitSmartDelegateIx(
     params: InitSmartDelegateParams,
-  ): Promise<InstructionWithData<InitSmartDelegateResult>> {
-    throw new Error("Method not implemented");
+  ): Promise<InstructionWithMetadata<InitSmartDelegateResult>> {
+    const { payer } = params;
+    const smartDelegate = this.readClient.getSmartDelegatePDA().publicKey;
+    const initSmartDelegateIx = await this.program.methods
+      .initSmartDelegate()
+      .accounts({
+        payer,
+        smartDelegate,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction();
+
+    return {
+      instruction: initSmartDelegateIx,
+      expectedSigners: [payer],
+      meta: {
+        smartDelegate,
+      },
+    };
   }
 
   public async buildInitOneTimePreAuthorizationIx(
     params: InitOneTimePreAuthorizationParams,
-  ): Promise<InstructionWithData<{ preAuthorization: PublicKey }>> {
+  ): Promise<InstructionWithMetadata<InitOneTimePreAuthorizationResult>> {
     throw new Error("Method not implemented");
   }
 
   public async buildInitRecurringPreAuthorizationIx(
     params: InitRecurringPreAuthorizationParams,
-  ): Promise<InstructionWithData<{ preAuthorization: PublicKey }>> {
+  ): Promise<InstructionWithMetadata<{ preAuthorization: PublicKey }>> {
     throw new Error("Method not implemented");
   }
 
   public async buildPausePreAuthorizationIx(params: {
     preAuthorization: PublicKey;
-  }): Promise<InstructionWithData<void>> {
+  }): Promise<InstructionWithMetadata<void>> {
     throw new Error("Method not implemented");
   }
 
   public async buildUnpausePreAuthorizationIx(params: {
     preAuthorization: PublicKey;
-  }): Promise<InstructionWithData<void>> {
+  }): Promise<InstructionWithMetadata<void>> {
     throw new Error("Method not implemented");
   }
 
   public async buildClosePreAuthorizationAsOwnerIx(
     params: ClosePreAuthorizationAsOwnerParams,
-  ): Promise<InstructionWithData<void>> {
+  ): Promise<InstructionWithMetadata<void>> {
     throw new Error("Method not implemented");
   }
 
   public async buildClosePreAuthorizationAsDebitAuthorityIx(params: {
     preAuthorization: PublicKey;
-  }): Promise<InstructionWithData<void>> {
+  }): Promise<InstructionWithMetadata<void>> {
     throw new Error("Method not implemented");
   }
 
   public async buildDebitIx(
     params: DebitParams,
-  ): Promise<InstructionWithData<void>> {
+  ): Promise<InstructionWithMetadata<void>> {
     throw new Error("Method not implemented");
   }
 
   public async buildApproveSmartDelegateIx(
     params: ApproveSmartDelegateParams,
-  ): Promise<InstructionWithData<void>> {
+  ): Promise<InstructionWithMetadata<void>> {
     throw new Error("Method not implemented");
   }
 }

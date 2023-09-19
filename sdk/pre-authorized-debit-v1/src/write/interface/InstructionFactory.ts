@@ -1,4 +1,4 @@
-import { InstructionWithData } from "./shared";
+import { InstructionWithMetadata } from "./shared";
 import {
   ApproveSmartDelegateParams,
   ApproveSmartDelegateResult,
@@ -22,7 +22,7 @@ import { DebitParams } from "../../anchor-client";
 
 type IxFactoryFn<Params, Result> = (
   params: Params,
-) => Promise<InstructionWithData<Result>>;
+) => Promise<InstructionWithMetadata<Result>>;
 
 export interface InstructionFactory {
   buildInitSmartDelegateIx: IxFactoryFn<

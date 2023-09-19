@@ -1,4 +1,4 @@
-import { TransactionWithData } from "./shared";
+import { TransactionWithMetadata } from "./shared";
 import {
   ApproveSmartDelegateParams,
   ApproveSmartDelegateResult,
@@ -23,7 +23,7 @@ import { PublicKey } from "@solana/web3.js";
 
 type TxFactoryFn<Params, Result> = (
   params: Params,
-) => Promise<TransactionWithData<Result>>;
+) => Promise<TransactionWithMetadata<Result>>;
 
 // Provide these if mint is NATIVE_MINT (Token or Token2022)
 type WrapNativeMintAdditionalParams = {
