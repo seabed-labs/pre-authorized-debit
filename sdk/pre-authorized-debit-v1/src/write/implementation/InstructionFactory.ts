@@ -28,7 +28,6 @@ import {
   PreAuthorizedDebitReadClientImpl,
 } from "../../read";
 import { NoPreAuthorizationFound } from "../../errors";
-import { getAccount } from "@solana/spl-token";
 
 export class InstructionFactoryImpl implements InstructionFactory {
   private readonly program: Program<PreAuthorizedDebitV1>;
