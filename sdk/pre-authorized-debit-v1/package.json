@@ -44,23 +44,5 @@
     "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
-  },
-  "nyc": {
-    "extends": "@istanbuljs/nyc-config-typescript",
-    "check-coverage": true,
-    "all": true,
-    "include": [
-      "src/**/!(*.test.*).[tj]s?(x)"
-    ],
-    "exclude": [
-      "src/_tests_/**/*.*"
-    ],
-    "reporter": [
-      "json",
-      "json-summary",
-      "html",
-      "lcov"
-    ],
-    "report-dir": "coverage"
   }
 }
