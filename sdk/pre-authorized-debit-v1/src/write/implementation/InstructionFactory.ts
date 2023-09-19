@@ -74,7 +74,13 @@ export class InstructionFactoryImpl implements InstructionFactory {
 
     return {
       instruction: initSmartDelegateIx,
-      expectedSigners: [payer],
+      expectedSigners: [
+        {
+          publicKey: payer,
+          reason:
+            "The 'payer' account needs to sign to pay for the creation of the smart delegate account",
+        },
+      ],
       meta: {
         smartDelegate,
       },

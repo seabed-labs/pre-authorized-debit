@@ -4,7 +4,7 @@ import { PublicKey, Signer, TransactionInstruction } from "@solana/web3.js";
 // Instruction Factory Return Type Wrapper
 export type InstructionWithMetadata<T> = {
   instruction: TransactionInstruction;
-  expectedSigners: PublicKey[];
+  expectedSigners: { publicKey: PublicKey; reason: string }[];
   meta: T;
 };
 
