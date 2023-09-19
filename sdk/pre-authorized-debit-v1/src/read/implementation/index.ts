@@ -182,7 +182,9 @@ export class PreAuthorizedDebitReadClientImpl
     const { publicKey: smartDelegtePubkey } = this.getSmartDelegatePDA();
 
     const smartDelegateAccount =
-      await this.program.account.smartDelegate.fetch(smartDelegtePubkey);
+      await this.program.account.smartDelegate.fetchNullable(
+        smartDelegtePubkey,
+      );
 
     return (
       smartDelegateAccount && {
@@ -214,7 +216,9 @@ export class PreAuthorizedDebitReadClientImpl
       ).publicKey;
 
     const preAuthorizationAccount =
-      await this.program.account.preAuthorization.fetch(preAuthorizationPubkey);
+      await this.program.account.preAuthorization.fetchNullable(
+        preAuthorizationPubkey,
+      );
 
     return (
       preAuthorizationAccount && {
@@ -231,6 +235,14 @@ export class PreAuthorizedDebitReadClientImpl
       debitAuthority?: PublicKey;
     },
   ): Promise<ProgramAccount<PreAuthorizationAccount>[]> {
+    if (
+      filterBy.debitAuthority &&
+      !(type === "oneTime" || type === "recurring")
+    ) {
+      throw new Error(
+        'Must provide a type filter that is not "all" when also filtering by debitAuthority',
+      );
+    }
     // TODO: Support pagination?
     // TODO: After test, make this code more dynamic (i.e. use IDL and anchor convenience functions instead of doing it raw)
 
@@ -252,7 +264,7 @@ export class PreAuthorizedDebitReadClientImpl
       filters.push({
         // debitAuthority
         memcmp: {
-          offset: 93,
+          offset: type === "recurring" ? 93 : 67,
           bytes: filterBy.debitAuthority.toBase58(),
         },
       });
@@ -263,7 +275,7 @@ export class PreAuthorizedDebitReadClientImpl
         // PreAuthorizationVariant::OneTime (discriminator)
         memcmp: {
           offset: 42,
-          bytes: utils.bytes.bs58.encode(Buffer.from([0, 0, 0, 0, 0, 0, 0, 0])),
+          bytes: utils.bytes.bs58.encode(Buffer.from([0])),
         },
       });
     } else if (type === "recurring") {
@@ -271,11 +283,10 @@ export class PreAuthorizedDebitReadClientImpl
         // PreAuthorizationVariant::Recurring (discriminator)
         memcmp: {
           offset: 42,
-          bytes: utils.bytes.bs58.encode(Buffer.from([0, 0, 0, 0, 0, 0, 0, 1])),
+          bytes: utils.bytes.bs58.encode(Buffer.from([1])),
         },
       });
     }
-
     const programAccounts =
       await this.program.account.preAuthorization.all(filters);
 
@@ -288,7 +299,7 @@ export class PreAuthorizedDebitReadClientImpl
   // TODO: Support pagination?
   public async fetchPreAuthorizationsForTokenAccount(
     tokenAccount: PublicKey,
-    type: PreAuthorizationType,
+    type: PreAuthorizationType = "all",
   ): Promise<ProgramAccount<PreAuthorizationAccount>[]> {
     return this.fetchPreAuthorizations(type, { tokenAccount });
   }
@@ -296,8 +307,14 @@ export class PreAuthorizedDebitReadClientImpl
   // TODO: Support pagination?
   public async fetchPreAuthorizationsForDebitAuthority(
     debitAuthority: PublicKey,
-    type: PreAuthorizationType,
+    type: PreAuthorizationType = "all",
   ): Promise<ProgramAccount<PreAuthorizationAccount>[]> {
+    if (type === "all") {
+      return [
+        ...(await this.fetchPreAuthorizations("oneTime", { debitAuthority })),
+        ...(await this.fetchPreAuthorizations("recurring", { debitAuthority })),
+      ];
+    }
     return this.fetchPreAuthorizations(type, { debitAuthority });
   }
 

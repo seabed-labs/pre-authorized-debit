@@ -17,3 +17,5 @@ Debit3fDrmgHiJpc5rhxi1YjsWtbupdSLaCRE1Xk7fhT.json
 **/*.env
 
 **/.nyc_output
+
+**/coverage

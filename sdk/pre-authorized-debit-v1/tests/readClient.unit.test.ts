@@ -1,10 +1,15 @@
 import { expect } from "chai";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { PreAuthorizedDebitReadClientImpl } from "../src";
+import * as sdkConstants from "../src/constants";
+import { deriveSmartDelegate } from "@dcaf/pad-test-utils";
 
 describe("PreAuthorizedDebitReadClientImpl unit", () => {
   const connection: Connection = new Connection("http://my.rpc");
-  const readClient = PreAuthorizedDebitReadClientImpl.mainnet(connection);
+  const readClient = PreAuthorizedDebitReadClientImpl.custom(
+    connection,
+    sdkConstants.MAINNET_PAD_PROGRAM_ID,
+  );
 
   it("should get smart delegate pda", () => {
     const smartDelegatePDA = readClient.getSmartDelegatePDA();
@@ -23,5 +28,16 @@ describe("PreAuthorizedDebitReadClientImpl unit", () => {
       "67fJXpgrtSRn5VbRq4hucpdYsvcbEDyCTwj7LBHopYio",
     );
     expect(preAuthorizationPda.bump).to.equal(255);
+  });
+
+  it("should use the custom program with the custom constructor", () => {
+    const newProgramId = new Keypair().publicKey;
+    const client = PreAuthorizedDebitReadClientImpl.custom(
+      connection,
+      newProgramId,
+    );
+    expect(client.getSmartDelegatePDA().publicKey.toString()).to.equal(
+      deriveSmartDelegate(newProgramId)[0].toString(),
+    );
   });
 });
