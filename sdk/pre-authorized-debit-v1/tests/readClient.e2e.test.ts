@@ -11,18 +11,20 @@ describe("PreAuthorizedDebitReadClientImpl e2e", () => {
   };
   delete idlWithoutMetadata.metadata;
 
-  it("should be able to fetch onchain idl from devnet", async () => {
-    const connection: Connection = new Connection(devnetValidatorUrl);
-    const readClient = PreAuthorizedDebitReadClientImpl.devnet(connection);
-    const idl = await readClient.fetchIdlFromChain();
-    expect(idl).to.not.equal(null);
-    expect(idl).to.deep.equal(idlWithoutMetadata);
-  });
-  it("should be able to fetch onchain idl from mainnet", async () => {
-    const connection: Connection = new Connection(mainnetValidatorUrl);
-    const readClient = PreAuthorizedDebitReadClientImpl.mainnet(connection);
-    const idl = await readClient.fetchIdlFromChain();
-    expect(idl).to.not.equal(null);
-    expect(idl).to.deep.equal(idlWithoutMetadata);
+  context("fetchIdlFromChain", () => {
+    it("should be able to fetch onchain idl from devnet", async () => {
+      const connection: Connection = new Connection(devnetValidatorUrl);
+      const readClient = PreAuthorizedDebitReadClientImpl.devnet(connection);
+      const idl = await readClient.fetchIdlFromChain();
+      expect(idl).to.not.equal(null);
+      expect(idl).to.deep.equal(idlWithoutMetadata);
+    });
+    it("should be able to fetch onchain idl from mainnet", async () => {
+      const connection: Connection = new Connection(mainnetValidatorUrl);
+      const readClient = PreAuthorizedDebitReadClientImpl.mainnet(connection);
+      const idl = await readClient.fetchIdlFromChain();
+      expect(idl).to.not.equal(null);
+      expect(idl).to.deep.equal(idlWithoutMetadata);
+    });
   });
 });

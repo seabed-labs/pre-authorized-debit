@@ -100,87 +100,112 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     }
   });
 
-  it("should fetch smartDelegate", async () => {
-    const smartDelegate = await readClient.fetchSmartDelegate();
-    assert.isNotEmpty(smartDelegate);
-    expect(smartDelegate!.publicKey.toString()).to.equal(
-      "5xwfb7dPwdbgnMFABbF9mqYaD79ocSngiR9GMSY9Tfzb",
-    );
-    expect(smartDelegate!.account.bump).to.equal(255);
-  });
-
-  it("should fetch preAuthorization", async () => {
-    const preAuthorization = await readClient.fetchPreAuthorization({
-      tokenAccount,
-      debitAuthority: debitAuthorities[0].publicKey,
-    });
-    assert.isNotEmpty(preAuthorization?.account);
-  });
-
-  it("should return null preAuthorization", async () => {
-    const preAuthorization = await readClient.fetchPreAuthorization({
-      tokenAccount,
-      debitAuthority: new Keypair().publicKey,
-    });
-    assert.isNull(preAuthorization);
-  });
-
-  it("should return preAuthorizations by tokenAccount and type=all", async () => {
-    const padAddressStrings = preAuthorizations.map((a) => a.toString());
-    const pads =
-      await readClient.fetchPreAuthorizationsForTokenAccount(tokenAccount);
-    expect(pads.length).to.equal(3);
-    pads.forEach((pad) => {
-      expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
-        true,
+  context("fetchSmartDelegate", () => {
+    it("should fetch smartDelegate", async () => {
+      const smartDelegate = await readClient.fetchSmartDelegate();
+      assert.isNotEmpty(smartDelegate);
+      expect(smartDelegate!.publicKey.toString()).to.equal(
+        "5xwfb7dPwdbgnMFABbF9mqYaD79ocSngiR9GMSY9Tfzb",
       );
-      expect(pad.account.tokenAccount.toString()).to.equal(
-        tokenAccount.toString(),
-      );
+      expect(smartDelegate!.account.bump).to.equal(255);
     });
   });
 
-  it("should return preAuthorizations by tokenAccount and type=recurring", async () => {
-    const padAddressStrings = preAuthorizations.map((a) => a.toString());
-    const pads = await readClient.fetchPreAuthorizationsForTokenAccount(
-      tokenAccount,
-      "recurring",
-    );
-    expect(pads.length).to.equal(2);
-    pads.forEach((pad) => {
-      expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
-        true,
-      );
-      expect(pad.account.tokenAccount.toString()).to.equal(
-        tokenAccount.toString(),
-      );
-      expect(pad.account.variant.type).to.equal("recurring");
+  context("fetchPreAuthorization", () => {
+    it("should fetch preAuthorization", async () => {
+      const preAuthorization = await readClient.fetchPreAuthorization({
+        tokenAccount,
+        debitAuthority: debitAuthorities[0].publicKey,
+      });
+      assert.isNotEmpty(preAuthorization?.account);
+    });
+    it("should return null preAuthorization", async () => {
+      const preAuthorization = await readClient.fetchPreAuthorization({
+        tokenAccount,
+        debitAuthority: new Keypair().publicKey,
+      });
+      assert.isNull(preAuthorization);
     });
   });
 
-  it("should return preAuthorizations by tokenAccount and type=oneTime", async () => {
-    const padAddressStrings = preAuthorizations.map((a) => a.toString());
-    const pads = await readClient.fetchPreAuthorizationsForTokenAccount(
-      tokenAccount,
-      "oneTime",
-    );
-    expect(pads.length).to.equal(1);
-    pads.forEach((pad) => {
-      expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
-        true,
+  context("fetchPreAuthorizationsForTokenAccount", () => {
+    it("should return preAuthorizations by tokenAccount and type=all", async () => {
+      const padAddressStrings = preAuthorizations.map((a) => a.toString());
+      const pads =
+        await readClient.fetchPreAuthorizationsForTokenAccount(tokenAccount);
+      expect(pads.length).to.equal(3);
+      pads.forEach((pad) => {
+        expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
+          true,
+        );
+        expect(pad.account.tokenAccount.toString()).to.equal(
+          tokenAccount.toString(),
+        );
+      });
+    });
+    it("should return preAuthorizations by tokenAccount and type=recurring", async () => {
+      const padAddressStrings = preAuthorizations.map((a) => a.toString());
+      const pads = await readClient.fetchPreAuthorizationsForTokenAccount(
+        tokenAccount,
+        "recurring",
       );
-      expect(pad.account.tokenAccount.toString()).to.equal(
-        tokenAccount.toString(),
+      expect(pads.length).to.equal(2);
+      pads.forEach((pad) => {
+        expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
+          true,
+        );
+        expect(pad.account.tokenAccount.toString()).to.equal(
+          tokenAccount.toString(),
+        );
+        expect(pad.account.variant.type).to.equal("recurring");
+      });
+    });
+    it("should return preAuthorizations by tokenAccount and type=oneTime", async () => {
+      const padAddressStrings = preAuthorizations.map((a) => a.toString());
+      const pads = await readClient.fetchPreAuthorizationsForTokenAccount(
+        tokenAccount,
+        "oneTime",
       );
-      expect(pad.account.variant.type).to.equal("oneTime");
+      expect(pads.length).to.equal(1);
+      pads.forEach((pad) => {
+        expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
+          true,
+        );
+        expect(pad.account.tokenAccount.toString()).to.equal(
+          tokenAccount.toString(),
+        );
+        expect(pad.account.variant.type).to.equal("oneTime");
+      });
     });
   });
 
-  it("should return preAuthorizations by debit authority and type=all", async () => {
-    const padAddressStrings = preAuthorizations.map((a) => a.toString());
-    for (let i = 0; i < debitAuthorities.length; i++) {
+  context("fetchPreAuthorizationsForDebitAuthority", () => {
+    it("should return preAuthorizations by debit authority and type=all", async () => {
+      const padAddressStrings = preAuthorizations.map((a) => a.toString());
+      for (let i = 0; i < debitAuthorities.length; i++) {
+        const pads = await readClient.fetchPreAuthorizationsForDebitAuthority(
+          debitAuthorities[i].publicKey,
+        );
+        expect(pads.length).to.equal(1);
+        pads.forEach((pad) => {
+          expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
+            true,
+          );
+          expect(pad.account.tokenAccount.toString()).to.equal(
+            tokenAccount.toString(),
+          );
+          expect(pad.account.debitAuthority.toString()).to.equal(
+            debitAuthorities[i].publicKey.toString(),
+          );
+        });
+      }
+    });
+
+    it("should return preAuthorizations by debit authority and type=recurring", async () => {
+      const padAddressStrings = preAuthorizations.map((a) => a.toString());
       const pads = await readClient.fetchPreAuthorizationsForDebitAuthority(
-        debitAuthorities[i].publicKey,
+        debitAuthorities[0].publicKey,
+        "recurring",
       );
       expect(pads.length).to.equal(1);
       pads.forEach((pad) => {
@@ -191,51 +216,31 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
           tokenAccount.toString(),
         );
         expect(pad.account.debitAuthority.toString()).to.equal(
-          debitAuthorities[i].publicKey.toString(),
+          debitAuthorities[0].publicKey.toString(),
         );
+        expect(pad.account.variant.type).to.equal("recurring");
       });
-    }
-  });
-
-  it("should return preAuthorizations by debit authority and type=recurring", async () => {
-    const padAddressStrings = preAuthorizations.map((a) => a.toString());
-    const pads = await readClient.fetchPreAuthorizationsForDebitAuthority(
-      debitAuthorities[0].publicKey,
-      "recurring",
-    );
-    expect(pads.length).to.equal(1);
-    pads.forEach((pad) => {
-      expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
-        true,
-      );
-      expect(pad.account.tokenAccount.toString()).to.equal(
-        tokenAccount.toString(),
-      );
-      expect(pad.account.debitAuthority.toString()).to.equal(
-        debitAuthorities[0].publicKey.toString(),
-      );
-      expect(pad.account.variant.type).to.equal("recurring");
     });
-  });
 
-  it("should return preAuthorizations by debit authority and type=oneTime", async () => {
-    const padAddressStrings = preAuthorizations.map((a) => a.toString());
-    const pads = await readClient.fetchPreAuthorizationsForDebitAuthority(
-      debitAuthorities[1].publicKey,
-      "oneTime",
-    );
-    expect(pads.length).to.equal(1);
-    pads.forEach((pad) => {
-      expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
-        true,
+    it("should return preAuthorizations by debit authority and type=oneTime", async () => {
+      const padAddressStrings = preAuthorizations.map((a) => a.toString());
+      const pads = await readClient.fetchPreAuthorizationsForDebitAuthority(
+        debitAuthorities[1].publicKey,
+        "oneTime",
       );
-      expect(pad.account.tokenAccount.toString()).to.equal(
-        tokenAccount.toString(),
-      );
-      expect(pad.account.debitAuthority.toString()).to.equal(
-        debitAuthorities[1].publicKey.toString(),
-      );
-      expect(pad.account.variant.type).to.equal("oneTime");
+      expect(pads.length).to.equal(1);
+      pads.forEach((pad) => {
+        expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
+          true,
+        );
+        expect(pad.account.tokenAccount.toString()).to.equal(
+          tokenAccount.toString(),
+        );
+        expect(pad.account.debitAuthority.toString()).to.equal(
+          debitAuthorities[1].publicKey.toString(),
+        );
+        expect(pad.account.variant.type).to.equal("oneTime");
+      });
     });
   });
 });
