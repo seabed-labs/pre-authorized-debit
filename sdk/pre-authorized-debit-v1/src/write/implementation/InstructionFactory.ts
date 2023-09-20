@@ -102,6 +102,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
     };
   }
 
+  // TODO: Dedupe with recurrig pre auth IX
   public async buildInitOneTimePreAuthorizationIx(
     params: InitOneTimePreAuthorizationParams,
   ): Promise<InstructionWithMetadata<InitOneTimePreAuthorizationResult>> {
@@ -172,10 +173,78 @@ export class InstructionFactoryImpl implements InstructionFactory {
     };
   }
 
+  // TODO: Dedupe this with the recurring pre-auth IX
   public async buildInitRecurringPreAuthorizationIx(
     params: InitRecurringPreAuthorizationParams,
   ): Promise<InstructionWithMetadata<{ preAuthorization: PublicKey }>> {
-    throw new Error("Method not implemented");
+    const {
+      payer,
+      tokenAccount,
+      debitAuthority,
+      activation,
+      repeatFrequencySeconds,
+      recurringAmountAuthorized,
+      resetEveryCycle,
+      numCycles,
+    } = params;
+
+    const activationUnixTimestamp = BigInt(dateToUnixTimestamp(activation));
+
+    const tokenAccountOwner =
+      await this.readClient.fetchCurrentOwnerOfTokenAccount(tokenAccount);
+
+    const tokenProgramId =
+      await this.readClient.fetchTokenProgramIdForTokenAccount(tokenAccount);
+
+    const preAuthorization = this.readClient.derivePreAuthorizationPDA(
+      tokenAccount,
+      debitAuthority,
+    ).publicKey;
+
+    const initRecurringPreAuthorizationIx = await this.program.methods
+      .initPreAuthorization({
+        variant: {
+          recurring: {
+            repeatFrequencySeconds: new BN(repeatFrequencySeconds.toString()),
+            resetEveryCycle,
+            recurringAmountAuthorized: new BN(
+              recurringAmountAuthorized.toString(),
+            ),
+            numCycles: numCycles != null ? new BN(numCycles.toString()) : null,
+          },
+        },
+        debitAuthority,
+        activationUnixTimestamp: new BN(activationUnixTimestamp.toString()),
+      })
+      .accounts({
+        payer,
+        owner: tokenAccountOwner,
+        smartDelegate: this.readClient.getSmartDelegatePDA().publicKey,
+        tokenAccount,
+        preAuthorization,
+        tokenProgram: tokenProgramId,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction();
+
+    return {
+      instruction: initRecurringPreAuthorizationIx,
+      expectedSigners: [
+        {
+          publicKey: payer,
+          reason:
+            "The 'payer' account needs to sign to pay for the creation of the pre-authorization account",
+        },
+        {
+          publicKey: tokenAccountOwner,
+          reason:
+            "The 'owner' (i.e. token account's owner) needs to sign to create a pre-authorization for a token account",
+        },
+      ],
+      meta: {
+        preAuthorization,
+      },
+    };
   }
 
   // TODO: De-dupe this with unpause method
