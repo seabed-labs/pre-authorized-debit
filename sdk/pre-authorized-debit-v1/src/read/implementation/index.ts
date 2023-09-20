@@ -25,6 +25,7 @@ import {
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { PreAuthorizationAccount, SmartDelegateAccount } from "../accounts.ts";
 import {
+  Account,
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   getAccount,
@@ -481,6 +482,31 @@ export class PreAuthorizedDebitReadClientImpl
     }
   }
 
+  public async fetchCurrentOwnerOfTokenAccount(
+    tokenAccountPubkey: PublicKey,
+  ): Promise<PublicKey> {
+    const tokenProgramId =
+      await this.fetchTokenProgramIdForTokenAccount(tokenAccountPubkey);
+
+    let tokenAccount: Account;
+
+    try {
+      tokenAccount = await getAccount(
+        this.connection,
+        tokenAccountPubkey,
+        undefined,
+        tokenProgramId,
+      );
+    } catch {
+      throw new TokenAccountDoesNotExist(
+        this.connection.rpcEndpoint,
+        tokenAccountPubkey,
+      );
+    }
+
+    return tokenAccount.owner;
+  }
+
   public async fetchCurrentOwnerOfPreAuthTokenAccount(
     preAuthorizationPubkey: PublicKey,
   ): Promise<PublicKey> {
@@ -495,17 +521,29 @@ export class PreAuthorizedDebitReadClientImpl
       );
     }
 
-    const tokenAccountInfo = await this.connection.getAccountInfo(
+    return this.fetchCurrentOwnerOfTokenAccount(
       preAuthorization.account.tokenAccount,
     );
+  }
 
-    const tokenAccount = await getAccount(
-      this.connection,
-      preAuthorization.account.tokenAccount,
-      undefined,
-      tokenAccountInfo?.owner,
-    );
+  public async fetchTokenProgramIdForTokenAccount(
+    tokenAccountPubkey: PublicKey,
+  ): Promise<PublicKey> {
+    const tokenAccountInfo =
+      await this.connection.getAccountInfo(tokenAccountPubkey);
 
-    return tokenAccount.owner;
+    if (
+      tokenAccountInfo == null ||
+      ![TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].includes(
+        tokenAccountInfo.owner,
+      )
+    ) {
+      throw new TokenAccountDoesNotExist(
+        this.connection.rpcEndpoint,
+        tokenAccountPubkey,
+      );
+    }
+
+    return tokenAccountInfo.owner;
   }
 }

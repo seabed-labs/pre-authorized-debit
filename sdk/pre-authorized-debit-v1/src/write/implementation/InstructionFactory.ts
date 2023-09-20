@@ -19,15 +19,20 @@ import {
   UnpausePreAuthorizationParams,
   UnpausePreAuthorizationResult,
 } from "../interface";
-import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { DEVNET_PAD_PROGRAM_ID, MAINNET_PAD_PROGRAM_ID } from "../../constants";
+import {
+  DEVNET_PAD_PROGRAM_ID,
+  MAINNET_PAD_PROGRAM_ID,
+  U64_MAX,
+} from "../../constants";
 import {
   PreAuthorizedDebitReadClient,
   PreAuthorizedDebitReadClientImpl,
 } from "../../read";
 import { NoPreAuthorizationFound } from "../../errors";
+import { dateToUnixTimestamp } from "../../utils";
 
 export class InstructionFactoryImpl implements InstructionFactory {
   private readonly program: Program<PreAuthorizedDebitV1>;
@@ -100,7 +105,71 @@ export class InstructionFactoryImpl implements InstructionFactory {
   public async buildInitOneTimePreAuthorizationIx(
     params: InitOneTimePreAuthorizationParams,
   ): Promise<InstructionWithMetadata<InitOneTimePreAuthorizationResult>> {
-    throw new Error("Method not implemented");
+    const {
+      payer,
+      tokenAccount,
+      debitAuthority,
+      activation,
+      amountAuthorized,
+      expiry,
+    } = params;
+
+    const activationUnixTimestamp = BigInt(dateToUnixTimestamp(activation));
+    const expiryUnixTimestamp = expiry
+      ? BigInt(dateToUnixTimestamp(expiry))
+      : U64_MAX;
+
+    const tokenAccountOwner =
+      await this.readClient.fetchCurrentOwnerOfTokenAccount(tokenAccount);
+
+    const tokenProgramId =
+      await this.readClient.fetchTokenProgramIdForTokenAccount(tokenAccount);
+
+    const preAuthorization = this.readClient.derivePreAuthorizationPDA(
+      tokenAccount,
+      debitAuthority,
+    ).publicKey;
+
+    const initOneTimePreAuthorizationIx = await this.program.methods
+      .initPreAuthorization({
+        variant: {
+          oneTime: {
+            amountAuthorized: new BN(amountAuthorized.toString()),
+            expiryUnixTimestamp: new BN(expiryUnixTimestamp.toString()),
+          },
+        },
+        debitAuthority,
+        activationUnixTimestamp: new BN(activationUnixTimestamp.toString()),
+      })
+      .accounts({
+        payer,
+        owner: tokenAccountOwner,
+        smartDelegate: this.readClient.getSmartDelegatePDA().publicKey,
+        tokenAccount,
+        preAuthorization,
+        tokenProgram: tokenProgramId,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction();
+
+    return {
+      instruction: initOneTimePreAuthorizationIx,
+      expectedSigners: [
+        {
+          publicKey: payer,
+          reason:
+            "The 'payer' account needs to sign to pay for the creation of the pre-authorization account",
+        },
+        {
+          publicKey: tokenAccountOwner,
+          reason:
+            "The 'owner' (i.e. token account's owner) needs to sign to create a pre-authorization for a token account",
+        },
+      ],
+      meta: {
+        preAuthorization,
+      },
+    };
   }
 
   public async buildInitRecurringPreAuthorizationIx(
