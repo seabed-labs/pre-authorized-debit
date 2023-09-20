@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 import {
   ApproveSmartDelegateParams,
+  ApproveSmartDelegateResult,
   ClosePreAuthorizationAsDebitAuthorityParams,
   ClosePreAuthorizationAsDebitAuthorityResult,
   ClosePreAuthorizationAsOwnerParams,
@@ -38,7 +38,7 @@ import {
   SmartDelegatedAmountNotEnough,
 } from "../../errors";
 import { dateToUnixTimestamp } from "../../utils";
-import { getAccount } from "@solana/spl-token";
+import { createApproveInstruction, getAccount } from "@solana/spl-token";
 
 export class InstructionFactoryImpl implements InstructionFactory {
   private readonly program: Program<PreAuthorizedDebitV1>;
@@ -108,7 +108,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
     };
   }
 
-  // TODO: Dedupe with recurrig pre auth IX
+  // TODO: De-dupe with recurring pre auth IX
   public async buildInitOneTimePreAuthorizationIx(
     params: InitOneTimePreAuthorizationParams,
   ): Promise<InstructionWithMetadata<InitOneTimePreAuthorizationResult>> {
@@ -179,7 +179,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
     };
   }
 
-  // TODO: Dedupe this with the recurring pre-auth IX
+  // TODO: De-dupe this with the recurring pre-auth IX
   public async buildInitRecurringPreAuthorizationIx(
     params: InitRecurringPreAuthorizationParams,
   ): Promise<InstructionWithMetadata<{ preAuthorization: PublicKey }>> {
@@ -411,18 +411,8 @@ export class InstructionFactoryImpl implements InstructionFactory {
       checkSmartDelegateEnabled = true,
     } = params;
 
-    const preAuthorizationAccount = (
-      await this.readClient.fetchPreAuthorization({
-        publicKey: preAuthorizationPubkey,
-      })
-    )?.account;
-
-    if (!preAuthorizationAccount) {
-      throw NoPreAuthorizationFound.givenPubkey(
-        this.connection.rpcEndpoint,
-        preAuthorizationPubkey,
-      );
-    }
+    const { account: preAuthorizationAccount } =
+      await this.fetchPreAuthorizationOrThrow(preAuthorizationPubkey);
 
     const debitAuthority = preAuthorizationAccount.debitAuthority;
     const tokenAccount = preAuthorizationAccount.tokenAccount;
@@ -489,8 +479,41 @@ export class InstructionFactoryImpl implements InstructionFactory {
 
   public async buildApproveSmartDelegateIx(
     params: ApproveSmartDelegateParams,
-  ): Promise<InstructionWithMetadata<void>> {
-    throw new Error("Method not implemented");
+  ): Promise<InstructionWithMetadata<ApproveSmartDelegateResult>> {
+    const { tokenAccount } = params;
+
+    const tokenProgramId =
+      await this.readClient.fetchTokenProgramIdForTokenAccount(tokenAccount);
+
+    const tokenAccountData = await getAccount(
+      this.connection,
+      tokenAccount,
+      undefined,
+      tokenProgramId,
+    );
+
+    const smartDelegate = this.readClient.getSmartDelegatePDA().publicKey;
+
+    const approveSmartDelegateIx = createApproveInstruction(
+      tokenAccount,
+      smartDelegate,
+      tokenAccountData.owner,
+      U64_MAX,
+      undefined,
+      tokenProgramId,
+    );
+
+    return {
+      instruction: approveSmartDelegateIx,
+      expectedSigners: [
+        {
+          publicKey: tokenAccountData.owner,
+          reason:
+            "The owner of the token account has to sign to approve a delegate",
+        },
+      ],
+      meta: undefined,
+    };
   }
 
   private async fetchPreAuthorizationOrThrow(pubkey: PublicKey) {
