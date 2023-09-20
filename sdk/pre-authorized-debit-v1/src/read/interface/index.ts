@@ -58,8 +58,6 @@ export interface PreAuthorizedDebitReadClient {
 
   fetchMaxDebitAmount(params: FetchMaxDebitAmountParams): Promise<bigint>;
 
-  // TODO: Should also maybe add a fetchCurrentDelegateAndAmountForTokenAccount?
-
   fetchTokenProgramIdForTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<PublicKey>;
@@ -68,7 +66,15 @@ export interface PreAuthorizedDebitReadClient {
     tokenAccountPubkey: PublicKey,
   ): Promise<PublicKey>;
 
+  fetchCurrentDelegationOfTokenAccount(
+    tokenAccountPubkey: PublicKey,
+  ): Promise<{ delegate: PublicKey; delgatedAmount: bigint } | null>;
+
   fetchCurrentOwnerOfPreAuthTokenAccount(
     preAuthorizationPubkey: PublicKey,
   ): Promise<PublicKey>;
+
+  fetchCurrentDelegationOfPreAuthTokenAccount(
+    preAuthorizationPubkey: PublicKey,
+  ): Promise<{ delegate: PublicKey; delgatedAmount: bigint } | null>;
 }

@@ -41,3 +41,21 @@ export class NoPreAuthorizationFound extends CustomError {
     return new NoPreAuthorizationFound(rpcUrl, `pubkey: ${pubkey.toBase58()}`);
   }
 }
+
+export class SmartDelegateNotSet extends CustomError {
+  constructor(rpcUrl: string, tokenAccountPubkey: PublicKey) {
+    super(
+      rpcUrl,
+      `The smart delegate is not set for token account: ${tokenAccountPubkey.toBase58()}`,
+    );
+  }
+}
+
+export class SmartDelegatedAmountNotEnough extends CustomError {
+  constructor(rpcUrl: string, tokenAccountPubkey: PublicKey) {
+    super(
+      rpcUrl,
+      `The smart delegate's delegated amount for token account is insufficient: ${tokenAccountPubkey.toBase58()}`,
+    );
+  }
+}

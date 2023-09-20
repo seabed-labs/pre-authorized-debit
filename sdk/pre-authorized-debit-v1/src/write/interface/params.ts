@@ -96,6 +96,7 @@ export type DebitParams = {
   preAuthorization: PublicKey;
   amount: bigint;
   destinationTokenAccount: PublicKey;
+  checkSmartDelegateEnabled?: boolean;
 };
 
 export type DebitResult = void;

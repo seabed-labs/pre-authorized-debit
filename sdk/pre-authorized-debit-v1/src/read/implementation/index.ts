@@ -33,6 +33,8 @@ import {
 } from "@solana/spl-token";
 import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
 
+// TODO: Dedupe across methds in impl
+
 export class PreAuthorizedDebitReadClientImpl
   implements PreAuthorizedDebitReadClient
 {
@@ -545,5 +547,54 @@ export class PreAuthorizedDebitReadClientImpl
     }
 
     return tokenAccountInfo.owner;
+  }
+
+  public async fetchCurrentDelegationOfTokenAccount(
+    tokenAccountPubkey: PublicKey,
+  ): Promise<{ delegate: PublicKey; delgatedAmount: bigint } | null> {
+    const tokenProgramId =
+      await this.fetchTokenProgramIdForTokenAccount(tokenAccountPubkey);
+
+    let tokenAccount: Account;
+
+    try {
+      tokenAccount = await getAccount(
+        this.connection,
+        tokenAccountPubkey,
+        undefined,
+        tokenProgramId,
+      );
+    } catch {
+      throw new TokenAccountDoesNotExist(
+        this.connection.rpcEndpoint,
+        tokenAccountPubkey,
+      );
+    }
+
+    return tokenAccount.delegate && tokenAccount.delegatedAmount > BigInt(0)
+      ? {
+          delegate: tokenAccount.delegate,
+          delgatedAmount: tokenAccount.delegatedAmount,
+        }
+      : null;
+  }
+
+  public async fetchCurrentDelegationOfPreAuthTokenAccount(
+    preAuthorizationPubkey: PublicKey,
+  ): Promise<{ delegate: PublicKey; delgatedAmount: bigint } | null> {
+    const preAuthorization = await this.fetchPreAuthorization({
+      publicKey: preAuthorizationPubkey,
+    });
+
+    if (!preAuthorization) {
+      throw NoPreAuthorizationFound.givenPubkey(
+        this.connection.rpcEndpoint,
+        preAuthorizationPubkey,
+      );
+    }
+
+    return this.fetchCurrentDelegationOfTokenAccount(
+      preAuthorization.account.tokenAccount,
+    );
   }
 }

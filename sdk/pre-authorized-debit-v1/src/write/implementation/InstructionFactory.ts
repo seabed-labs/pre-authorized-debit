@@ -7,6 +7,7 @@ import {
   ClosePreAuthorizationAsOwnerParams,
   ClosePreAuthorizationAsOwnerResult,
   DebitParams,
+  DebitResult,
   InitOneTimePreAuthorizationParams,
   InitOneTimePreAuthorizationResult,
   InitRecurringPreAuthorizationParams,
@@ -31,8 +32,13 @@ import {
   PreAuthorizedDebitReadClient,
   PreAuthorizedDebitReadClientImpl,
 } from "../../read";
-import { NoPreAuthorizationFound } from "../../errors";
+import {
+  NoPreAuthorizationFound,
+  SmartDelegateNotSet,
+  SmartDelegatedAmountNotEnough,
+} from "../../errors";
 import { dateToUnixTimestamp } from "../../utils";
+import { getAccount } from "@solana/spl-token";
 
 export class InstructionFactoryImpl implements InstructionFactory {
   private readonly program: Program<PreAuthorizedDebitV1>;
@@ -397,8 +403,88 @@ export class InstructionFactoryImpl implements InstructionFactory {
 
   public async buildDebitIx(
     params: DebitParams,
-  ): Promise<InstructionWithMetadata<void>> {
-    throw new Error("Method not implemented");
+  ): Promise<InstructionWithMetadata<DebitResult>> {
+    const {
+      preAuthorization: preAuthorizationPubkey,
+      amount,
+      destinationTokenAccount,
+      checkSmartDelegateEnabled = true,
+    } = params;
+
+    const preAuthorizationAccount = (
+      await this.readClient.fetchPreAuthorization({
+        publicKey: preAuthorizationPubkey,
+      })
+    )?.account;
+
+    if (!preAuthorizationAccount) {
+      throw NoPreAuthorizationFound.givenPubkey(
+        this.connection.rpcEndpoint,
+        preAuthorizationPubkey,
+      );
+    }
+
+    const debitAuthority = preAuthorizationAccount.debitAuthority;
+    const tokenAccount = preAuthorizationAccount.tokenAccount;
+    const tokenProgramId =
+      await this.readClient.fetchTokenProgramIdForTokenAccount(tokenAccount);
+
+    const tokenAccountData = await getAccount(
+      this.connection,
+      tokenAccount,
+      undefined,
+      tokenProgramId,
+    );
+
+    const mint = tokenAccountData.mint;
+
+    const smartDelegate = this.readClient.getSmartDelegatePDA().publicKey;
+
+    if (checkSmartDelegateEnabled) {
+      const currentDelegation =
+        await this.readClient.fetchCurrentDelegationOfTokenAccount(
+          preAuthorizationAccount.tokenAccount,
+        );
+
+      if (!currentDelegation || currentDelegation.delegate !== smartDelegate) {
+        throw new SmartDelegateNotSet(
+          this.connection.rpcEndpoint,
+          tokenAccount,
+        );
+      }
+
+      if (currentDelegation.delgatedAmount < amount) {
+        throw new SmartDelegatedAmountNotEnough(
+          this.connection.rpcEndpoint,
+          tokenAccount,
+        );
+      }
+    }
+
+    const debitIx = await this.program.methods
+      .debit({ amount: new BN(amount.toString()) })
+      .accounts({
+        debitAuthority,
+        mint,
+        tokenAccount,
+        destinationTokenAccount,
+        smartDelegate,
+        preAuthorization: preAuthorizationPubkey,
+        tokenProgram: tokenProgramId,
+      })
+      .instruction();
+
+    return {
+      instruction: debitIx,
+      expectedSigners: [
+        {
+          publicKey: debitAuthority,
+          reason:
+            "The debit_authority of the pre-authorization has to sign to debit funds against it",
+        },
+      ],
+      meta: undefined,
+    };
   }
 
   public async buildApproveSmartDelegateIx(
