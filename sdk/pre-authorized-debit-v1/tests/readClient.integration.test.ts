@@ -1,21 +1,23 @@
 import "./setup";
 
 import { assert, expect } from "chai";
-import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+  AccountInfo,
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+} from "@solana/web3.js";
 import { localValidatorUrl } from "./constants";
 import {
   IDL,
   MAINNET_PAD_PROGRAM_ID,
   PreAuthorizedDebitReadClientImpl,
+  TokenAccountDoesNotExist,
 } from "../src";
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { getProviderNodeWallet } from "./util";
-import {
-  TOKEN_PROGRAM_ID,
-  createMint,
-  createAccount,
-  TokenAccountNotFoundError,
-} from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, createMint, createAccount } from "@solana/spl-token";
 import {
   fundAccounts,
   initSmartDelegateIdempotent,
@@ -381,37 +383,141 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       );
     });
 
-    it("should throw if tokenAccount does not exist", async () => {
-      const stub = sandbox
+    it("should call fetchCurrentOwnerOfTokenAccount", async () => {
+      const stubbedTokenAccountOwner = Keypair.generate().publicKey;
+      const fetchCurrentOwnerOfTokenAccountStub = sandbox
         .stub(
           PreAuthorizedDebitReadClientImpl.prototype,
-          "fetchPreAuthorization",
+          "fetchCurrentOwnerOfTokenAccount",
         )
-        .returns(
-          Promise.resolve({
-            publicKey: new PublicKey(
-              "3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3",
-            ),
-            account: {
-              tokenAccount: Keypair.generate().publicKey,
-            } as unknown as PreAuthorizationAccount,
-          }),
-        );
-      await expect(
-        readClient.fetchCurrentOwnerOfPreAuthTokenAccount(
-          new PublicKey("3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3"),
-        ),
-      ).to.eventually.be.rejected.and.be.an.instanceof(
-        TokenAccountNotFoundError,
-      );
-      expect(stub.calledOnce).to.equal(true);
-    });
-
-    it("should return owner of pre authorization", async () => {
+        .resolves(stubbedTokenAccountOwner);
       const owner = await readClient.fetchCurrentOwnerOfPreAuthTokenAccount(
         preAuthorizations[0],
       );
+      expect(owner.toString()).to.equal(stubbedTokenAccountOwner.toString());
+      expect(fetchCurrentOwnerOfTokenAccountStub.calledOnce).to.be.equal(true);
+    });
+  });
+
+  context("fetchCurrentOwnerOfTokenAccount", () => {
+    it("should throw if tokenAccount does not exist", async () => {
+      await expect(
+        readClient.fetchCurrentOwnerOfTokenAccount(
+          new PublicKey("3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3"),
+        ),
+      ).to.eventually.be.rejected.and.be.an.instanceof(
+        TokenAccountDoesNotExist,
+      );
+    });
+
+    it("should return owner of token account", async () => {
+      const owner =
+        await readClient.fetchCurrentOwnerOfTokenAccount(tokenAccount);
       expect(owner.toString()).to.equal(provider.publicKey.toString());
+    });
+  });
+
+  context("fetchTokenProgramIdForTokenAccount", () => {
+    const sandbox = createSandbox();
+
+    afterEach(() => {
+      sandbox.reset();
+      sandbox.restore();
+    });
+
+    it("should throw if the token account does not exist", async () => {
+      await expect(
+        readClient.fetchTokenProgramIdForTokenAccount(
+          new PublicKey("3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3"),
+        ),
+      ).to.eventually.be.rejectedWith(
+        /Token account doesn't exist: 3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3/,
+      );
+    });
+
+    it("should throw if the token account has an unexpected programId as the owner", async () => {
+      const getAccountInfoStub = sandbox
+        .stub(Connection.prototype, "getAccountInfo")
+        .resolves({
+          owner: Keypair.generate().publicKey,
+        } as unknown as AccountInfo<Buffer>);
+      await expect(
+        readClient.fetchTokenProgramIdForTokenAccount(
+          new PublicKey("3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3"),
+        ),
+      ).to.eventually.be.rejectedWith(
+        /Token account doesn't exist: 3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3/,
+      );
+
+      expect(getAccountInfoStub.calledOnce).to.equal(true);
+    });
+
+    it("should return the token account programId", async () => {
+      const tokenAccountOwner =
+        await readClient.fetchTokenProgramIdForTokenAccount(tokenAccount);
+      expect(tokenAccountOwner.toString()).to.equal(
+        TOKEN_PROGRAM_ID.toString(),
+      );
+    });
+  });
+
+  context("fetchCurrentDelegationOfTokenAccount", () => {
+    it("should throw TokenAccountDoesNotExist", async () => {
+      await expect(
+        readClient.fetchCurrentDelegationOfTokenAccount(
+          new PublicKey("3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3"),
+        ),
+      ).to.eventually.be.rejected.and.be.an.instanceof(
+        TokenAccountDoesNotExist,
+      );
+    });
+
+    it("should return token account delegate and delegate amount", async () => {
+      const delegateData =
+        await readClient.fetchCurrentDelegationOfTokenAccount(tokenAccount);
+      expect(delegateData?.delegate.toString()).to.equal(
+        smartDelegate.toString(),
+      );
+      expect(delegateData?.delgatedAmount.toString()).to.equal(
+        (BigInt(2) ** BigInt(64) - BigInt(1)).toString(),
+      );
+    });
+  });
+
+  context("fetchCurrentDelegationOfPreAuthTokenAccount", () => {
+    const sandbox = createSandbox();
+
+    afterEach(() => {
+      sandbox.reset();
+      sandbox.restore();
+    });
+
+    it("should throw NoPreAuthorizationFound", async () => {
+      await expect(
+        readClient.fetchCurrentDelegationOfPreAuthTokenAccount(
+          new PublicKey("3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3"),
+        ),
+      ).to.eventually.be.rejectedWith(
+        /Pre-authorization not found \(pubkey: 3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3\) \(rpc: http:\/\/127.0.0.1:8899\)/,
+      );
+    });
+
+    it("should return delegate and delegated amount for pre authorization", async () => {
+      const fetchCurrentDelegationOfTokenAccountSpy = sandbox.spy(
+        PreAuthorizedDebitReadClientImpl.prototype,
+        "fetchCurrentDelegationOfTokenAccount",
+      );
+      const delegateData =
+        await readClient.fetchCurrentDelegationOfPreAuthTokenAccount(
+          preAuthorizations[0],
+        );
+      expect(delegateData?.delegate.toString()).to.equal(
+        smartDelegate.toString(),
+      );
+      expect(delegateData?.delgatedAmount.toString()).to.equal(
+        (BigInt(2) ** BigInt(64) - BigInt(1)).toString(),
+      );
+      expect(fetchCurrentDelegationOfTokenAccountSpy.calledOnce).to.equal(true);
     });
   });
 });

@@ -357,7 +357,7 @@ export class PreAuthorizedDebitReadClientImpl
     const tokenAccount = await getAccount(
       this.connection,
       tokenAccountPubkey,
-      undefined,
+      this.connection.commitment,
       tokenProgramId,
     );
 
@@ -489,14 +489,13 @@ export class PreAuthorizedDebitReadClientImpl
   ): Promise<PublicKey> {
     const tokenProgramId =
       await this.fetchTokenProgramIdForTokenAccount(tokenAccountPubkey);
-
     let tokenAccount: Account;
 
     try {
       tokenAccount = await getAccount(
         this.connection,
         tokenAccountPubkey,
-        undefined,
+        this.connection.commitment,
         tokenProgramId,
       );
     } catch {
@@ -536,8 +535,8 @@ export class PreAuthorizedDebitReadClientImpl
 
     if (
       tokenAccountInfo == null ||
-      ![TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID].includes(
-        tokenAccountInfo.owner,
+      ![TOKEN_PROGRAM_ID.toString(), TOKEN_2022_PROGRAM_ID.toString()].includes(
+        tokenAccountInfo.owner.toString(),
       )
     ) {
       throw new TokenAccountDoesNotExist(
@@ -561,7 +560,7 @@ export class PreAuthorizedDebitReadClientImpl
       tokenAccount = await getAccount(
         this.connection,
         tokenAccountPubkey,
-        undefined,
+        this.connection.commitment,
         tokenProgramId,
       );
     } catch {
