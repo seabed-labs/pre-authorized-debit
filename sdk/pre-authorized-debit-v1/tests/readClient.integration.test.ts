@@ -461,10 +461,27 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     });
   });
 
-  xcontext("fetchCurrentDelegationOfTokenAccount", () => {
-    it("should throw TokenAccountDoesNotExist", async () => {});
+  context("fetchCurrentDelegationOfTokenAccount", () => {
+    it("should throw TokenAccountDoesNotExist", async () => {
+      await expect(
+        readClient.fetchCurrentDelegationOfTokenAccount(
+          new PublicKey("3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3"),
+        ),
+      ).to.eventually.be.rejected.and.be.an.instanceof(
+        TokenAccountDoesNotExist,
+      );
+    });
 
-    it("should return token account delegate and delegate amount", async () => {});
+    it("should return token account delegate and delegate amount", async () => {
+      const delegateData =
+        await readClient.fetchCurrentDelegationOfTokenAccount(tokenAccount);
+      expect(delegateData?.delegate.toString()).to.equal(
+        smartDelegate.toString(),
+      );
+      expect(delegateData?.delgatedAmount.toString()).to.equal(
+        (BigInt(2) ** BigInt(64) - BigInt(1)).toString(),
+      );
+    });
   });
 
   context("fetchCurrentDelegationOfPreAuthTokenAccount", () => {
