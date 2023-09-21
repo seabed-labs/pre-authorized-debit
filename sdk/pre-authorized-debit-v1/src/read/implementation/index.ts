@@ -357,7 +357,7 @@ export class PreAuthorizedDebitReadClientImpl
     const tokenAccount = await getAccount(
       this.connection,
       tokenAccountPubkey,
-      undefined,
+      this.connection.commitment,
       tokenProgramId,
     );
 
@@ -560,7 +560,7 @@ export class PreAuthorizedDebitReadClientImpl
       tokenAccount = await getAccount(
         this.connection,
         tokenAccountPubkey,
-        undefined,
+        this.connection.commitment,
         tokenProgramId,
       );
     } catch {
