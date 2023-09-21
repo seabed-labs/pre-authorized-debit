@@ -460,4 +460,47 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       );
     });
   });
+
+  xcontext("fetchCurrentDelegationOfTokenAccount", () => {
+    it("should throw TokenAccountDoesNotExist", async () => {});
+
+    it("should return token account delegate and delegate amount", async () => {});
+  });
+
+  context("fetchCurrentDelegationOfPreAuthTokenAccount", () => {
+    const sandbox = createSandbox();
+
+    afterEach(() => {
+      sandbox.reset();
+      sandbox.restore();
+    });
+
+    it("should throw NoPreAuthorizationFound", async () => {
+      await expect(
+        readClient.fetchCurrentDelegationOfPreAuthTokenAccount(
+          new PublicKey("3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3"),
+        ),
+      ).to.eventually.be.rejectedWith(
+        /Pre-authorization not found \(pubkey: 3U1sFjpK35XCkRiWuFVb9Y3fxSwHgUBkntvyWDy4Jxx3\) \(rpc: http:\/\/127.0.0.1:8899\)/,
+      );
+    });
+
+    it("should return delegate and delegated amount for pre authorization", async () => {
+      const fetchCurrentDelegationOfTokenAccountSpy = sandbox.spy(
+        PreAuthorizedDebitReadClientImpl.prototype,
+        "fetchCurrentDelegationOfTokenAccount",
+      );
+      const delegateData =
+        await readClient.fetchCurrentDelegationOfPreAuthTokenAccount(
+          preAuthorizations[0],
+        );
+      expect(delegateData?.delegate.toString()).to.equal(
+        smartDelegate.toString(),
+      );
+      expect(delegateData?.delgatedAmount.toString()).to.equal(
+        (BigInt(2) ** BigInt(64) - BigInt(1)).toString(),
+      );
+      expect(fetchCurrentDelegationOfTokenAccountSpy.calledOnce).to.equal(true);
+    });
+  });
 });
