@@ -334,16 +334,8 @@ export class PreAuthorizedDebitReadClientImpl
 
     const tokenAccountInfo =
       await this.connection.getAccountInfo(tokenAccountPubkey);
-
     const tokenProgramId = tokenAccountInfo?.owner;
-
-    if (
-      tokenAccountInfo == null ||
-      tokenProgramId == null || // for typescript
-      ![TOKEN_PROGRAM_ID.toString(), TOKEN_2022_PROGRAM_ID.toString()].includes(
-        tokenProgramId.toString(),
-      )
-    ) {
+    if (!this.isOwnerTokenProgram(tokenAccountInfo)) {
       throw new TokenAccountDoesNotExist(
         this.connection.rpcEndpoint,
         tokenAccountPubkey,
@@ -533,12 +525,7 @@ export class PreAuthorizedDebitReadClientImpl
     const tokenAccountInfo =
       await this.connection.getAccountInfo(tokenAccountPubkey);
 
-    if (
-      tokenAccountInfo == null ||
-      ![TOKEN_PROGRAM_ID.toString(), TOKEN_2022_PROGRAM_ID.toString()].includes(
-        tokenAccountInfo.owner.toString(),
-      )
-    ) {
+    if (!this.isOwnerTokenProgram(tokenAccountInfo)) {
       throw new TokenAccountDoesNotExist(
         this.connection.rpcEndpoint,
         tokenAccountPubkey,
@@ -595,5 +582,17 @@ export class PreAuthorizedDebitReadClientImpl
     return this.fetchCurrentDelegationOfTokenAccount(
       preAuthorization.account.tokenAccount,
     );
+  }
+
+  private isOwnerTokenProgram<T extends { owner: PublicKey }>(
+    account: T | undefined | null,
+  ): account is T {
+    if (!account) {
+      return false;
+    }
+    return [
+      TOKEN_PROGRAM_ID.toString(),
+      TOKEN_2022_PROGRAM_ID.toString(),
+    ].includes(account.owner.toString());
   }
 }
