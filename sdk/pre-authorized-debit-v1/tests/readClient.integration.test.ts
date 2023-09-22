@@ -14,6 +14,7 @@ import {
   MAINNET_PAD_PROGRAM_ID,
   PreAuthorizedDebitReadClientImpl,
   TokenAccountDoesNotExist,
+  PreAuthorizationAccount,
 } from "../src";
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { getProviderNodeWallet } from "./util";
@@ -24,7 +25,6 @@ import {
 } from "@dcaf/pad-test-utils";
 import * as anchor from "@coral-xyz/anchor";
 import { createSandbox } from "sinon";
-import { PreAuthorizationAccount } from "../src/read/accounts";
 
 describe("PreAuthorizedDebitReadClientImpl integration", () => {
   const connection: Connection = new Connection(localValidatorUrl, "processed");
@@ -258,24 +258,135 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     });
   });
 
-  // TODO: Fails as we need to sign, should we still keep this in the read client in that case?
-  xcontext("checkDebitAmount", () => {
-    it("should return true for recurring pad", async () => {
-      const canDebit = await readClient.checkDebitAmount({
-        tokenAccount,
-        debitAuthority: debitAuthorities[0].publicKey,
-        amount: BigInt(100),
+  context("checkDebitAmountForPreAuthorization", () => {
+    it("should return false if pad is not activated", async () => {
+      const canDebit = readClient.checkDebitAmountForPreAuthorization({
+        preAuthorizationAccount: {
+          variant: {
+            type: "oneTime",
+          },
+          // activates at 101
+          activationUnixTimestamp: BigInt(101),
+        } as unknown as PreAuthorizationAccount,
+        // current time is 100
+        solanaTime: BigInt(100),
+        requestedDebitAmount: BigInt(100),
       });
-      expect(canDebit).to.equal(true);
+      expect(canDebit).to.equal(false);
     });
 
-    it("should return false for recurring pad", async () => {
-      const canDebit = await readClient.checkDebitAmount({
-        tokenAccount,
-        debitAuthority: debitAuthorities[0].publicKey,
-        amount: BigInt(1000),
+    it("should return false for oneTime pad that is requesting a debit larger than the authorized amount", async () => {
+      const canDebit = readClient.checkDebitAmountForPreAuthorization({
+        preAuthorizationAccount: {
+          variant: {
+            type: "oneTime",
+            // amount authorized is 100
+            amountAuthorized: BigInt(100),
+            amountDebited: BigInt(0),
+          },
+          activationUnixTimestamp: BigInt(0),
+        } as unknown as PreAuthorizationAccount,
+        solanaTime: BigInt(100),
+        // withdrawing 101
+        requestedDebitAmount: BigInt(101),
       });
-      expect(canDebit).to.equal(true);
+      expect(canDebit).to.equal(false);
+    });
+
+    it("should return false for oneTime pad that is requesting a debit larger than the available amount", async () => {
+      const canDebit = readClient.checkDebitAmountForPreAuthorization({
+        preAuthorizationAccount: {
+          variant: {
+            type: "oneTime",
+            // amount available is 1
+            amountAuthorized: BigInt(100),
+            amountDebited: BigInt(99),
+          },
+          activationUnixTimestamp: BigInt(0),
+        } as unknown as PreAuthorizationAccount,
+        solanaTime: BigInt(100),
+        // withdrawing 2
+        requestedDebitAmount: BigInt(2),
+      });
+      expect(canDebit).to.equal(false);
+    });
+
+    it("should return true for oneTime pad", async () => {
+      const canDebit = readClient.checkDebitAmountForPreAuthorization({
+        preAuthorizationAccount: {
+          variant: {
+            type: "oneTime",
+            // amount available is 1
+            amountAuthorized: BigInt(100),
+            amountDebited: BigInt(99),
+          },
+          activationUnixTimestamp: BigInt(0),
+        } as unknown as PreAuthorizationAccount,
+        solanaTime: BigInt(100),
+        // withdrawing 1
+        requestedDebitAmount: BigInt(1),
+      });
+      expect(canDebit).to.equal(false);
+    });
+
+    it("should return false for recurring pad if currentCycle > numCycles", async () => {
+      const canDebit = readClient.checkDebitAmountForPreAuthorization({
+        preAuthorizationAccount: {
+          variant: {
+            type: "recurring",
+            repeatFrequencySeconds: BigInt(1),
+            numCycles: 1,
+          },
+          activationUnixTimestamp: BigInt(0),
+        } as unknown as PreAuthorizationAccount,
+        solanaTime: BigInt(100),
+        requestedDebitAmount: BigInt(1),
+      });
+      expect(canDebit).to.equal(false);
+    });
+
+    it("should return false for recurring pad if currentCycle > numCycles", async () => {
+      const canDebit = readClient.checkDebitAmountForPreAuthorization({
+        preAuthorizationAccount: {
+          variant: {
+            type: "recurring",
+            repeatFrequencySeconds: BigInt(1),
+            numCycles: 200,
+            lastDebitedCycle: 101,
+            // should be authorized for 100
+            amountDebitedLastCycle: BigInt(0),
+            recurringAmountAuthorized: BigInt(100),
+            resetEveryCycle: true,
+          },
+          activationUnixTimestamp: BigInt(0),
+        } as unknown as PreAuthorizationAccount,
+        solanaTime: BigInt(100),
+        // withdrawing 101
+        requestedDebitAmount: BigInt(101),
+      });
+      expect(canDebit).to.equal(false);
+    });
+
+    it("should return true for recurring pad", async () => {
+      const canDebit = readClient.checkDebitAmountForPreAuthorization({
+        preAuthorizationAccount: {
+          variant: {
+            type: "recurring",
+            repeatFrequencySeconds: BigInt(1),
+            numCycles: 200,
+            lastDebitedCycle: 101,
+            // should be authorized for 100
+            amountDebitedLastCycle: BigInt(0),
+            recurringAmountAuthorized: BigInt(100),
+            resetEveryCycle: true,
+          },
+          activationUnixTimestamp: BigInt(0),
+        } as unknown as PreAuthorizationAccount,
+        solanaTime: BigInt(100),
+        // withdrawing 101
+        requestedDebitAmount: BigInt(100),
+      });
+      expect(canDebit).to.equal(false);
     });
   });
 
