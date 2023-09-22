@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "yarn run tsc"
+    "build": "yarn run tsc",
+    "test": "cd ../../ && anchor test \"sdk/pre-authorized-debit-v1\" \"tests/**/*.test.ts\""
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
