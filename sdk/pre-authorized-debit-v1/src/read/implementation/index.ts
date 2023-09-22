@@ -1,6 +1,5 @@
 import {
   AnchorProvider,
-  BN,
   Program,
   ProgramAccount,
   utils,
@@ -12,6 +11,8 @@ import {
   PublicKey,
 } from "@solana/web3.js";
 import {
+  CheckDebitAmountForPerAuthorizationParams,
+  CheckDebitAmountParams,
   PDA,
   PreAuthorizationType,
   PreAuthorizedDebitReadClient,
@@ -23,13 +24,19 @@ import {
   TokenAccountDoesNotExist,
 } from "../../errors";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { PreAuthorizationAccount, SmartDelegateAccount } from "../accounts.ts";
+import {
+  assertsIsRecurringPreAuthorizationAccount,
+  computeAvailableAmountForRecurringDebit,
+  computePreAuthorizationCurrentCycle,
+  isOneTimePreAuthorizationAccount,
+  PreAuthorizationAccount,
+  SmartDelegateAccount,
+} from "../accounts.ts";
 import {
   Account,
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   getAccount,
-  getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
 
@@ -321,69 +328,69 @@ export class PreAuthorizedDebitReadClientImpl
     return this.fetchPreAuthorizations(type, { debitAuthority });
   }
 
-  public async checkDebitAmount(params: {
-    tokenAccount: PublicKey;
-    debitAuthority: PublicKey;
-    amount: bigint;
-  }): Promise<boolean> {
-    const { tokenAccount: tokenAccountPubkey, debitAuthority, amount } = params;
-    const preAuthorization = await this.fetchPreAuthorization({
-      tokenAccount: tokenAccountPubkey,
-      debitAuthority,
-    });
-
-    const tokenAccountInfo =
-      await this.connection.getAccountInfo(tokenAccountPubkey);
-    const tokenProgramId = tokenAccountInfo?.owner;
-    if (!this.isOwnerTokenProgram(tokenAccountInfo)) {
-      throw new TokenAccountDoesNotExist(
-        this.connection.rpcEndpoint,
-        tokenAccountPubkey,
-      );
+  public checkDebitAmountForPreAuthorization({
+    preAuthorizationAccount,
+    requestedDebitAmount,
+    solanaTime,
+  }: CheckDebitAmountForPerAuthorizationParams): boolean {
+    if (preAuthorizationAccount.activationUnixTimestamp < solanaTime) {
+      return false;
     }
+    if (isOneTimePreAuthorizationAccount(preAuthorizationAccount)) {
+      const amountAvailable =
+        preAuthorizationAccount.variant.amountAuthorized -
+        preAuthorizationAccount.variant.amountDebited;
+      return (
+        amountAvailable >= requestedDebitAmount &&
+        solanaTime < preAuthorizationAccount.variant.expiryUnixTimestamp
+      );
+    } else {
+      assertsIsRecurringPreAuthorizationAccount(preAuthorizationAccount);
+      const variant = preAuthorizationAccount.variant;
+      const currentCycle = computePreAuthorizationCurrentCycle(
+        solanaTime,
+        preAuthorizationAccount,
+      );
+      if (
+        preAuthorizationAccount.variant.numCycles &&
+        preAuthorizationAccount.variant.numCycles > currentCycle
+      ) {
+        return false;
+      }
+      const amountAvailable = computeAvailableAmountForRecurringDebit(
+        currentCycle,
+        variant,
+      );
+      return amountAvailable >= requestedDebitAmount;
+    }
+  }
 
+  public async checkDebitAmount(
+    params: CheckDebitAmountParams,
+  ): Promise<boolean> {
+    const preAuthorization = await this.fetchPreAuthorization(
+      "preAuthorizedDebit" in params
+        ? {
+            publicKey: params.preAuthorizedDebit,
+          }
+        : {
+            tokenAccount: params.tokenAccount,
+            debitAuthority: params.debitAuthority,
+          },
+    );
     if (preAuthorization == null) {
       return false;
     }
-
-    const tokenAccount = await getAccount(
-      this.connection,
-      tokenAccountPubkey,
-      this.connection.commitment,
-      tokenProgramId,
-    );
-
-    // NOTE: The debit authority can debit to any token account.
-    //       But, we just use the ATA to keep this method's interface simple.
-    const debitAuthortyAta = getAssociatedTokenAddressSync(
-      tokenAccount.mint,
-      debitAuthority,
-      true,
-      tokenProgramId,
-    );
-
-    const { publicKey: smartDelegate } = this.getSmartDelegatePDA();
-
-    const simulationRes = await this.program.methods
-      .debit({
-        amount: new BN(amount.toString()),
-      })
-      .accounts({
-        debitAuthority,
-        mint: tokenAccount.mint,
-        tokenAccount: tokenAccountPubkey,
-        destinationTokenAccount: debitAuthortyAta,
-        smartDelegate,
-        preAuthorization: preAuthorization.publicKey,
-        tokenProgram: tokenProgramId,
-      })
-      .simulate();
-
-    const debitOccured = simulationRes.events.some(
-      (event) => event.name === "DebitEvent",
-    );
-
-    return debitOccured;
+    const solanaTime = BigInt(await this.getSolanaUnixTimestamp());
+    if (preAuthorization.account.activationUnixTimestamp < solanaTime) {
+      return false;
+    }
+    const preAuthorizationAccount = preAuthorization.account;
+    return this.checkDebitAmountForPreAuthorization({
+      preAuthorizationAccount,
+      requestedDebitAmount: params.requestedDebitAmount,
+      solanaTime,
+    });
   }
 
   public async fetchMaxDebitAmount(params: {
@@ -413,12 +420,7 @@ export class PreAuthorizedDebitReadClientImpl
     );
 
     const activationDate = new Date(activationUnixTimestamp * 1e3);
-    const latestSlot = await this.connection.getSlot();
-    const latestSlotTimestamp = await this.connection.getBlockTime(latestSlot);
-    const solanaNowDate = latestSlotTimestamp
-      ? new Date(latestSlotTimestamp * 1e3)
-      : new Date(); // fallback to client side current timestamp
-
+    const solanaNowDate = new Date((await this.getSolanaUnixTimestamp()) * 1e3);
     if (activationDate > solanaNowDate) {
       return BigInt(0);
     }
@@ -594,5 +596,12 @@ export class PreAuthorizedDebitReadClientImpl
       TOKEN_PROGRAM_ID.toString(),
       TOKEN_2022_PROGRAM_ID.toString(),
     ].includes(account.owner.toString());
+  }
+
+  private async getSolanaUnixTimestamp(): Promise<number> {
+    const latestSlot = await this.connection.getSlot();
+    const latestSlotUnixTimestamp =
+      await this.connection.getBlockTime(latestSlot);
+    return latestSlotUnixTimestamp || Math.floor(new Date().getTime() / 1e3); // fallback to client side current timestamp
   }
 }

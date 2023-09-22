@@ -7,10 +7,21 @@ export type FetchPreAuthorizationParams =
   | { publicKey: PublicKey }
   | { tokenAccount: PublicKey; debitAuthority: PublicKey };
 
-export type CheckDebitAmountParams = {
-  tokenAccount: PublicKey;
-  debitAuthority: PublicKey;
-  amount: bigint;
+export type CheckDebitAmountParams =
+  | {
+      tokenAccount: PublicKey;
+      debitAuthority: PublicKey;
+      requestedDebitAmount: bigint;
+    }
+  | {
+      preAuthorizedDebit: PublicKey;
+      requestedDebitAmount: bigint;
+    };
+
+export type CheckDebitAmountForPerAuthorizationParams = {
+  preAuthorizationAccount: PreAuthorizationAccount;
+  requestedDebitAmount: bigint;
+  solanaTime: bigint;
 };
 
 export type FetchMaxDebitAmountParams = {
@@ -51,11 +62,17 @@ export interface PreAuthorizedDebitReadClient {
     type?: PreAuthorizationType,
   ): Promise<ProgramAccount<PreAuthorizationAccount>[]>;
 
-  // Checks whether the given debit will go through right now (based on current state of pre-auth if any)
-  // Returns true if so
+  /**
+   * Checks whether the given debit will go through right now (based on current state of pre-auth if any)
+   * @returns true if above is true
+   * @param params
+   */
   checkDebitAmount(params: CheckDebitAmountParams): Promise<boolean>;
-  // Returns the maximum debitable amount given the current state of pre-auth given params (if any)
+  checkDebitAmountForPreAuthorization(
+    params: CheckDebitAmountForPerAuthorizationParams,
+  ): boolean;
 
+  // Returns the maximum debitable amount given the current state of pre-auth given params (if any)
   fetchMaxDebitAmount(params: FetchMaxDebitAmountParams): Promise<bigint>;
 
   fetchTokenProgramIdForTokenAccount(

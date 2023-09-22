@@ -69,10 +69,41 @@ export function computePreAuthorizationCurrentCycle(
   );
 }
 
+export function computeAvailableAmountForRecurringDebit(
+  currentCycle: bigint,
+  preAuthorizationVariant: Exclude<
+    PreAuthorizationVariantRecurring,
+    "repeatFrequencySeconds" | "numCycles"
+  >,
+): bigint {
+  const {
+    lastDebitedCycle,
+    resetEveryCycle,
+    recurringAmountAuthorized,
+    amountDebitedLastCycle,
+    amountDebitedTotal,
+  } = preAuthorizationVariant;
+  if (!resetEveryCycle) {
+    return recurringAmountAuthorized * currentCycle - amountDebitedTotal;
+  } else if (resetEveryCycle && currentCycle !== lastDebitedCycle) {
+    return recurringAmountAuthorized;
+  } else {
+    return recurringAmountAuthorized - amountDebitedLastCycle;
+  }
+}
+
 export function isRecurringPreAuthorizationAccount(
   preAuthorization: PreAuthorizationAccount,
 ): preAuthorization is RecurringPreAuthorizationAccount {
   return preAuthorization.variant.type === "recurring";
+}
+
+export function assertsIsRecurringPreAuthorizationAccount(
+  preAuthorization: PreAuthorizationAccount,
+): asserts preAuthorization is RecurringPreAuthorizationAccount {
+  if (!isRecurringPreAuthorizationAccount(preAuthorization)) {
+    throw new Error(`Invalid variant ${preAuthorization.variant.type}`);
+  }
 }
 
 export function isOneTimePreAuthorizationAccount(
