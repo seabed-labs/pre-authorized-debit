@@ -1,5 +1,8 @@
 import {
   computePreAuthorizationCurrentCycle,
+  isOneTimePreAuthorizationAccount,
+  isRecurringPreAuthorizationAccount,
+  PreAuthorizationAccount,
   PreAuthorizationVariantRecurring,
 } from "../src";
 import { expect } from "chai";
@@ -60,6 +63,42 @@ describe("PreAuthorizedDebitReadClientImpl unit", () => {
         });
         expect(cycle).to.equal(testCase.expectedRes);
       });
+    });
+  });
+
+  context("isOneTimePreAuthorizationAccount", () => {
+    it("should return true", () => {
+      expect(
+        isOneTimePreAuthorizationAccount({
+          variant: { type: "oneTime" },
+        } as unknown as PreAuthorizationAccount),
+      ).to.equal(true);
+    });
+
+    it("should return false", () => {
+      expect(
+        isOneTimePreAuthorizationAccount({
+          variant: { type: "recurring" },
+        } as unknown as PreAuthorizationAccount),
+      ).to.equal(false);
+    });
+  });
+
+  context("isRecurringPreAuthorizationAccount", () => {
+    it("should return true", () => {
+      expect(
+        isRecurringPreAuthorizationAccount({
+          variant: { type: "recurring" },
+        } as unknown as PreAuthorizationAccount),
+      ).to.equal(true);
+    });
+
+    it("should return false", () => {
+      expect(
+        isRecurringPreAuthorizationAccount({
+          variant: { type: "oneTime" },
+        } as unknown as PreAuthorizationAccount),
+      ).to.equal(false);
     });
   });
 });

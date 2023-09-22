@@ -34,10 +34,10 @@ type PreAuthorizationBase<T> = {
 export type PreAuthorizationAccount = PreAuthorizationBase<
   PreAuthorizationVariantOneTime | PreAuthorizationVariantRecurring
 >;
-export type PreAuthorizationAccountOneTime =
+export type OneTimePreAuthorizationAccount =
   PreAuthorizationBase<PreAuthorizationVariantOneTime>;
 
-export type PreAuthorizationAccountRecurring =
+export type RecurringPreAuthorizationAccount =
   PreAuthorizationBase<PreAuthorizationVariantRecurring>;
 
 export const SMART_DELEGATE_DISCRIMINATOR = Buffer.from([
@@ -67,4 +67,16 @@ export function computePreAuthorizationCurrentCycle(
     (chainTimestamp - preAuthorization.activationUnixTimestamp) /
       preAuthorization.variant.repeatFrequencySeconds
   );
+}
+
+export function isRecurringPreAuthorizationAccount(
+  preAuthorization: PreAuthorizationAccount,
+): preAuthorization is RecurringPreAuthorizationAccount {
+  return preAuthorization.variant.type === "recurring";
+}
+
+export function isOneTimePreAuthorizationAccount(
+  preAuthorization: PreAuthorizationAccount,
+): preAuthorization is OneTimePreAuthorizationAccount {
+  return preAuthorization.variant.type === "oneTime";
 }
