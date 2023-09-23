@@ -59,3 +59,9 @@ export class SmartDelegatedAmountNotEnough extends CustomError {
     );
   }
 }
+
+export class TransactionFeesPayerNotProvided extends Error {
+  constructor() {
+    super("TX fees payer not provided");
+  }
+}

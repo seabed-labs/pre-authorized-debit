@@ -43,7 +43,6 @@ import { createApproveInstruction, getAccount } from "@solana/spl-token";
 export class InstructionFactoryImpl implements InstructionFactory {
   private readonly program: Program<PreAuthorizedDebitV1>;
 
-  // eslint-disable-next-line no-useless-constructor
   private constructor(
     private readonly connection: Connection,
     private readonly programId: PublicKey,
