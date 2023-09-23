@@ -9,6 +9,8 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import {
+  ApproveSmartDelegateParams,
+  ApproveSmartDelegateResult,
   InitSmartDelegateParams,
   InitSmartDelegateResult,
   InstructionFactory,
@@ -152,6 +154,42 @@ export class TransactionFactoryImpl implements TransactionFactory {
   ): Promise<TransactionWithMetadata<InitSmartDelegateResult>> {
     const initSmartDelegateIx =
       await this.ixFactory.buildInitSmartDelegateIx(params);
+
+    const setupInstructions: TransactionInstruction[] = [];
+    const coreInstructions = [initSmartDelegateIx.instruction];
+    const cleanupInstructions: TransactionInstruction[] = [];
+
+    const coreTxInstructions = [
+      ...setupInstructions,
+      ...coreInstructions,
+      ...cleanupInstructions,
+    ];
+
+    return {
+      setupInstructions,
+      coreInstructions,
+      cleanupInstructions,
+      expectedSigners: initSmartDelegateIx.expectedSigners,
+      meta: initSmartDelegateIx.meta,
+      buildVersionedTransaction: async (signers, txFeesPayer) => {
+        return this.buildAndSignTx(coreTxInstructions, signers, txFeesPayer);
+      },
+      simulate: this.buildSimulateFn(
+        coreTxInstructions,
+        initSmartDelegateIx.meta,
+      ),
+      execute: this.buildExecuteFn(
+        coreTxInstructions,
+        initSmartDelegateIx.meta,
+      ),
+    };
+  }
+
+  public async buildApproveSmartDelegateTx(
+    params: ApproveSmartDelegateParams,
+  ): Promise<TransactionWithMetadata<ApproveSmartDelegateResult>> {
+    const initSmartDelegateIx =
+      await this.ixFactory.buildApproveSmartDelegateIx(params);
 
     const setupInstructions: TransactionInstruction[] = [];
     const coreInstructions = [initSmartDelegateIx.instruction];
