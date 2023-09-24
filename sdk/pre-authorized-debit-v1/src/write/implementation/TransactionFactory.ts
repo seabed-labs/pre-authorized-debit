@@ -5,6 +5,7 @@ import {
   PublicKey,
   SendOptions,
   Signer,
+  SystemProgram,
   TransactionInstruction,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -16,6 +17,8 @@ import {
   ClosePreAuthorizationAsOwnerParams,
   ClosePreAuthorizationAsOwnerResult,
   ExpectedSigner,
+  InitOneTimePreAuthorizationParams,
+  InitOneTimePreAuthorizationResult,
   InitSmartDelegateParams,
   InitSmartDelegateResult,
   InstructionFactory,
@@ -26,6 +29,7 @@ import {
   UnpausePreAuthorizationParams,
   UnpausePreAuthorizationResult,
   UnwrapNativeMintAdditionalParams,
+  WrapNativeMintAdditionalParams,
 } from "../interface";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import {
@@ -39,7 +43,11 @@ import {
   TransactionFeesPayerNotProvided,
 } from "../..";
 import { InstructionFactoryImpl } from "./InstructionFactory";
-import { createCloseAccountInstruction, getAccount } from "@solana/spl-token";
+import {
+  createCloseAccountInstruction,
+  createSyncNativeInstruction,
+  getAccount,
+} from "@solana/spl-token";
 
 // TODO: Remove this after finishing impl (suppress TS errors until then)
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -309,6 +317,66 @@ export class TransactionFactoryImpl implements TransactionFactory {
       undefined,
       closePreAuthAsDebitAuthorityIx.expectedSigners,
       closePreAuthAsDebitAuthorityIx.meta,
+    );
+  }
+
+  public async buildInitOneTimePreAuthorizationTx(
+    params: InitOneTimePreAuthorizationParams & WrapNativeMintAdditionalParams,
+  ): Promise<TransactionWithMetadata<InitOneTimePreAuthorizationResult>> {
+    const initOneTimePreAuthorizationIx =
+      await this.ixFactory.buildInitOneTimePreAuthorizationIx(params);
+
+    const setupInstructions: TransactionInstruction[] = [];
+    const additionalExpectedSigners: ExpectedSigner[] = [];
+
+    const tokenProgramId =
+      await this.readClient.fetchTokenProgramIdForTokenAccount(
+        params.tokenAccount,
+      );
+
+    const tokenAccount = await getAccount(
+      this.connection,
+      params.tokenAccount,
+      undefined,
+      tokenProgramId,
+    );
+
+    if (tokenAccount.isNative && params.wrapNativeMintParams) {
+      const { wrapLamportsAmount, lamportsSourceAccount } =
+        params.wrapNativeMintParams;
+
+      if (
+        lamportsSourceAccount &&
+        !lamportsSourceAccount.equals(tokenAccount.owner)
+      ) {
+        additionalExpectedSigners.push({
+          publicKey: lamportsSourceAccount,
+          reason: `${lamportsSourceAccount.toBase58()} needs to sign to debit lamports from it`,
+        });
+      }
+
+      setupInstructions.push(
+        SystemProgram.transfer({
+          fromPubkey: lamportsSourceAccount ?? tokenAccount.owner,
+          toPubkey: params.tokenAccount,
+          lamports: wrapLamportsAmount,
+        }),
+      );
+
+      setupInstructions.push(
+        createSyncNativeInstruction(params.tokenAccount, tokenProgramId),
+      );
+    }
+
+    return this.wrapIxsInTx(
+      setupInstructions,
+      [initOneTimePreAuthorizationIx.instruction],
+      undefined,
+      [
+        ...initOneTimePreAuthorizationIx.expectedSigners,
+        ...additionalExpectedSigners,
+      ],
+      initOneTimePreAuthorizationIx.meta,
     );
   }
 
