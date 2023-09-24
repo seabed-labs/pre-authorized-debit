@@ -11,6 +11,10 @@ import {
 import {
   ApproveSmartDelegateParams,
   ApproveSmartDelegateResult,
+  ClosePreAuthorizationAsDebitAuthorityParams,
+  ClosePreAuthorizationAsDebitAuthorityResult,
+  ClosePreAuthorizationAsOwnerParams,
+  ClosePreAuthorizationAsOwnerResult,
   ExpectedSigner,
   InitSmartDelegateParams,
   InitSmartDelegateResult,
@@ -238,6 +242,38 @@ export class TransactionFactoryImpl implements TransactionFactory {
       undefined,
       unpausePreAuthIx.expectedSigners,
       unpausePreAuthIx.meta,
+    );
+  }
+
+  public async buildClosePreAuthorizationAsOwnerTx(
+    params: ClosePreAuthorizationAsOwnerParams,
+  ): Promise<TransactionWithMetadata<ClosePreAuthorizationAsOwnerResult>> {
+    const closePreAuthAsOwnerIx =
+      await this.ixFactory.buildClosePreAuthorizationAsOwnerIx(params);
+
+    return this.wrapIxsInTx(
+      undefined,
+      [closePreAuthAsOwnerIx.instruction],
+      undefined,
+      closePreAuthAsOwnerIx.expectedSigners,
+      closePreAuthAsOwnerIx.meta,
+    );
+  }
+
+  public async buildClosePreAuthorizationAsDebitAuthorityTx(
+    params: ClosePreAuthorizationAsDebitAuthorityParams,
+  ): Promise<
+    TransactionWithMetadata<ClosePreAuthorizationAsDebitAuthorityResult>
+  > {
+    const closePreAuthAsDebitAuthorityIx =
+      await this.ixFactory.buildClosePreAuthorizationAsDebitAuthorityIx(params);
+
+    return this.wrapIxsInTx(
+      undefined,
+      [closePreAuthAsDebitAuthorityIx.instruction],
+      undefined,
+      closePreAuthAsDebitAuthorityIx.expectedSigners,
+      closePreAuthAsDebitAuthorityIx.meta,
     );
   }
 }
