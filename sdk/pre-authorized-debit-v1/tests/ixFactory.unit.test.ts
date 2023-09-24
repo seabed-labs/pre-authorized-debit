@@ -3,6 +3,7 @@ import { Connection, Keypair, SystemProgram } from "@solana/web3.js";
 import {
   InitOneTimePreAuthorizationParams,
   InitRecurringPreAuthorizationParams,
+  PausePreAuthorizationParams,
   PreAuthorizedDebitReadClientImpl,
 } from "../src";
 import * as sdkConstants from "../src/constants";
@@ -308,6 +309,83 @@ describe("InstructionFactory Unit Tests", () => {
       expect(
         stubFetchTokenProgramIdForTokenAccount.calledOnceWith(
           params.tokenAccount,
+        ),
+      ).to.equal(true);
+    });
+  });
+
+  context("buildPausePreAuthorizationIx", () => {
+    it("should build init pre authorization ix for recurring pad", async () => {
+      const mockTokenAccount = Keypair.generate().publicKey;
+      const mockTokenAccountOwner = Keypair.generate().publicKey;
+      const mockDebitAuthority = Keypair.generate().publicKey;
+      const preAuthorization = readClient.derivePreAuthorizationPDA(
+        mockTokenAccount,
+        mockDebitAuthority,
+      ).publicKey;
+
+      const params: PausePreAuthorizationParams = {
+        preAuthorization,
+      };
+      const mockPreAuthorization = {
+        publicKey: preAuthorization,
+        account: {
+          tokenAccount: mockTokenAccount,
+        },
+      };
+
+      const stubFetchPreAuthorization = sandbox
+        .stub(readClient, "fetchPreAuthorization")
+        // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+        .resolves(mockPreAuthorization as any);
+      const stubFetchCurrentOwnerOfPreAuthTokenAccount = sandbox
+        .stub(readClient, "fetchCurrentOwnerOfPreAuthTokenAccount")
+        .resolves(mockTokenAccountOwner);
+
+      const ix = await instructionFactory.buildPausePreAuthorizationIx(params);
+
+      const ixData =
+        // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+        (coder.instruction.decode(ix.instruction.data)?.data as any).params;
+      expect(Object.keys(ixData).length).to.equal(1);
+      expect(ixData.pause).to.equal(true);
+
+      expect(ix.instruction.keys[0].pubkey.toString()).to.equal(
+        mockTokenAccountOwner.toString(),
+      );
+      expect(ix.instruction.keys[0].isSigner).to.equal(true);
+      expect(ix.instruction.keys[0].isWritable).to.equal(false);
+
+      expect(ix.instruction.keys[1].pubkey.toString()).to.equal(
+        mockTokenAccount.toString(),
+      );
+      expect(ix.instruction.keys[1].isSigner).to.equal(false);
+      expect(ix.instruction.keys[1].isWritable).to.equal(false);
+
+      expect(ix.instruction.keys[2].pubkey.toString()).to.equal(
+        preAuthorization.toString(),
+      );
+      expect(ix.instruction.keys[2].isSigner).to.equal(false);
+      expect(ix.instruction.keys[2].isWritable).to.equal(true);
+
+      expect(ix.expectedSigners.length).to.equal(1);
+      expect(ix.expectedSigners[0].publicKey.toString()).to.equal(
+        mockTokenAccountOwner.toString(),
+      );
+      expect(ix.expectedSigners[0].reason).to.equal(
+        "The pre-authorization's token account's owner needs to sign to pause it",
+      );
+
+      expect(ix.meta).to.equal(undefined);
+
+      expect(
+        stubFetchPreAuthorization.calledOnceWith({
+          publicKey: preAuthorization,
+        }),
+      ).to.equal(true);
+      expect(
+        stubFetchCurrentOwnerOfPreAuthTokenAccount.calledOnceWith(
+          preAuthorization,
         ),
       ).to.equal(true);
     });
