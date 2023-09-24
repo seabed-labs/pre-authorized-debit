@@ -489,7 +489,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
     const tokenAccountData = await getAccount(
       this.connection,
       tokenAccount,
-      undefined,
+      this.connection.commitment,
       tokenProgramId,
     );
 

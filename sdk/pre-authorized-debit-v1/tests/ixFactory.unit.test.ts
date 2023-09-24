@@ -11,6 +11,7 @@ import { expect } from "chai";
 import { createSandbox } from "sinon";
 import { BorshCoder } from "@coral-xyz/anchor";
 import { IDL } from "@dcaf/pad-test-utils/pre_authorized_debit_v1";
+import * as SplToken from "@solana/spl-token";
 
 describe("InstructionFactory Unit Tests", () => {
   const sandbox = createSandbox();
@@ -636,5 +637,64 @@ describe("InstructionFactory Unit Tests", () => {
     it("should throw if token account delegated mount is less than requested debit amount", async () => {});
 
     it("should build debit instruction", async () => {});
+  });
+
+  context("buildApproveSmartDelegateIx", () => {
+    it("should build token approval instruction for pre authorization token account", async () => {
+      const mockTokenAccount = Keypair.generate().publicKey;
+      const mockTokenProgramId = Keypair.generate().publicKey;
+      const mockTokenAccountOwner = Keypair.generate().publicKey;
+      const mockTokenAccountData: SplToken.RawAccount = {
+        amount: BigInt(0),
+        closeAuthority: mockTokenAccountOwner,
+        closeAuthorityOption: 0,
+        delegate: mockTokenAccountOwner,
+        delegateOption: 0,
+        delegatedAmount: BigInt(0),
+        isNative: BigInt(0),
+        isNativeOption: 0,
+        mint: Keypair.generate().publicKey,
+        owner: mockTokenAccountOwner,
+        state: 1,
+      };
+      const buffer = Buffer.alloc(SplToken.ACCOUNT_SIZE);
+      SplToken.AccountLayout.encode(mockTokenAccountData, buffer);
+      // We cant directly stub getAccount, so we need to stub the getAccountInfo call it uses instead
+      const stubGetAccountInfo = sandbox
+        .stub(connection, "getAccountInfo")
+        .resolves({
+          executable: false,
+          owner: mockTokenProgramId,
+          lamports: 100,
+          data: buffer,
+        });
+
+      const stubFetchTokenProgramIdForTokenAccount = sandbox
+        .stub(readClient, "fetchTokenProgramIdForTokenAccount")
+        .resolves(mockTokenProgramId);
+
+      const ix = await instructionFactory.buildApproveSmartDelegateIx({
+        tokenAccount: mockTokenAccount,
+      });
+
+      expect(ix.expectedSigners.length).to.equal(1);
+      expect(ix.expectedSigners[0].publicKey.toString()).to.equal(
+        mockTokenAccountOwner.toString(),
+      );
+      expect(ix.expectedSigners[0].reason).to.equal(
+        "The owner of the token account has to sign to approve a delegate",
+      );
+      expect(ix.meta).to.equal(undefined);
+
+      expect(
+        stubGetAccountInfo.calledOnceWith(
+          mockTokenAccount,
+          connection.commitment,
+        ),
+      ).to.equal(true);
+      expect(
+        stubFetchTokenProgramIdForTokenAccount.calledOnceWith(mockTokenAccount),
+      ).to.equal(true);
+    });
   });
 });
