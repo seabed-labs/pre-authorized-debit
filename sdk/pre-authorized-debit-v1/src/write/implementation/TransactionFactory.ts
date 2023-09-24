@@ -1,6 +1,5 @@
 import {
   Connection,
-  Keypair,
   Message,
   PublicKey,
   SendOptions,
@@ -35,15 +34,12 @@ import {
   UnwrapNativeMintAdditionalParams,
   WrapNativeMintAdditionalParams,
 } from "../interface";
-import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import {
   DEVNET_PAD_PROGRAM_ID,
-  IDL,
   MAINNET_PAD_PROGRAM_ID,
   NoPreAuthorizationFound,
   PreAuthorizedDebitReadClient,
   PreAuthorizedDebitReadClientImpl,
-  PreAuthorizedDebitV1,
   TransactionFeesPayerNotProvided,
 } from "../..";
 import { InstructionFactoryImpl } from "./InstructionFactory";
@@ -53,26 +49,15 @@ import {
   getAccount,
 } from "@solana/spl-token";
 
-// TODO: Remove this after finishing impl (suppress TS errors until then)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-export class TransactionFactoryImpl implements TransactionFactory {
-  private readonly program: Program<PreAuthorizedDebitV1>;
+// TODO: De-dupe code between methods if applicable
 
+export class TransactionFactoryImpl implements TransactionFactory {
+  // eslint-disable-next-line no-useless-constructor
   private constructor(
     private readonly connection: Connection,
-    private readonly programId: PublicKey,
     private readonly readClient: PreAuthorizedDebitReadClient,
     private readonly ixFactory: InstructionFactory,
-  ) {
-    const readonlyProvider = new AnchorProvider(
-      this.connection,
-      new Wallet(Keypair.generate()),
-      { commitment: this.connection.commitment },
-    );
-
-    this.program = new Program(IDL, this.programId, readonlyProvider);
-  }
+  ) {}
 
   public static custom(
     connection: Connection,
@@ -80,12 +65,8 @@ export class TransactionFactoryImpl implements TransactionFactory {
     readClient?: PreAuthorizedDebitReadClient,
     ixFactory?: InstructionFactory,
   ): TransactionFactory {
-    // TODO: Remove this after finishing impl (suppress TS errors until then)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     return new TransactionFactoryImpl(
       connection,
-      programId,
       readClient ??
         PreAuthorizedDebitReadClientImpl.custom(connection, programId),
       ixFactory ?? InstructionFactoryImpl.custom(connection, programId),
