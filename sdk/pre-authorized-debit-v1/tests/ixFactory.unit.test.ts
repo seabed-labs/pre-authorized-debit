@@ -103,6 +103,23 @@ describe("InstructionFactory Unit Tests", () => {
       const ix =
         await instructionFactory.buildInitOneTimePreAuthorizationIx(params);
 
+      const ixData =
+        // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+        (coder.instruction.decode(ix.instruction.data)?.data as any).params;
+      expect(Object.keys(ixData).length).to.equal(3);
+      expect(ixData.debitAuthority.toString()).to.equal(
+        params.debitAuthority.toString(),
+      );
+      expect(ixData.activationUnixTimestamp.toString()).to.equal(
+        Math.floor(params.activation.getTime() / 1e3).toString(),
+      );
+      expect(ixData.variant.oneTime.amountAuthorized.toString()).to.equal(
+        params.amountAuthorized.toString(),
+      );
+      expect(ixData.variant.oneTime.expiryUnixTimestamp.toString()).to.equal(
+        Math.floor(params.expiry!.getTime() / 1e3).toString(),
+      );
+
       expect(ix.instruction.keys[0].pubkey.toString()).to.equal(
         params.payer.toString(),
       );
