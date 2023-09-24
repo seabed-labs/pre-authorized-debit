@@ -155,13 +155,12 @@ export class TransactionFactoryImpl implements TransactionFactory {
   }
 
   private async wrapIxsInTx<T>(
+    setupInstructions: TransactionInstruction[] = [],
     coreInstructions: TransactionInstruction[],
+    cleanupInstructions: TransactionInstruction[] = [],
     expectedSigners: ExpectedSigner[],
     meta: T,
   ): Promise<TransactionWithMetadata<T>> {
-    const setupInstructions: TransactionInstruction[] = [];
-    const cleanupInstructions: TransactionInstruction[] = [];
-
     const coreTxInstructions = [
       ...setupInstructions,
       ...coreInstructions,
@@ -189,7 +188,9 @@ export class TransactionFactoryImpl implements TransactionFactory {
       await this.ixFactory.buildInitSmartDelegateIx(params);
 
     return this.wrapIxsInTx(
+      undefined,
       [initSmartDelegateIx.instruction],
+      undefined,
       initSmartDelegateIx.expectedSigners,
       initSmartDelegateIx.meta,
     );
@@ -202,7 +203,9 @@ export class TransactionFactoryImpl implements TransactionFactory {
       await this.ixFactory.buildApproveSmartDelegateIx(params);
 
     return this.wrapIxsInTx(
+      undefined,
       [approveSmartDelegateIx.instruction],
+      undefined,
       approveSmartDelegateIx.expectedSigners,
       approveSmartDelegateIx.meta,
     );
@@ -215,7 +218,9 @@ export class TransactionFactoryImpl implements TransactionFactory {
       await this.ixFactory.buildPausePreAuthorizationIx(params);
 
     return this.wrapIxsInTx(
+      undefined,
       [pausePreAuthIx.instruction],
+      undefined,
       pausePreAuthIx.expectedSigners,
       pausePreAuthIx.meta,
     );
@@ -228,7 +233,9 @@ export class TransactionFactoryImpl implements TransactionFactory {
       await this.ixFactory.buildUnpausePreAuthorizationIx(params);
 
     return this.wrapIxsInTx(
+      undefined,
       [unpausePreAuthIx.instruction],
+      undefined,
       unpausePreAuthIx.expectedSigners,
       unpausePreAuthIx.meta,
     );
