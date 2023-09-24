@@ -469,74 +469,85 @@ describe("InstructionFactory Unit Tests", () => {
     });
   });
 
-  context("buildClosePreAuthorizationAsOwnerIx", async () => {
-    const mockTokenAccount = Keypair.generate().publicKey;
-    const mockTokenAccountOwner = Keypair.generate().publicKey;
-    const mockDebitAuthority = Keypair.generate().publicKey;
-    const preAuthorization = readClient.derivePreAuthorizationPDA(
-      mockTokenAccount,
-      mockDebitAuthority,
-    ).publicKey;
-    const mockPreAuthorization = {
-      publicKey: preAuthorization,
-      account: {
-        tokenAccount: mockTokenAccount,
-        debitAuthority: mockDebitAuthority,
-      },
-    };
-    const stubFetchPreAuthorization = sandbox
-      .stub(readClient, "fetchPreAuthorization")
-      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-      .resolves(mockPreAuthorization as any);
-    const stubFetchCurrentOwnerOfPreAuthTokenAccount = sandbox
-      .stub(readClient, "fetchCurrentOwnerOfPreAuthTokenAccount")
-      .resolves(mockTokenAccountOwner);
+  context("buildClosePreAuthorizationAsDebitAuthorityIx", () => {
+    it("should build buildClosePreAuthorizationAsDebitAuthorityIx", async () => {
+      const mockTokenAccount = Keypair.generate().publicKey;
+      const mockTokenAccountOwner = Keypair.generate().publicKey;
+      const mockDebitAuthority = Keypair.generate().publicKey;
+      const preAuthorization = readClient.derivePreAuthorizationPDA(
+        mockTokenAccount,
+        mockDebitAuthority,
+      ).publicKey;
 
-    const ix =
-      await instructionFactory.buildClosePreAuthorizationAsDebitAuthorityIx({
-        preAuthorization,
-      });
-
-    const ixData = coder.instruction.decode(ix.instruction.data);
-    expect(ixData).to.equal(null);
-
-    expect(ix.instruction.keys[0].pubkey.toString()).to.equal(
-      mockTokenAccountOwner.toString(),
-    );
-    expect(ix.instruction.keys[0].isSigner).to.equal(false);
-    expect(ix.instruction.keys[0].isWritable).to.equal(true);
-
-    expect(ix.instruction.keys[1].pubkey.toString()).to.equal(
-      mockDebitAuthority.toString(),
-    );
-    expect(ix.instruction.keys[1].isSigner).to.equal(false);
-    expect(ix.instruction.keys[1].isWritable).to.equal(false);
-
-    expect(ix.instruction.keys[2].pubkey.toString()).to.equal(
-      mockTokenAccount.toString(),
-    );
-    expect(ix.instruction.keys[2].isSigner).to.equal(false);
-    expect(ix.instruction.keys[2].isWritable).to.equal(true);
-
-    expect(ix.expectedSigners.length).to.equal(1);
-    expect(ix.expectedSigners[0].publicKey.toString()).to.equal(
-      mockDebitAuthority.toString(),
-    );
-    expect(ix.expectedSigners[0].reason).to.equal(
-      "The pre-authorization's debit authority needs to sign to close it",
-    );
-
-    expect(ix.meta).to.equal(undefined);
-
-    expect(
-      stubFetchPreAuthorization.calledOnceWith({
+      const mockPreAuthorization = {
         publicKey: preAuthorization,
-      }),
-    ).to.equal(true);
-    expect(
-      stubFetchCurrentOwnerOfPreAuthTokenAccount.calledOnceWith(
-        preAuthorization,
-      ),
-    ).to.equal(true);
+        account: {
+          tokenAccount: mockTokenAccount,
+          debitAuthority: mockDebitAuthority,
+        },
+      };
+      const stubFetchPreAuthorization = sandbox
+        .stub(readClient, "fetchPreAuthorization")
+        // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+        .resolves(mockPreAuthorization as any);
+      const stubFetchCurrentOwnerOfPreAuthTokenAccount = sandbox
+        .stub(readClient, "fetchCurrentOwnerOfPreAuthTokenAccount")
+        .resolves(mockTokenAccountOwner);
+
+      const ix =
+        await instructionFactory.buildClosePreAuthorizationAsDebitAuthorityIx({
+          preAuthorization,
+        });
+
+      const ixData = coder.instruction.decode(ix.instruction.data);
+      expect(Object.keys(ixData!.data).length).to.equal(0);
+
+      expect(ix.instruction.keys[0].pubkey.toString()).to.equal(
+        mockTokenAccountOwner.toString(),
+      );
+      expect(ix.instruction.keys[0].isSigner).to.equal(false);
+      expect(ix.instruction.keys[0].isWritable).to.equal(true);
+
+      expect(ix.instruction.keys[1].pubkey.toString()).to.equal(
+        mockDebitAuthority.toString(),
+      );
+      expect(ix.instruction.keys[1].isSigner).to.equal(true);
+      expect(ix.instruction.keys[1].isWritable).to.equal(false);
+
+      expect(ix.instruction.keys[2].pubkey.toString()).to.equal(
+        mockTokenAccount.toString(),
+      );
+      expect(ix.instruction.keys[2].isSigner).to.equal(false);
+      expect(ix.instruction.keys[2].isWritable).to.equal(false);
+
+      expect(ix.expectedSigners.length).to.equal(1);
+      expect(ix.expectedSigners[0].publicKey.toString()).to.equal(
+        mockDebitAuthority.toString(),
+      );
+      expect(ix.expectedSigners[0].reason).to.equal(
+        "The pre-authorization's debit authority needs to sign to close it",
+      );
+
+      expect(ix.meta).to.equal(undefined);
+
+      expect(
+        stubFetchPreAuthorization.calledOnceWith({
+          publicKey: preAuthorization,
+        }),
+      ).to.equal(true);
+      expect(
+        stubFetchCurrentOwnerOfPreAuthTokenAccount.calledOnceWith(
+          preAuthorization,
+        ),
+      ).to.equal(true);
+    });
+  });
+
+  context("buildDebitIx", () => {
+    it("should throw if smart delegate is not token account delegate", async () => {});
+
+    it("should throw if token account delegated mount is less than requested debit amount", async () => {});
+
+    it("should build debit instruction", async () => {});
   });
 });

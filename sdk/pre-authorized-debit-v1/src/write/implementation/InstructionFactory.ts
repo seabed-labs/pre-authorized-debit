@@ -384,6 +384,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
         receiver: tokenAccountOwner,
         authority: preAuthorization.account.debitAuthority,
         tokenAccount: preAuthorization.account.tokenAccount,
+        preAuthorization: preAuthorization.publicKey,
       })
       .instruction();
 
