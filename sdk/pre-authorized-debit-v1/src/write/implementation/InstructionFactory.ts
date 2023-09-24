@@ -346,6 +346,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
         receiver: rentReceiver ?? tokenAccountOwner,
         authority: tokenAccountOwner,
         tokenAccount: preAuthorization.account.tokenAccount,
+        preAuthorization: preAuthorization.publicKey,
       })
       .instruction();
 

@@ -469,6 +469,87 @@ describe("InstructionFactory Unit Tests", () => {
     });
   });
 
+  context("buildClosePreAuthorizationAsOwnerIx", () => {
+    it("should build buildClosePreAuthorizationAsOwnerIx", async () => {
+      const mockTokenAccount = Keypair.generate().publicKey;
+      const mockRentReceiver = Keypair.generate().publicKey;
+      const mockTokenAccountOwner = Keypair.generate().publicKey;
+      const mockDebitAuthority = Keypair.generate().publicKey;
+      const preAuthorization = readClient.derivePreAuthorizationPDA(
+        mockTokenAccount,
+        mockDebitAuthority,
+      ).publicKey;
+
+      const mockPreAuthorization = {
+        publicKey: preAuthorization,
+        account: {
+          tokenAccount: mockTokenAccount,
+          debitAuthority: mockDebitAuthority,
+        },
+      };
+      const stubFetchPreAuthorization = sandbox
+        .stub(readClient, "fetchPreAuthorization")
+        // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+        .resolves(mockPreAuthorization as any);
+      const stubFetchCurrentOwnerOfPreAuthTokenAccount = sandbox
+        .stub(readClient, "fetchCurrentOwnerOfPreAuthTokenAccount")
+        .resolves(mockTokenAccountOwner);
+
+      const ix = await instructionFactory.buildClosePreAuthorizationAsOwnerIx({
+        preAuthorization,
+        rentReceiver: mockRentReceiver,
+      });
+
+      const ixData = coder.instruction.decode(ix.instruction.data);
+      expect(Object.keys(ixData!.data).length).to.equal(0);
+
+      expect(ix.instruction.keys[0].pubkey.toString()).to.equal(
+        mockRentReceiver.toString(),
+      );
+      expect(ix.instruction.keys[0].isSigner).to.equal(false);
+      expect(ix.instruction.keys[0].isWritable).to.equal(true);
+
+      expect(ix.instruction.keys[1].pubkey.toString()).to.equal(
+        mockTokenAccountOwner.toString(),
+      );
+      expect(ix.instruction.keys[1].isSigner).to.equal(true);
+      expect(ix.instruction.keys[1].isWritable).to.equal(false);
+
+      expect(ix.instruction.keys[2].pubkey.toString()).to.equal(
+        mockTokenAccount.toString(),
+      );
+      expect(ix.instruction.keys[2].isSigner).to.equal(false);
+      expect(ix.instruction.keys[2].isWritable).to.equal(false);
+
+      expect(ix.instruction.keys[3].pubkey.toString()).to.equal(
+        preAuthorization.toString(),
+      );
+      expect(ix.instruction.keys[3].isSigner).to.equal(false);
+      expect(ix.instruction.keys[3].isWritable).to.equal(true);
+
+      expect(ix.expectedSigners.length).to.equal(1);
+      expect(ix.expectedSigners[0].publicKey.toString()).to.equal(
+        mockTokenAccountOwner.toString(),
+      );
+      expect(ix.expectedSigners[0].reason).to.equal(
+        "The pre-authorization's token account's owner needs to sign to close it",
+      );
+
+      expect(ix.meta).to.equal(undefined);
+
+      expect(
+        stubFetchPreAuthorization.calledOnceWith({
+          publicKey: preAuthorization,
+        }),
+      ).to.equal(true);
+      expect(
+        stubFetchCurrentOwnerOfPreAuthTokenAccount.calledOnceWith(
+          preAuthorization,
+        ),
+      ).to.equal(true);
+    });
+  });
+
   context("buildClosePreAuthorizationAsDebitAuthorityIx", () => {
     it("should build buildClosePreAuthorizationAsDebitAuthorityIx", async () => {
       const mockTokenAccount = Keypair.generate().publicKey;
@@ -519,6 +600,12 @@ describe("InstructionFactory Unit Tests", () => {
       );
       expect(ix.instruction.keys[2].isSigner).to.equal(false);
       expect(ix.instruction.keys[2].isWritable).to.equal(false);
+
+      expect(ix.instruction.keys[3].pubkey.toString()).to.equal(
+        preAuthorization.toString(),
+      );
+      expect(ix.instruction.keys[3].isSigner).to.equal(false);
+      expect(ix.instruction.keys[3].isWritable).to.equal(true);
 
       expect(ix.expectedSigners.length).to.equal(1);
       expect(ix.expectedSigners[0].publicKey.toString()).to.equal(
