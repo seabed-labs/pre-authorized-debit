@@ -1,10 +1,21 @@
-import { Provider } from "@coral-xyz/anchor";
-import { PublicKey, Signer, TransactionInstruction } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  SendOptions,
+  Signer,
+  TransactionInstruction,
+  VersionedTransaction,
+} from "@solana/web3.js";
+
+export type ExpectedSigner = {
+  publicKey: PublicKey;
+  reason: string;
+};
 
 // Instruction Factory Return Type Wrapper
 export type InstructionWithMetadata<T> = {
   instruction: TransactionInstruction;
-  expectedSigners: { publicKey: PublicKey; reason: string }[];
+  expectedSigners: ExpectedSigner[];
   meta: T;
 };
 
@@ -13,24 +24,33 @@ export type TransactionWithMetadata<T> = {
   setupInstructions: TransactionInstruction[];
   coreInstructions: TransactionInstruction[];
   cleanupInstructions: TransactionInstruction[];
-  expectedSigners: PublicKey[];
+  expectedSigners: ExpectedSigner[];
   meta: T;
+  buildVersionedTransaction(
+    signers?: Signer[],
+    // TODO: Add documentation: defaults to signers[0]
+    txFeesPayer?: PublicKey,
+  ): Promise<VersionedTransaction>;
   // TODO: How do we implement this?
   simulate(
-    signers: Signer[],
-    // if provider is not given, signers[0] will pay for TX fees
-    provider?: Provider,
-    // TODO: Probably need a different return type
-  ): Promise<TransactionResultWithData<T>>;
+    signers?: Signer[],
+    // TODO: Add documentation: defaults to signers[0]
+    txFeesPayer?: PublicKey,
+  ): Promise<TransactionSimulationResultWithMeta<T>>;
   execute(
-    signers: Signer[],
-    // if provider is not given, signers[0] will pay for TX fees
-    provider?: Provider,
-  ): Promise<TransactionResultWithData<T>>;
+    options?: SendOptions,
+    signers?: Signer[],
+    // TODO: Add documentation: defaults to signers[0]
+    txFeesPayer?: PublicKey,
+  ): Promise<TransactionResultWithMeta<T>>;
 };
 
-// Write Client Return Type Wrapper
-export type TransactionResultWithData<T> = {
+export type TransactionSimulationResultWithMeta<T> = {
+  result: Awaited<ReturnType<typeof Connection.prototype.simulateTransaction>>;
+  meta: T;
+};
+
+export type TransactionResultWithMeta<T> = {
   signature: string;
-  data: T;
+  meta: T;
 };

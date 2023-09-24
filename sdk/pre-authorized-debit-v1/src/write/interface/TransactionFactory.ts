@@ -26,7 +26,7 @@ type TxFactoryFn<Params, Result> = (
 ) => Promise<TransactionWithMetadata<Result>>;
 
 // Provide these if mint is NATIVE_MINT (Token or Token2022)
-type WrapNativeMintAdditionalParams = {
+export type WrapNativeMintAdditionalParams = {
   wrapNativeMintParams?: {
     lamportsSourceAccount?: PublicKey;
     wrapLamportsAmount: bigint;
@@ -34,9 +34,9 @@ type WrapNativeMintAdditionalParams = {
 };
 
 // Provide these if mint is NATIVE_MINT (Token or Token2022)
-type UnwrapNativeMintAdditionalParams = {
+export type UnwrapNativeMintAdditionalParams = {
   unwrapNativeMintParams?: {
-    unwrapLamportsAmount: bigint;
+    lamportsDestinationAccount?: PublicKey;
   };
 };
 
@@ -72,12 +72,14 @@ export interface TransactionFactory {
   >;
 
   buildClosePreAuthorizationAsDebitAuthorityTx: TxFactoryFn<
-    ClosePreAuthorizationAsDebitAuthorityParams &
-      UnwrapNativeMintAdditionalParams,
+    ClosePreAuthorizationAsDebitAuthorityParams,
     ClosePreAuthorizationAsDebitAuthorityResult
   >;
 
-  buildDebitTx: TxFactoryFn<DebitParams, DebitResult>;
+  buildDebitTx: TxFactoryFn<
+    DebitParams & UnwrapNativeMintAdditionalParams,
+    DebitResult
+  >;
 
   // sets delegate to smartDelegate and amount to u64::max
   buildApproveSmartDelegateTx: TxFactoryFn<
