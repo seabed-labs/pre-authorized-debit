@@ -426,7 +426,7 @@ describe("InstructionFactory Unit Tests", () => {
         // eslint-disable-next-line  @typescript-eslint/no-explicit-any
         (coder.instruction.decode(ix.instruction.data)?.data as any).params;
       expect(Object.keys(ixData).length).to.equal(1);
-      expect(ixData.pause).to.equal(true);
+      expect(ixData.pause).to.equal(false);
 
       expect(ix.instruction.keys[0].pubkey.toString()).to.equal(
         mockTokenAccountOwner.toString(),
@@ -451,7 +451,7 @@ describe("InstructionFactory Unit Tests", () => {
         mockTokenAccountOwner.toString(),
       );
       expect(ix.expectedSigners[0].reason).to.equal(
-        "The pre-authorization's token account's owner needs to sign to pause it",
+        "The pre-authorization's token account's owner needs to sign to unpause it",
       );
 
       expect(ix.meta).to.equal(undefined);

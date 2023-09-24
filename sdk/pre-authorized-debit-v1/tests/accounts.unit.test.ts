@@ -1,4 +1,5 @@
 import {
+  assertsIsRecurringPreAuthorizationAccount,
   computePreAuthorizationCurrentCycle,
   isOneTimePreAuthorizationAccount,
   isRecurringPreAuthorizationAccount,
@@ -99,6 +100,22 @@ describe("PreAuthorizedDebitReadClientImpl unit", () => {
           variant: { type: "oneTime" },
         } as unknown as PreAuthorizationAccount),
       ).to.equal(false);
+    });
+  });
+
+  context("assertsIsRecurringPreAuthorizationAccount", () => {
+    it("should assert true", () => {
+      assertsIsRecurringPreAuthorizationAccount({
+        variant: { type: "recurring" },
+      } as unknown as PreAuthorizationAccount);
+    });
+
+    it("should throw", () => {
+      expect(() => {
+        assertsIsRecurringPreAuthorizationAccount({
+          variant: { type: "oneTime" },
+        } as unknown as PreAuthorizationAccount);
+      }).to.throw("Invalid variant oneTime");
     });
   });
 });
