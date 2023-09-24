@@ -16,6 +16,8 @@ import {
   ClosePreAuthorizationAsDebitAuthorityResult,
   ClosePreAuthorizationAsOwnerParams,
   ClosePreAuthorizationAsOwnerResult,
+  DebitParams,
+  DebitResult,
   ExpectedSigner,
   InitOneTimePreAuthorizationParams,
   InitOneTimePreAuthorizationResult,
@@ -441,6 +443,64 @@ export class TransactionFactoryImpl implements TransactionFactory {
         ...additionalExpectedSigners,
       ],
       initRecurringPreAuthorizationIx.meta,
+    );
+  }
+
+  public async buildDebitTx(
+    params: DebitParams & UnwrapNativeMintAdditionalParams,
+  ): Promise<TransactionWithMetadata<DebitResult>> {
+    const debitIx = await this.ixFactory.buildDebitIx(params);
+
+    const cleanupInstructions: TransactionInstruction[] = [];
+    const additionalExpectedSigners: ExpectedSigner[] = [];
+
+    const preAuthorization = await this.fetchPreAuthorizationOrThrow(
+      params.preAuthorization,
+    );
+
+    const tokenProgramId =
+      await this.readClient.fetchTokenProgramIdForTokenAccount(
+        params.destinationTokenAccount,
+      );
+
+    // NOTE: We don't create this token account, caller has to do it.
+    const destinationTokenAccount = await getAccount(
+      this.connection,
+      params.destinationTokenAccount,
+      undefined,
+      tokenProgramId,
+    );
+
+    if (destinationTokenAccount.isNative && params.unwrapNativeMintParams) {
+      if (
+        !destinationTokenAccount.owner.equals(
+          preAuthorization.account.debitAuthority,
+        )
+      ) {
+        additionalExpectedSigners.push({
+          publicKey: destinationTokenAccount.owner,
+          reason: `The owner of token account ${destinationTokenAccount.address.toBase58()} (owner: ${destinationTokenAccount.owner.toBase58()}) has to sign to close it`,
+        });
+      }
+
+      cleanupInstructions.push(
+        createCloseAccountInstruction(
+          params.destinationTokenAccount,
+          params.unwrapNativeMintParams.lamportsDestinationAccount ??
+            destinationTokenAccount.owner,
+          destinationTokenAccount.owner,
+          undefined,
+          tokenProgramId,
+        ),
+      );
+    }
+
+    return this.wrapIxsInTx(
+      undefined,
+      [debitIx.instruction],
+      cleanupInstructions,
+      debitIx.expectedSigners,
+      debitIx.meta,
     );
   }
 
