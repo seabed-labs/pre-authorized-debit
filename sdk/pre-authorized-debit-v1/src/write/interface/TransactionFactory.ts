@@ -76,7 +76,10 @@ export interface TransactionFactory {
     ClosePreAuthorizationAsDebitAuthorityResult
   >;
 
-  buildDebitTx: TxFactoryFn<DebitParams, DebitResult>;
+  buildDebitTx: TxFactoryFn<
+    DebitParams & UnwrapNativeMintAdditionalParams,
+    DebitResult
+  >;
 
   // sets delegate to smartDelegate and amount to u64::max
   buildApproveSmartDelegateTx: TxFactoryFn<

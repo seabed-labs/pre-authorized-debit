@@ -19,6 +19,8 @@ import {
   ExpectedSigner,
   InitOneTimePreAuthorizationParams,
   InitOneTimePreAuthorizationResult,
+  InitRecurringPreAuthorizationParams,
+  InitRecurringPreAuthorizationResult,
   InitSmartDelegateParams,
   InitSmartDelegateResult,
   InstructionFactory,
@@ -320,6 +322,7 @@ export class TransactionFactoryImpl implements TransactionFactory {
     );
   }
 
+  // TODO: De-dupe with recurring variant
   public async buildInitOneTimePreAuthorizationTx(
     params: InitOneTimePreAuthorizationParams & WrapNativeMintAdditionalParams,
   ): Promise<TransactionWithMetadata<InitOneTimePreAuthorizationResult>> {
@@ -377,6 +380,67 @@ export class TransactionFactoryImpl implements TransactionFactory {
         ...additionalExpectedSigners,
       ],
       initOneTimePreAuthorizationIx.meta,
+    );
+  }
+
+  public async buildInitRecurringPreAuthorizationTx(
+    params: InitRecurringPreAuthorizationParams &
+      WrapNativeMintAdditionalParams,
+  ): Promise<TransactionWithMetadata<InitRecurringPreAuthorizationResult>> {
+    const initRecurringPreAuthorizationIx =
+      await this.ixFactory.buildInitRecurringPreAuthorizationIx(params);
+
+    const setupInstructions: TransactionInstruction[] = [];
+    const additionalExpectedSigners: ExpectedSigner[] = [];
+
+    const tokenProgramId =
+      await this.readClient.fetchTokenProgramIdForTokenAccount(
+        params.tokenAccount,
+      );
+
+    const tokenAccount = await getAccount(
+      this.connection,
+      params.tokenAccount,
+      undefined,
+      tokenProgramId,
+    );
+
+    if (tokenAccount.isNative && params.wrapNativeMintParams) {
+      const { wrapLamportsAmount, lamportsSourceAccount } =
+        params.wrapNativeMintParams;
+
+      if (
+        lamportsSourceAccount &&
+        !lamportsSourceAccount.equals(tokenAccount.owner)
+      ) {
+        additionalExpectedSigners.push({
+          publicKey: lamportsSourceAccount,
+          reason: `${lamportsSourceAccount.toBase58()} needs to sign to debit lamports from it`,
+        });
+      }
+
+      setupInstructions.push(
+        SystemProgram.transfer({
+          fromPubkey: lamportsSourceAccount ?? tokenAccount.owner,
+          toPubkey: params.tokenAccount,
+          lamports: wrapLamportsAmount,
+        }),
+      );
+
+      setupInstructions.push(
+        createSyncNativeInstruction(params.tokenAccount, tokenProgramId),
+      );
+    }
+
+    return this.wrapIxsInTx(
+      setupInstructions,
+      [initRecurringPreAuthorizationIx.instruction],
+      undefined,
+      [
+        ...initRecurringPreAuthorizationIx.expectedSigners,
+        ...additionalExpectedSigners,
+      ],
+      initRecurringPreAuthorizationIx.meta,
     );
   }
 
