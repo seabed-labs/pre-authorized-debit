@@ -11,11 +11,16 @@ import {
 import {
   ApproveSmartDelegateParams,
   ApproveSmartDelegateResult,
+  ExpectedSigner,
   InitSmartDelegateParams,
   InitSmartDelegateResult,
   InstructionFactory,
+  PausePreAuthorizationParams,
+  PausePreAuthorizationResult,
   TransactionFactory,
   TransactionWithMetadata,
+  UnpausePreAuthorizationParams,
+  UnpausePreAuthorizationResult,
 } from "../interface";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import {
@@ -149,75 +154,83 @@ export class TransactionFactoryImpl implements TransactionFactory {
     };
   }
 
+  private async wrapIxsInTx<T>(
+    coreInstructions: TransactionInstruction[],
+    expectedSigners: ExpectedSigner[],
+    meta: T,
+  ): Promise<TransactionWithMetadata<T>> {
+    const setupInstructions: TransactionInstruction[] = [];
+    const cleanupInstructions: TransactionInstruction[] = [];
+
+    const coreTxInstructions = [
+      ...setupInstructions,
+      ...coreInstructions,
+      ...cleanupInstructions,
+    ];
+
+    return {
+      setupInstructions,
+      coreInstructions,
+      cleanupInstructions,
+      expectedSigners,
+      meta,
+      buildVersionedTransaction: async (signers, txFeesPayer) => {
+        return this.buildAndSignTx(coreTxInstructions, signers, txFeesPayer);
+      },
+      simulate: this.buildSimulateFn(coreTxInstructions, meta),
+      execute: this.buildExecuteFn(coreTxInstructions, meta),
+    };
+  }
+
   public async buildInitSmartDelegateTx(
     params: InitSmartDelegateParams,
   ): Promise<TransactionWithMetadata<InitSmartDelegateResult>> {
     const initSmartDelegateIx =
       await this.ixFactory.buildInitSmartDelegateIx(params);
 
-    const setupInstructions: TransactionInstruction[] = [];
-    const coreInstructions = [initSmartDelegateIx.instruction];
-    const cleanupInstructions: TransactionInstruction[] = [];
-
-    const coreTxInstructions = [
-      ...setupInstructions,
-      ...coreInstructions,
-      ...cleanupInstructions,
-    ];
-
-    return {
-      setupInstructions,
-      coreInstructions,
-      cleanupInstructions,
-      expectedSigners: initSmartDelegateIx.expectedSigners,
-      meta: initSmartDelegateIx.meta,
-      buildVersionedTransaction: async (signers, txFeesPayer) => {
-        return this.buildAndSignTx(coreTxInstructions, signers, txFeesPayer);
-      },
-      simulate: this.buildSimulateFn(
-        coreTxInstructions,
-        initSmartDelegateIx.meta,
-      ),
-      execute: this.buildExecuteFn(
-        coreTxInstructions,
-        initSmartDelegateIx.meta,
-      ),
-    };
+    return this.wrapIxsInTx(
+      [initSmartDelegateIx.instruction],
+      initSmartDelegateIx.expectedSigners,
+      initSmartDelegateIx.meta,
+    );
   }
 
   public async buildApproveSmartDelegateTx(
     params: ApproveSmartDelegateParams,
   ): Promise<TransactionWithMetadata<ApproveSmartDelegateResult>> {
-    const initSmartDelegateIx =
+    const approveSmartDelegateIx =
       await this.ixFactory.buildApproveSmartDelegateIx(params);
 
-    const setupInstructions: TransactionInstruction[] = [];
-    const coreInstructions = [initSmartDelegateIx.instruction];
-    const cleanupInstructions: TransactionInstruction[] = [];
+    return this.wrapIxsInTx(
+      [approveSmartDelegateIx.instruction],
+      approveSmartDelegateIx.expectedSigners,
+      approveSmartDelegateIx.meta,
+    );
+  }
 
-    const coreTxInstructions = [
-      ...setupInstructions,
-      ...coreInstructions,
-      ...cleanupInstructions,
-    ];
+  public async buildPausePreAuthorizationTx(
+    params: PausePreAuthorizationParams,
+  ): Promise<TransactionWithMetadata<PausePreAuthorizationResult>> {
+    const pausePreAuthIx =
+      await this.ixFactory.buildPausePreAuthorizationIx(params);
 
-    return {
-      setupInstructions,
-      coreInstructions,
-      cleanupInstructions,
-      expectedSigners: initSmartDelegateIx.expectedSigners,
-      meta: initSmartDelegateIx.meta,
-      buildVersionedTransaction: async (signers, txFeesPayer) => {
-        return this.buildAndSignTx(coreTxInstructions, signers, txFeesPayer);
-      },
-      simulate: this.buildSimulateFn(
-        coreTxInstructions,
-        initSmartDelegateIx.meta,
-      ),
-      execute: this.buildExecuteFn(
-        coreTxInstructions,
-        initSmartDelegateIx.meta,
-      ),
-    };
+    return this.wrapIxsInTx(
+      [pausePreAuthIx.instruction],
+      pausePreAuthIx.expectedSigners,
+      pausePreAuthIx.meta,
+    );
+  }
+
+  public async buildUnpausePreAuthorizationTx(
+    params: UnpausePreAuthorizationParams,
+  ): Promise<TransactionWithMetadata<UnpausePreAuthorizationResult>> {
+    const unpausePreAuthIx =
+      await this.ixFactory.buildUnpausePreAuthorizationIx(params);
+
+    return this.wrapIxsInTx(
+      [unpausePreAuthIx.instruction],
+      unpausePreAuthIx.expectedSigners,
+      unpausePreAuthIx.meta,
+    );
   }
 }

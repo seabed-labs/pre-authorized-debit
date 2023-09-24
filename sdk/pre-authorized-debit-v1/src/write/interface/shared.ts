@@ -7,10 +7,15 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 
+export type ExpectedSigner = {
+  publicKey: PublicKey;
+  reason: string;
+};
+
 // Instruction Factory Return Type Wrapper
 export type InstructionWithMetadata<T> = {
   instruction: TransactionInstruction;
-  expectedSigners: { publicKey: PublicKey; reason: string }[];
+  expectedSigners: ExpectedSigner[];
   meta: T;
 };
 
@@ -19,7 +24,7 @@ export type TransactionWithMetadata<T> = {
   setupInstructions: TransactionInstruction[];
   coreInstructions: TransactionInstruction[];
   cleanupInstructions: TransactionInstruction[];
-  expectedSigners: { publicKey: PublicKey; reason: string }[];
+  expectedSigners: ExpectedSigner[];
   meta: T;
   buildVersionedTransaction(
     signers?: Signer[],
