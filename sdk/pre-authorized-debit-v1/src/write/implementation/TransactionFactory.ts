@@ -25,18 +25,21 @@ import {
   TransactionWithMetadata,
   UnpausePreAuthorizationParams,
   UnpausePreAuthorizationResult,
+  UnwrapNativeMintAdditionalParams,
 } from "../interface";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import {
   DEVNET_PAD_PROGRAM_ID,
   IDL,
   MAINNET_PAD_PROGRAM_ID,
+  NoPreAuthorizationFound,
   PreAuthorizedDebitReadClient,
   PreAuthorizedDebitReadClientImpl,
   PreAuthorizedDebitV1,
   TransactionFeesPayerNotProvided,
 } from "../..";
 import { InstructionFactoryImpl } from "./InstructionFactory";
+import { createCloseAccountInstruction, getAccount } from "@solana/spl-token";
 
 // TODO: Remove this after finishing impl (suppress TS errors until then)
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -246,15 +249,47 @@ export class TransactionFactoryImpl implements TransactionFactory {
   }
 
   public async buildClosePreAuthorizationAsOwnerTx(
-    params: ClosePreAuthorizationAsOwnerParams,
+    params: ClosePreAuthorizationAsOwnerParams &
+      UnwrapNativeMintAdditionalParams,
   ): Promise<TransactionWithMetadata<ClosePreAuthorizationAsOwnerResult>> {
     const closePreAuthAsOwnerIx =
       await this.ixFactory.buildClosePreAuthorizationAsOwnerIx(params);
 
+    const cleanupInstructions: TransactionInstruction[] = [];
+
+    const preAuthorization = await this.fetchPreAuthorizationOrThrow(
+      params.preAuthorization,
+    );
+
+    const tokenProgramId =
+      await this.readClient.fetchTokenProgramIdForTokenAccount(
+        preAuthorization.account.tokenAccount,
+      );
+
+    const tokenAccount = await getAccount(
+      this.connection,
+      preAuthorization.account.tokenAccount,
+      undefined,
+      tokenProgramId,
+    );
+
+    if (tokenAccount.isNative && params.unwrapNativeMintParams) {
+      cleanupInstructions.push(
+        createCloseAccountInstruction(
+          preAuthorization.account.tokenAccount,
+          params.unwrapNativeMintParams.lamportsDestinationAccount ??
+            tokenAccount.owner,
+          tokenAccount.owner,
+          undefined,
+          tokenProgramId,
+        ),
+      );
+    }
+
     return this.wrapIxsInTx(
       undefined,
       [closePreAuthAsOwnerIx.instruction],
-      undefined,
+      cleanupInstructions,
       closePreAuthAsOwnerIx.expectedSigners,
       closePreAuthAsOwnerIx.meta,
     );
@@ -275,5 +310,20 @@ export class TransactionFactoryImpl implements TransactionFactory {
       closePreAuthAsDebitAuthorityIx.expectedSigners,
       closePreAuthAsDebitAuthorityIx.meta,
     );
+  }
+
+  private async fetchPreAuthorizationOrThrow(pubkey: PublicKey) {
+    const preAuthorization = await this.readClient.fetchPreAuthorization({
+      publicKey: pubkey,
+    });
+
+    if (preAuthorization == null) {
+      throw NoPreAuthorizationFound.givenPubkey(
+        this.connection.rpcEndpoint,
+        pubkey,
+      );
+    }
+
+    return preAuthorization;
   }
 }
