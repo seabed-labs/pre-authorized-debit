@@ -1,5 +1,6 @@
 import {
   assertsIsRecurringPreAuthorizationAccount,
+  computeAvailableAmountForRecurringDebit,
   computePreAuthorizationCurrentCycle,
   isOneTimePreAuthorizationAccount,
   isRecurringPreAuthorizationAccount,
@@ -116,6 +117,108 @@ describe("PreAuthorizedDebitReadClientImpl unit", () => {
           variant: { type: "oneTime" },
         } as unknown as PreAuthorizationAccount);
       }).to.throw("Invalid variant oneTime");
+    });
+  });
+
+  context("computeAvailableAmountForRecurringDebit", () => {
+    const testCases: {
+      currentCycle: bigint;
+      preAuthorizationVariant: {
+        lastDebitedCycle: bigint;
+        resetEveryCycle: boolean;
+        recurringAmountAuthorized: bigint;
+        amountDebitedLastCycle: bigint;
+        amountDebitedTotal: bigint;
+      };
+      expectedRes: bigint;
+    }[] = [
+      {
+        currentCycle: BigInt(1),
+        preAuthorizationVariant: {
+          lastDebitedCycle: BigInt(1),
+          resetEveryCycle: false,
+          recurringAmountAuthorized: BigInt(0),
+          amountDebitedLastCycle: BigInt(0),
+          amountDebitedTotal: BigInt(0),
+        },
+        expectedRes: BigInt(0),
+      },
+      {
+        currentCycle: BigInt(1),
+        preAuthorizationVariant: {
+          lastDebitedCycle: BigInt(1),
+          resetEveryCycle: false,
+          recurringAmountAuthorized: BigInt(100),
+          amountDebitedLastCycle: BigInt(0),
+          amountDebitedTotal: BigInt(0),
+        },
+        expectedRes: BigInt(100),
+      },
+      {
+        currentCycle: BigInt(5),
+        preAuthorizationVariant: {
+          lastDebitedCycle: BigInt(5),
+          resetEveryCycle: false,
+          recurringAmountAuthorized: BigInt(100),
+          amountDebitedLastCycle: BigInt(0),
+          amountDebitedTotal: BigInt(100),
+        },
+        expectedRes: BigInt(400),
+      },
+      {
+        currentCycle: BigInt(1),
+        preAuthorizationVariant: {
+          lastDebitedCycle: BigInt(1),
+          resetEveryCycle: true,
+          recurringAmountAuthorized: BigInt(0),
+          amountDebitedLastCycle: BigInt(0),
+          amountDebitedTotal: BigInt(0),
+        },
+        expectedRes: BigInt(0),
+      },
+      {
+        currentCycle: BigInt(1),
+        preAuthorizationVariant: {
+          lastDebitedCycle: BigInt(1),
+          resetEveryCycle: true,
+          recurringAmountAuthorized: BigInt(100),
+          amountDebitedLastCycle: BigInt(0),
+          amountDebitedTotal: BigInt(0),
+        },
+        expectedRes: BigInt(100),
+      },
+      {
+        currentCycle: BigInt(5),
+        preAuthorizationVariant: {
+          lastDebitedCycle: BigInt(5),
+          resetEveryCycle: true,
+          recurringAmountAuthorized: BigInt(100),
+          amountDebitedLastCycle: BigInt(0),
+          amountDebitedTotal: BigInt(100),
+        },
+        expectedRes: BigInt(100),
+      },
+      {
+        currentCycle: BigInt(0),
+        preAuthorizationVariant: {
+          lastDebitedCycle: BigInt(1),
+          resetEveryCycle: true,
+          recurringAmountAuthorized: BigInt(0),
+          amountDebitedLastCycle: BigInt(0),
+          amountDebitedTotal: BigInt(0),
+        },
+        expectedRes: BigInt(0),
+      },
+    ];
+
+    testCases.forEach((testCase, testCaseNumber) => {
+      it(`test case ${testCaseNumber}`, () => {
+        const cycle = computeAvailableAmountForRecurringDebit(
+          testCase.currentCycle,
+          testCase.preAuthorizationVariant,
+        );
+        expect(cycle).to.equal(testCase.expectedRes);
+      });
     });
   });
 });

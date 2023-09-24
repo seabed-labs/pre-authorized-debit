@@ -69,12 +69,17 @@ export function computePreAuthorizationCurrentCycle(
   );
 }
 
+export type ComputeAvailableAmountForRecurringDebitVariantData = {
+  lastDebitedCycle: bigint;
+  resetEveryCycle: boolean;
+  recurringAmountAuthorized: bigint;
+  amountDebitedLastCycle: bigint;
+  amountDebitedTotal: bigint;
+};
+
 export function computeAvailableAmountForRecurringDebit(
   currentCycle: bigint,
-  preAuthorizationVariant: Exclude<
-    PreAuthorizationVariantRecurring,
-    "repeatFrequencySeconds" | "numCycles"
-  >,
+  preAuthorizationVariant: ComputeAvailableAmountForRecurringDebitVariantData,
 ): bigint {
   const {
     lastDebitedCycle,
