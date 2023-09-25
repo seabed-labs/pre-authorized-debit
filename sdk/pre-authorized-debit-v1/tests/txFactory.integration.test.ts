@@ -149,7 +149,7 @@ describe("Transaction Factory Integration Tests", () => {
 
   context("buildApproveSmartDelegateTx", () => {
     it("should build tx", async () => {
-      const spyBuildInitSmartDelegateIx = sandbox.spy(
+      const spyBuildApproveSmartDelegateTx = sandbox.spy(
         ixFactory,
         "buildApproveSmartDelegateIx",
       );
@@ -160,7 +160,7 @@ describe("Transaction Factory Integration Tests", () => {
       expect(tx.setupInstructions.length).to.equal(0);
       expect(tx.coreInstructions.length).to.equal(1);
       expect(tx.cleanupInstructions.length).to.equal(0);
-      expect(spyBuildInitSmartDelegateIx.calledWith(params)).to.equal(true);
+      expect(spyBuildApproveSmartDelegateTx.calledWith(params)).to.equal(true);
 
       const versionedTx = await tx.buildVersionedTransaction(
         [payer],
@@ -170,5 +170,26 @@ describe("Transaction Factory Integration Tests", () => {
     });
   });
 
-  xcontext("buildPausePreAuthorizationTx", () => {});
+  context("buildPausePreAuthorizationTx", () => {
+    it("should build tx", async () => {
+      const spyBuildPausePreAuthorizationIx = sandbox.spy(
+        ixFactory,
+        "buildPausePreAuthorizationIx",
+      );
+      const params = {
+        preAuthorization: preAuthorizations[0],
+      };
+      const tx = await txFactory.buildPausePreAuthorizationTx(params);
+      expect(tx.setupInstructions.length).to.equal(0);
+      expect(tx.coreInstructions.length).to.equal(1);
+      expect(tx.cleanupInstructions.length).to.equal(0);
+      expect(spyBuildPausePreAuthorizationIx.calledWith(params)).to.equal(true);
+
+      const versionedTx = await tx.buildVersionedTransaction(
+        [payer],
+        payer.publicKey,
+      );
+      await provider.sendAndConfirm(versionedTx);
+    });
+  });
 });
