@@ -161,6 +161,12 @@ describe("Transaction Factory Integration Tests", () => {
       expect(tx.coreInstructions.length).to.equal(1);
       expect(tx.cleanupInstructions.length).to.equal(0);
       expect(spyBuildInitSmartDelegateIx.calledWith(params)).to.equal(true);
+
+      const versionedTx = await tx.buildVersionedTransaction(
+        [payer],
+        payer.publicKey,
+      );
+      await provider.sendAndConfirm(versionedTx);
     });
   });
 
