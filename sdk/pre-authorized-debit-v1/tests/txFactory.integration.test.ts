@@ -55,6 +55,9 @@ describe("Transaction Factory Integration Tests", () => {
   }
   const preAuthorizations: PublicKey[] = [];
 
+  const activationUnixTimestamp = Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
+  const expirationUnixTimestamp = activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
+
   before(async () => {
     smartDelegate = await initSmartDelegateIdempotent(program, provider);
     const tx = await fundAccounts(provider, [payer.publicKey], 5000e6);
@@ -79,9 +82,6 @@ describe("Transaction Factory Integration Tests", () => {
       TOKEN_PROGRAM_ID,
     );
     await mintTo(connection, payer, mint, tokenAccount, mintAuthority, 1000e6);
-
-    const activationUnixTimestamp = Math.floor(new Date().getTime() / 1e3) - 60; // -60 seconds from now
-    const expirationUnixTimestamp = activationUnixTimestamp + 10 * 24 * 60 * 60; // +10 days from activation
 
     for (let i = 0; i < 3; i++) {
       // every odd will be oneTime
@@ -148,7 +148,7 @@ describe("Transaction Factory Integration Tests", () => {
   });
 
   context("buildApproveSmartDelegateTx", () => {
-    it("should build tx", async () => {
+    it("should build and broadcast tx", async () => {
       const spyBuildApproveSmartDelegateTx = sandbox.spy(
         ixFactory,
         "buildApproveSmartDelegateIx",
@@ -171,7 +171,7 @@ describe("Transaction Factory Integration Tests", () => {
   });
 
   context("buildPausePreAuthorizationTx", () => {
-    it("should build tx", async () => {
+    it("should build and broadcast tx", async () => {
       const spyBuildPausePreAuthorizationIx = sandbox.spy(
         ixFactory,
         "buildPausePreAuthorizationIx",
@@ -194,7 +194,7 @@ describe("Transaction Factory Integration Tests", () => {
   });
 
   context("buildUnpausePreAuthorizationTx", () => {
-    it("should build tx", async () => {
+    it("should build and broadcast tx", async () => {
       const spyBuildUnpausePreAuthorizationIx = sandbox.spy(
         ixFactory,
         "buildUnpausePreAuthorizationIx",
@@ -209,6 +209,59 @@ describe("Transaction Factory Integration Tests", () => {
       expect(spyBuildUnpausePreAuthorizationIx.calledWith(params)).to.equal(
         true,
       );
+
+      const versionedTx = await tx.buildVersionedTransaction(
+        [payer],
+        payer.publicKey,
+      );
+      await provider.sendAndConfirm(versionedTx);
+    });
+  });
+
+  context("buildClosePreAuthorizationAsOwnerTx", () => {
+    it("should build and broadcast tx", async () => {
+      const newDebitAuthority = Keypair.generate();
+      const pad = readClient.derivePreAuthorizationPDA(
+        tokenAccount,
+        newDebitAuthority.publicKey,
+      ).publicKey;
+      preAuthorizations.push(pad);
+      await program.methods
+        .initPreAuthorization({
+          variant: {
+            oneTime: {
+              amountAuthorized: new BN(100e6),
+              expiryUnixTimestamp: new BN(expirationUnixTimestamp),
+            },
+          },
+          debitAuthority: newDebitAuthority.publicKey,
+          activationUnixTimestamp: new BN(activationUnixTimestamp),
+        })
+        .accounts({
+          payer: provider.publicKey,
+          owner: provider.publicKey,
+          smartDelegate,
+          tokenAccount,
+          preAuthorization: pad,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      const spyBuildClosePreAuthorizationAsOwnerIx = sandbox.spy(
+        ixFactory,
+        "buildClosePreAuthorizationAsOwnerIx",
+      );
+      const params = {
+        preAuthorization: pad,
+      };
+      const tx = await txFactory.buildClosePreAuthorizationAsOwnerTx(params);
+      expect(tx.setupInstructions.length).to.equal(0);
+      expect(tx.coreInstructions.length).to.equal(1);
+      expect(tx.cleanupInstructions.length).to.equal(0);
+      expect(
+        spyBuildClosePreAuthorizationAsOwnerIx.calledWith(params),
+      ).to.equal(true);
 
       const versionedTx = await tx.buildVersionedTransaction(
         [payer],
