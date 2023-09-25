@@ -192,4 +192,29 @@ describe("Transaction Factory Integration Tests", () => {
       await provider.sendAndConfirm(versionedTx);
     });
   });
+
+  context("buildUnpausePreAuthorizationTx", () => {
+    it("should build tx", async () => {
+      const spyBuildUnpausePreAuthorizationIx = sandbox.spy(
+        ixFactory,
+        "buildUnpausePreAuthorizationIx",
+      );
+      const params = {
+        preAuthorization: preAuthorizations[0],
+      };
+      const tx = await txFactory.buildUnpausePreAuthorizationTx(params);
+      expect(tx.setupInstructions.length).to.equal(0);
+      expect(tx.coreInstructions.length).to.equal(1);
+      expect(tx.cleanupInstructions.length).to.equal(0);
+      expect(spyBuildUnpausePreAuthorizationIx.calledWith(params)).to.equal(
+        true,
+      );
+
+      const versionedTx = await tx.buildVersionedTransaction(
+        [payer],
+        payer.publicKey,
+      );
+      await provider.sendAndConfirm(versionedTx);
+    });
+  });
 });
