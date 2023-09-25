@@ -218,14 +218,16 @@ describe("Transaction Factory Integration Tests", () => {
     });
   });
 
-  context("buildClosePreAuthorizationAsOwnerTx", () => {
-    it("should build and broadcast tx", async () => {
-      const newDebitAuthority = Keypair.generate();
-      const pad = readClient.derivePreAuthorizationPDA(
+  context("buildClosePreAuthorization", () => {
+    let newDebitAuthority: Keypair;
+    let pad: PublicKey;
+
+    beforeEach(async () => {
+      newDebitAuthority = Keypair.generate();
+      pad = readClient.derivePreAuthorizationPDA(
         tokenAccount,
         newDebitAuthority.publicKey,
       ).publicKey;
-      preAuthorizations.push(pad);
       await program.methods
         .initPreAuthorization({
           variant: {
@@ -247,27 +249,60 @@ describe("Transaction Factory Integration Tests", () => {
           systemProgram: SystemProgram.programId,
         })
         .rpc();
+    });
 
-      const spyBuildClosePreAuthorizationAsOwnerIx = sandbox.spy(
-        ixFactory,
-        "buildClosePreAuthorizationAsOwnerIx",
-      );
-      const params = {
-        preAuthorization: pad,
-      };
-      const tx = await txFactory.buildClosePreAuthorizationAsOwnerTx(params);
-      expect(tx.setupInstructions.length).to.equal(0);
-      expect(tx.coreInstructions.length).to.equal(1);
-      expect(tx.cleanupInstructions.length).to.equal(0);
-      expect(
-        spyBuildClosePreAuthorizationAsOwnerIx.calledWith(params),
-      ).to.equal(true);
+    context("AsOwnerTx", () => {
+      it("should build and broadcast tx", async () => {
+        const spyBuildClosePreAuthorizationAsOwnerIx = sandbox.spy(
+          ixFactory,
+          "buildClosePreAuthorizationAsOwnerIx",
+        );
+        const params = {
+          preAuthorization: pad,
+        };
+        const tx = await txFactory.buildClosePreAuthorizationAsOwnerTx(params);
+        expect(tx.setupInstructions.length).to.equal(0);
+        expect(tx.coreInstructions.length).to.equal(1);
+        expect(tx.cleanupInstructions.length).to.equal(0);
+        expect(
+          spyBuildClosePreAuthorizationAsOwnerIx.calledWith(params),
+        ).to.equal(true);
 
-      const versionedTx = await tx.buildVersionedTransaction(
-        [payer],
-        payer.publicKey,
-      );
-      await provider.sendAndConfirm(versionedTx);
+        const versionedTx = await tx.buildVersionedTransaction(
+          [payer],
+          payer.publicKey,
+        );
+        await provider.sendAndConfirm(versionedTx);
+      });
+    });
+
+    context("AsDebitAuthorityTx", async () => {
+      it("should build and broadcast tx", async () => {
+        const spyBuildClosePreAuthorizationAsDebitAuthorityIx = sandbox.spy(
+          ixFactory,
+          "buildClosePreAuthorizationAsDebitAuthorityIx",
+        );
+        const params = {
+          preAuthorization: pad,
+        };
+        const tx =
+          await txFactory.buildClosePreAuthorizationAsDebitAuthorityTx(params);
+        expect(tx.setupInstructions.length).to.equal(0);
+        expect(tx.coreInstructions.length).to.equal(1);
+        expect(tx.cleanupInstructions.length).to.equal(0);
+        expect(
+          spyBuildClosePreAuthorizationAsDebitAuthorityIx.calledWith(params),
+        ).to.equal(true);
+        await tx.simulate([newDebitAuthority, payer], payer.publicKey);
+        await tx.execute(
+          undefined,
+          [newDebitAuthority, payer],
+          payer.publicKey,
+        );
+
+        const accountInfo = await connection.getAccountInfo(pad);
+        expect(accountInfo).to.equal(null);
+      });
     });
   });
 });
