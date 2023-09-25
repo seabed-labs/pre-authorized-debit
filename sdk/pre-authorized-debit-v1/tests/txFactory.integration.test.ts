@@ -276,7 +276,7 @@ describe("Transaction Factory Integration Tests", () => {
       });
     });
 
-    context("AsDebitAuthorityTx", async () => {
+    context("AsDebitAuthorityTx", () => {
       it("should build and broadcast tx", async () => {
         const spyBuildClosePreAuthorizationAsDebitAuthorityIx = sandbox.spy(
           ixFactory,
@@ -302,6 +302,35 @@ describe("Transaction Factory Integration Tests", () => {
 
         const accountInfo = await connection.getAccountInfo(pad);
         expect(accountInfo).to.equal(null);
+      });
+    });
+
+    context("buildInitOneTimePreAuthorizationTx", () => {
+      it("should build and broadcast tx for non native token account", async () => {
+        const spyBuildInitOneTimePreAuthorizationIx = sandbox.spy(
+          ixFactory,
+          "buildInitOneTimePreAuthorizationIx",
+        );
+        const params = {
+          amountAuthorized: BigInt(100),
+          payer: payer.publicKey,
+          tokenAccount,
+          debitAuthority: Keypair.generate().publicKey,
+          activation: new Date(),
+        };
+        const tx = await txFactory.buildInitOneTimePreAuthorizationTx(params);
+        expect(tx.setupInstructions.length).to.equal(0);
+        expect(tx.coreInstructions.length).to.equal(1);
+        expect(tx.cleanupInstructions.length).to.equal(0);
+        expect(
+          spyBuildInitOneTimePreAuthorizationIx.calledWith(params),
+        ).to.equal(true);
+
+        const versionedTx = await tx.buildVersionedTransaction(
+          [payer],
+          payer.publicKey,
+        );
+        await provider.sendAndConfirm(versionedTx);
       });
     });
   });
