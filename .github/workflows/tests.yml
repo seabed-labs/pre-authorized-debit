@@ -118,13 +118,13 @@ jobs:
           MAINNET_VALIDATOR_URL: ${{ secrets.MAINNET_VALIDATOR_URL }}
         run: anchor test ${{ matrix.test.scope }} ${{ matrix.test.testSuffix }}
       - name: Test | delete remote badges branch
-        if: ${{ contains(matrix.test.scope, 'sdk') }}
+        if: ${{ github.ref == 'ref/head/main' && contains(matrix.test.scope, 'sdk') }}
         run: git push origin --delete ${{ matrix.test.scope }}/ci-badges
       - name: Test | create badges branch
-        if: ${{ contains(matrix.test.scope, 'sdk') }}
+        if: ${{ github.ref == 'ref/head/main' && contains(matrix.test.scope, 'sdk') }}
         run: git checkout -b ${{ matrix.test.scope }}/ci-badges
       - name: Test | code coverage
-        if: ${{ contains(matrix.test.scope, 'sdk') }}
+        if: ${{ github.ref == 'ref/head/main' && contains(matrix.test.scope, 'sdk') }}
         uses: jpb06/jest-badges-action@latest
         with:
           coverage-summary-path: ./${{ matrix.test.scope }}/coverage/coverage-summary.json
