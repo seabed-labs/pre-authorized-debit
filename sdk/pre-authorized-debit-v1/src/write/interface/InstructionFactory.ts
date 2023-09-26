@@ -25,6 +25,23 @@ type IxFactoryFn<Params, Result> = (
 ) => Promise<InstructionWithMetadata<Result>>;
 
 export interface InstructionFactory {
+  /**
+   * Builds the `init_smart_delegate` IX.
+   * @param {InitSmartDelegateParams} params - payer for new account
+   * @returns {Promise<InstructionWithMetadata<InitSmartDelegateResult>>} ix, expected signers, and smart delegate pubkey
+   * @example
+   * ```typescript
+   * const ixWithMetadata = await ixFactory.buildInitSmartDelegateIx({
+   *   payer: accountPayerKeypair.publicKey,
+   * });
+   *
+   * const {
+   *   instruction: initSmartDelegateIx,
+   *   expectedSigners,
+   *   meta: { smartDelegate: smartDelegatePubkey },
+   * } = ixWithMetadata;
+   * ```
+   */
   buildInitSmartDelegateIx: IxFactoryFn<
     InitSmartDelegateParams,
     InitSmartDelegateResult
