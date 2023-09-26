@@ -1,4 +1,4 @@
-name: Program Tests
+name: Tests
 
 on:
   pull_request:
@@ -58,12 +58,25 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        test: [
-          {scope: "program-tests/pre-authorized-debit-v1", testSuffix: "**/*test.ts"},
-          {scope: "program-tests/pre-authorized-debit-v1", testSuffix: "**/*test.2.ts"},
-          {scope: "program-tests/pre-authorized-debit-v1", testSuffix: "**/debit/*.test.ts"},
-          {scope: "sdk/pre-authorized-debit-v1", testSuffix: "tests/**/*.test.ts"},
-        ]
+        test:
+          [
+            {
+              scope: "program-tests/pre-authorized-debit-v1",
+              testSuffix: "**/*test.ts",
+            },
+            {
+              scope: "program-tests/pre-authorized-debit-v1",
+              testSuffix: "**/*test.2.ts",
+            },
+            {
+              scope: "program-tests/pre-authorized-debit-v1",
+              testSuffix: "**/debit/*.test.ts",
+            },
+            {
+              scope: "sdk/pre-authorized-debit-v1",
+              testSuffix: "tests/**/*.test.ts",
+            },
+          ]
     steps:
       - name: Setup | checkout
         uses: actions/checkout@v3
