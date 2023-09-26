@@ -82,8 +82,30 @@ export type PreAuthorizationType = "oneTime" | "recurring" | "all";
  * ```
  */
 export interface PreAuthorizedDebitReadClient {
+  /**
+   * Fetch the on-chain IDL
+   *
+   * Example:
+   * ```typescript
+   * const OnchainIDL = await readClient.fetchIdlFromChain();
+   * ```
+   *
+   * @returns {Promise<PreAuthorizedDebitV1>} the IDL as JSON
+   *
+   */
   fetchIdlFromChain(): Promise<PreAuthorizedDebitV1>;
 
+  /**
+   * Derives the SmartDelegate PDA (singleton).
+   *
+   * Example:
+   * ```typescript
+   * const smartDelegatePDA = readClient.getSmartDelegatePDA();
+   * const { publicKey, bump } = smartDelegatePDA;
+   * ```
+   *
+   * @returns {PDA} the PDA object with `publicKey` and `bump`
+   */
   getSmartDelegatePDA(): PDA;
 
   derivePreAuthorizationPDA(
