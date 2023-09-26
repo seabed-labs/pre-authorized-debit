@@ -11,6 +11,8 @@ import {
   TransactionFactoryImpl,
   DebitParams,
   UnwrapNativeMintAdditionalParams,
+  InitRecurringPreAuthorizationParams,
+  WrapNativeMintAdditionalParams,
 } from "../src";
 import { createSandbox } from "sinon";
 import { expect } from "chai";
@@ -148,6 +150,46 @@ describe("Transaction Factory Integration Tests", () => {
       expect(tx.coreInstructions.length).to.equal(1);
       expect(tx.cleanupInstructions.length).to.equal(0);
       expect(spyBuildInitSmartDelegateIx.calledWith(params)).to.equal(true);
+    });
+  });
+
+  context("buildInitRecurringPreAuthorizationTx", () => {
+    it("should build and broadcast tx", async () => {
+      const user = Keypair.generate();
+      const spyBuildInitRecurringPreAuthorizationIx = sandbox.spy(
+        ixFactory,
+        "buildInitRecurringPreAuthorizationIx",
+      );
+      const nativeTokenAccount = await createWrappedNativeAccount(
+        connection,
+        payer,
+        user.publicKey,
+        100e6,
+      );
+      const params: InitRecurringPreAuthorizationParams &
+        WrapNativeMintAdditionalParams = {
+        payer: payer.publicKey,
+        tokenAccount: nativeTokenAccount,
+        debitAuthority: Keypair.generate().publicKey,
+        activation: new Date(),
+        repeatFrequencySeconds: BigInt(5),
+        recurringAmountAuthorized: BigInt(100),
+        numCycles: null,
+        resetEveryCycle: false,
+        wrapNativeMintParams: {
+          lamportsSourceAccount: payer.publicKey,
+          wrapLamportsAmount: BigInt(100),
+        },
+      };
+      const tx = await txFactory.buildInitRecurringPreAuthorizationTx(params);
+      expect(tx.setupInstructions.length).to.equal(2);
+      expect(tx.coreInstructions.length).to.equal(1);
+      expect(tx.cleanupInstructions.length).to.equal(0);
+      expect(
+        spyBuildInitRecurringPreAuthorizationIx.calledWith(params),
+      ).to.equal(true);
+
+      await tx.execute(undefined, [payer, user], payer.publicKey);
     });
   });
 
