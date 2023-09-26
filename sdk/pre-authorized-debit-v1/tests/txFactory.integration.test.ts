@@ -417,127 +417,122 @@ describe("Transaction Factory Integration Tests", () => {
         await provider.sendAndConfirm(versionedTx);
       });
     });
+  });
 
-    context("buildDebitTx", () => {
-      let destinationTokenAccount: PublicKey;
+  context("buildDebitTx", () => {
+    let destinationTokenAccount: PublicKey;
 
-      before(async () => {
-        destinationTokenAccount = await createAccount(
-          connection,
-          payer,
-          mint,
-          debitAuthorities[0].publicKey,
-        );
-      });
+    before(async () => {
+      destinationTokenAccount = await createAccount(
+        connection,
+        payer,
+        mint,
+        debitAuthorities[0].publicKey,
+      );
+    });
 
-      it("should throw if smart delegate is not delegate", async () => {
-        const stubFetchCurrentDelegationOfTokenAccount = sandbox
-          .stub(readClient, "fetchCurrentDelegationOfTokenAccount")
-          .resolves({
-            delegate: Keypair.generate().publicKey,
-            delegatedAmount: BigInt(100),
-          });
+    it("should throw if smart delegate is not delegate", async () => {
+      const stubFetchCurrentDelegationOfTokenAccount = sandbox
+        .stub(readClient, "fetchCurrentDelegationOfTokenAccount")
+        .resolves({
+          delegate: Keypair.generate().publicKey,
+          delegatedAmount: BigInt(100),
+        });
 
-        const params = {
-          preAuthorization: preAuthorizations[0],
-          amount: BigInt(10),
-          destinationTokenAccount,
-          checkSmartDelegateEnabled: true,
-        };
-        await expect(
-          txFactory.buildDebitTx(params),
-        ).to.eventually.be.rejectedWith(
-          `The smart delegate is not set for token account: ${tokenAccount.toString()} (rpc: http://127.0.0.1:8899)`,
-        );
+      const params = {
+        preAuthorization: preAuthorizations[0],
+        amount: BigInt(10),
+        destinationTokenAccount,
+        checkSmartDelegateEnabled: true,
+      };
+      await expect(
+        txFactory.buildDebitTx(params),
+      ).to.eventually.be.rejectedWith(
+        `The smart delegate is not set for token account: ${tokenAccount.toString()} (rpc: http://127.0.0.1:8899)`,
+      );
 
-        expect(
-          stubFetchCurrentDelegationOfTokenAccount.calledOnceWith(
-            sandbox.match((val) => {
-              return (val as PublicKey).equals(tokenAccount);
-            }),
+      expect(
+        stubFetchCurrentDelegationOfTokenAccount.calledOnceWith(
+          sandbox.match((val) => {
+            return (val as PublicKey).equals(tokenAccount);
+          }),
+        ),
+      ).to.equal(true);
+    });
+
+    it("should build and broadcast tx", async () => {
+      const spyBuildDebitIx = sandbox.spy(ixFactory, "buildDebitIx");
+      const params: DebitParams & UnwrapNativeMintAdditionalParams = {
+        preAuthorization: preAuthorizations[0],
+        amount: BigInt(10),
+        destinationTokenAccount,
+        checkSmartDelegateEnabled: true,
+      };
+      const tx = await txFactory.buildDebitTx(params);
+      expect(tx.setupInstructions.length).to.equal(0);
+      expect(tx.coreInstructions.length).to.equal(1);
+      expect(tx.cleanupInstructions.length).to.equal(0);
+      expect(spyBuildDebitIx.calledWith(params)).to.equal(true);
+
+      await tx.execute(
+        undefined,
+        [payer, debitAuthorities[0]],
+        payer.publicKey,
+      );
+    });
+
+    it("should debit native mint token account", async () => {
+      // one day in the past
+      const activation = new Date(
+        new Date().getTime() - 1000 * 60 * 60 * 24 * 2,
+      );
+      // one day in the future
+      const expiry = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2);
+      const user = Keypair.generate();
+      const debitAuthority = Keypair.generate();
+      const [userNativeTokenAccount, debitNativeTokenAccount] =
+        await Promise.all([
+          createWrappedNativeAccount(connection, payer, user.publicKey, 100e6),
+          createWrappedNativeAccount(
+            connection,
+            payer,
+            debitAuthority.publicKey,
+            100e6,
           ),
-        ).to.equal(true);
-      });
+        ]);
+      const initPreAuthParams: InitOneTimePreAuthorizationParams &
+        WrapNativeMintAdditionalParams = {
+        payer: payer.publicKey,
+        tokenAccount: userNativeTokenAccount,
+        debitAuthority: debitAuthority.publicKey,
+        activation,
+        expiry,
+        amountAuthorized: BigInt(10e6),
+        wrapNativeMintParams: {
+          lamportsSourceAccount: payer.publicKey,
+          wrapLamportsAmount: BigInt(100),
+        },
+      };
+      const initPreAuthTx =
+        await txFactory.buildInitOneTimePreAuthorizationTx(initPreAuthParams);
+      await initPreAuthTx.execute(undefined, [payer, user], payer.publicKey);
 
-      it("should build and broadcast tx", async () => {
-        const spyBuildDebitIx = sandbox.spy(ixFactory, "buildDebitIx");
-        const params: DebitParams & UnwrapNativeMintAdditionalParams = {
-          preAuthorization: preAuthorizations[0],
-          amount: BigInt(10),
-          destinationTokenAccount,
-          checkSmartDelegateEnabled: true,
-        };
-        const tx = await txFactory.buildDebitTx(params);
-        expect(tx.setupInstructions.length).to.equal(0);
-        expect(tx.coreInstructions.length).to.equal(1);
-        expect(tx.cleanupInstructions.length).to.equal(0);
-        expect(spyBuildDebitIx.calledWith(params)).to.equal(true);
-
-        await tx.execute(
-          undefined,
-          [payer, debitAuthorities[0]],
-          payer.publicKey,
-        );
-      });
-
-      it("should debit native mint token account", async () => {
-        // one day in the past
-        const activation = new Date(
-          new Date().getTime() - 1000 * 60 * 60 * 24 * 2,
-        );
-        // one day in the future
-        const expiry = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2);
-        const user = Keypair.generate();
-        const debitAuthority = Keypair.generate();
-        const [userNativeTokenAccount, debitNativeTokenAccount] =
-          await Promise.all([
-            createWrappedNativeAccount(
-              connection,
-              payer,
-              user.publicKey,
-              100e6,
-            ),
-            createWrappedNativeAccount(
-              connection,
-              payer,
-              debitAuthority.publicKey,
-              100e6,
-            ),
-          ]);
-        const initPreAuthParams: InitOneTimePreAuthorizationParams &
-          WrapNativeMintAdditionalParams = {
-          payer: payer.publicKey,
-          tokenAccount: userNativeTokenAccount,
-          debitAuthority: debitAuthority.publicKey,
-          activation,
-          expiry,
-          amountAuthorized: BigInt(10e6),
-          wrapNativeMintParams: {
-            lamportsSourceAccount: payer.publicKey,
-            wrapLamportsAmount: BigInt(100),
-          },
-        };
-        const initPreAuthTx =
-          await txFactory.buildInitOneTimePreAuthorizationTx(initPreAuthParams);
-        await initPreAuthTx.execute(undefined, [payer, user], payer.publicKey);
-
-        const spyBuildDebitIx = sandbox.spy(ixFactory, "buildDebitIx");
-        const params: DebitParams & UnwrapNativeMintAdditionalParams = {
-          preAuthorization: initPreAuthTx.meta.preAuthorization,
-          amount: BigInt(10),
-          destinationTokenAccount: debitNativeTokenAccount,
-          checkSmartDelegateEnabled: true,
-          unwrapNativeMintParams: {
-            lamportsDestinationAccount: debitAuthority.publicKey,
-          },
-        };
-        const tx = await txFactory.buildDebitTx(params);
-        expect(tx.setupInstructions.length).to.equal(0);
-        expect(tx.coreInstructions.length).to.equal(1);
-        expect(tx.cleanupInstructions.length).to.equal(1);
-        expect(spyBuildDebitIx.calledWith(params)).to.equal(true);
-        await tx.execute(undefined, [payer, debitAuthority], payer.publicKey);
-      });
+      const spyBuildDebitIx = sandbox.spy(ixFactory, "buildDebitIx");
+      const params: DebitParams & UnwrapNativeMintAdditionalParams = {
+        preAuthorization: initPreAuthTx.meta.preAuthorization,
+        amount: BigInt(10),
+        destinationTokenAccount: debitNativeTokenAccount,
+        checkSmartDelegateEnabled: true,
+        unwrapNativeMintParams: {
+          lamportsDestinationAccount: debitAuthority.publicKey,
+        },
+      };
+      const tx = await txFactory.buildDebitTx(params);
+      expect(tx.setupInstructions.length).to.equal(0);
+      expect(tx.coreInstructions.length).to.equal(1);
+      expect(tx.cleanupInstructions.length).to.equal(1);
+      expect(spyBuildDebitIx.calledWith(params)).to.equal(true);
+      await tx.execute(undefined, [payer, debitAuthority], payer.publicKey);
     });
   });
 });
