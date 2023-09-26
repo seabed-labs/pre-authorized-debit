@@ -542,9 +542,9 @@ export class PreAuthorizedDebitReadClientImpl
 
   public async fetchCurrentDelegationOfTokenAccount(
     tokenAccountPubkey: PublicKey,
-  ): Promise<{ delegate: PublicKey; delgatedAmount: bigint } | null> {
+  ): Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null> {
     const tokenProgramId = await this.fetchTokenProgramIdForTokenAccount(
-      tokenAccountPubkey,
+      tokenAccountPubkey
     );
 
     let tokenAccount: Account;
@@ -566,14 +566,14 @@ export class PreAuthorizedDebitReadClientImpl
     return tokenAccount.delegate && tokenAccount.delegatedAmount > BigInt(0)
       ? {
           delegate: tokenAccount.delegate,
-          delgatedAmount: tokenAccount.delegatedAmount,
+          delegatedAmount: tokenAccount.delegatedAmount,
         }
       : null;
   }
 
   public async fetchCurrentDelegationOfPreAuthTokenAccount(
     preAuthorizationPubkey: PublicKey,
-  ): Promise<{ delegate: PublicKey; delgatedAmount: bigint } | null> {
+  ): Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null> {
     const preAuthorization = await this.fetchPreAuthorization({
       publicKey: preAuthorizationPubkey,
     });
