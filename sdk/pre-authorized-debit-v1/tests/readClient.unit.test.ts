@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { PreAuthorizedDebitReadClientImpl } from "../src";
 import * as sdkConstants from "../src/constants";
-import { deriveSmartDelegate } from "@dcaf/pad-test-utils";
+import { deriveSmartDelegate } from "@seabed-labs/pad-test-utils";
 
 describe("PreAuthorizedDebitReadClientImpl unit", () => {
   const connection: Connection = new Connection("http://my.rpc");

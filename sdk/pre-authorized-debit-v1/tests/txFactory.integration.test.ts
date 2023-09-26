@@ -17,7 +17,7 @@ import { expect } from "chai";
 import {
   fundAccounts,
   initSmartDelegateIdempotent,
-} from "@dcaf/pad-test-utils";
+} from "@seabed-labs/pad-test-utils";
 import {
   createAccount,
   createMint,
@@ -289,8 +289,9 @@ describe("Transaction Factory Integration Tests", () => {
         const params = {
           preAuthorization: pad,
         };
-        const tx =
-          await txFactory.buildClosePreAuthorizationAsDebitAuthorityTx(params);
+        const tx = await txFactory.buildClosePreAuthorizationAsDebitAuthorityTx(
+          params,
+        );
         expect(tx.setupInstructions.length).to.equal(0);
         expect(tx.coreInstructions.length).to.equal(1);
         expect(tx.cleanupInstructions.length).to.equal(0);

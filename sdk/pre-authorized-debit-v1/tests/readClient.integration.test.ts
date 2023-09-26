@@ -22,7 +22,7 @@ import { TOKEN_PROGRAM_ID, createMint, createAccount } from "@solana/spl-token";
 import {
   fundAccounts,
   initSmartDelegateIdempotent,
-} from "@dcaf/pad-test-utils";
+} from "@seabed-labs/pad-test-utils";
 import * as anchor from "@coral-xyz/anchor";
 import { createSandbox } from "sinon";
 
@@ -160,8 +160,9 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
   context("fetchPreAuthorizationsForTokenAccount", () => {
     it("should return preAuthorizations by tokenAccount and type=all", async () => {
       const padAddressStrings = preAuthorizations.map((a) => a.toString());
-      const pads =
-        await readClient.fetchPreAuthorizationsForTokenAccount(tokenAccount);
+      const pads = await readClient.fetchPreAuthorizationsForTokenAccount(
+        tokenAccount,
+      );
       expect(pads.length).to.equal(3);
       pads.forEach((pad) => {
         expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
@@ -537,8 +538,9 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     });
 
     it("should return owner of token account", async () => {
-      const owner =
-        await readClient.fetchCurrentOwnerOfTokenAccount(tokenAccount);
+      const owner = await readClient.fetchCurrentOwnerOfTokenAccount(
+        tokenAccount,
+      );
       expect(owner.toString()).to.equal(provider.publicKey.toString());
     });
   });

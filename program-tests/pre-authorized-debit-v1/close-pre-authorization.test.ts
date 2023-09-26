@@ -23,7 +23,7 @@ import {
   fundAccounts,
   initSmartDelegateIdempotent,
   waitForTxToConfirm,
-} from "@dcaf/pad-test-utils";
+} from "@seabed-labs/pad-test-utils";
 
 describe("pre-authorized-debit-v1#close-pre-authorization", () => {
   const program =

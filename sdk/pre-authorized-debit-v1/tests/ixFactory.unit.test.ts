@@ -10,7 +10,7 @@ import * as sdkConstants from "../src/constants";
 import { expect } from "chai";
 import { createSandbox } from "sinon";
 import { BorshCoder } from "@coral-xyz/anchor";
-import { IDL } from "@dcaf/pad-test-utils/pre_authorized_debit_v1";
+import { IDL } from "@seabed-labs/pad-test-utils/pre_authorized_debit_v1";
 import * as SplToken from "@solana/spl-token";
 
 describe("InstructionFactory Unit Tests", () => {

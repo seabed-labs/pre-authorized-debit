@@ -1,8 +1,8 @@
 {
-  "name": "@dcaf/pad-test-utils",
+  "name": "@seabed-labs/pad-test-utils",
   "version": "1.0.0",
+  "license": "Apache-2.0",
   "packageManager": "yarn@3.6.0",
-  "private": true,
   "scripts": {
     "build": "yarn run tsc"
   },

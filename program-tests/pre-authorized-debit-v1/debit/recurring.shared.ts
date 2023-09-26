@@ -19,7 +19,7 @@ import {
   fundAccounts,
   initSmartDelegateIdempotent,
   waitForTxToConfirm,
-} from "@dcaf/pad-test-utils";
+} from "@seabed-labs/pad-test-utils";
 
 export function testRecurringDebit(
   tokenProgramId: PublicKey,

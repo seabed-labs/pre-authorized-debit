@@ -15,7 +15,7 @@ import {
   fundAccounts,
   initSmartDelegateIdempotent,
   waitForTxToConfirm,
-} from "@dcaf/pad-test-utils";
+} from "@seabed-labs/pad-test-utils";
 
 describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
   let owner: Keypair, mintAuthority: Keypair, debitAuthority: Keypair;

@@ -8,7 +8,7 @@ import {
   deriveSmartDelegate,
   fundAccounts,
   waitForTxToConfirm,
-} from "@dcaf/pad-test-utils";
+} from "@seabed-labs/pad-test-utils";
 
 describe("pre-authorized-debit-v1#init-smart-delegate", () => {
   const [canonicalSmartDelegatePublicKey, canonicalSmartDelegateBump] =

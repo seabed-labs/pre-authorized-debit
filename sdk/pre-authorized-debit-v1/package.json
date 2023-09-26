@@ -1,6 +1,7 @@
 {
   "name": "@seabed-labs/pre-authorized-debit",
-  "version": "0.1.2",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
   "packageManager": "yarn@3.6.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,8 +22,8 @@
     "@babel/core": "^7.22.20",
     "@babel/preset-env": "^7.22.20",
     "@babel/preset-typescript": "^7.22.15",
-    "@dcaf/pad-test-utils": "1.0.0",
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
+    "@seabed-labs/pad-test-utils": "1.0.0",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.6",

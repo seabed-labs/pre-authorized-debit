@@ -1,9 +1,9 @@
 {
-  "name": "@dcaf/pad-library-scripts",
+  "name": "@seabed-labs/pad-library-scripts",
+  "license": "Apache-2.0",
   "packageManager": "yarn@3.6.0",
-  "private": true,
   "dependencies": {
-    "@seabed-labs/pre-authorized-debit": "0.1.0",
+    "@seabed-labs/pre-authorized-debit": "1.0.0",
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.78.4",
     "dotenv": "^16.3.1"

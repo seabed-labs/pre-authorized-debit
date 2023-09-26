@@ -1,7 +1,7 @@
 {
-  "name": "@dcaf/pad-integration-tests",
+  "name": "@seabed-labs/pad-program-tests",
+  "license": "Apache-2.0",
   "packageManager": "yarn@3.6.0",
-  "private": true,
   "scripts": {
     "test": "yarn test:batch2 && yarn test:batch1",
     "test:batch1": "cd ../../ && anchor test \"pre-authorized-debit-v1/**\" .ts",
@@ -14,7 +14,7 @@
     "@solana/web3.js": "^1.78.4"
   },
   "devDependencies": {
-    "@dcaf/pad-test-utils": "1.0.0",
+    "@seabed-labs/pad-test-utils": "1.0.0",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.5",
