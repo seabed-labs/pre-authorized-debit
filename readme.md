@@ -6,7 +6,7 @@
 
 ## SDK Code Coverage
 
-![SDK Coverage - Statements](https://raw.githubusercontent.com/seabed-labs/pre-authorized-debit/34af251e4303f5ef55151aae7662e48c1e7e204b/sdk/pre-authorized-debit-v1/badges/coverage-statements.svg)
+![SDK Coverage - Statements](https://raw.githubusercontent.com/seabed-labs/pre-authorized-debit/sdk/pre-authorized-debit-v1/ci-badges/sdk/pre-authorized-debit-v1/badges/coverage-statements.svg)
 
 The Pre Authorized Debit (PAD) program is a Solana primitive to extend functionality of a token account
 with pre-authorized debits (an advanced form of multi delegation or delegate multiplexing which we call smart delegation).
