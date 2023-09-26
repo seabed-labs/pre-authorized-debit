@@ -73,7 +73,7 @@ type IxFactoryFn<Params, Result> = (
  */
 export interface InstructionFactory {
   /**
-   * Build the `init_smart_delegate` IX.
+   * Build the `init_smart_delegate` instruction.
    * @param {InitSmartDelegateParams} params - payer for new account
    * @returns {Promise<InstructionWithMetadata<InitSmartDelegateResult>>} ix, expected signers, and smart delegate pubkey
    * @example
