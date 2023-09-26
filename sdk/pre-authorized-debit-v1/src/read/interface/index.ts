@@ -14,7 +14,7 @@ export type CheckDebitAmountParams =
       requestedDebitAmount: bigint;
     }
   | {
-      preAuthorizedDebit: PublicKey;
+      preAuthorization: PublicKey;
       requestedDebitAmount: bigint;
     };
 
@@ -259,12 +259,47 @@ export interface PreAuthorizedDebitReadClient {
   ): Promise<ProgramAccount<PreAuthorizationAccount>[]>;
 
   /**
-   * Checks whether the given debit will go through right now (based on current state of pre-auth if any)
+   * Asynchronously checks whether the given debit will go through right now (based on current state of pre-auth if any)
    * @param {CheckDebitAmountParams} params - (pre-auth pubkey or token account and debit authority) + amount to debit
    * @returns {Promise<boolean>} whether or not the debit goes through
+   * @example
+   * Check with pre-authorization pubkey
+   * ```typescript
+   * const canDebit = await checkDebitAmount({
+   *   preAuthorization: // pre-auth pubkey,
+   *   requestedDebitAmount: // amount to debit (bigint)
+   * });
+   * ```
+   * Check with token account and debit authority pubkeys
+   * ```typescript
+   * const canDebit = await checkDebitAmount({
+   *   tokenAccount: // token account pubkey
+   *   debitAuthority: // debit authority pubkey
+   *   requestedDebitAmount: // amount to debit (bigint)
+   * });
+   * ```
    */
   checkDebitAmount(params: CheckDebitAmountParams): Promise<boolean>;
 
+  /**
+   * Synchronously check whether a debit will go through given the actual pre-authorization account, debit amount, and solana timestamp.
+   * @param {CheckDebitAmountForPerAuthorizationParams} params - the actual pre-authorization account, debit amount, and solana timestamp
+   * @returns {boolean} whether or not the debit goes through
+   * @example
+   * ```typescript
+   * const preAuthorization: PreAuthorizationAccount = // make or fetch this however
+   * const requestedDebitAmount = BigInt(100e6); // example
+   * const solanaTime = BigInt(
+   *   Math.floor(new Date().getTime() / 1e3)
+   * ) - 24 * 3600; // -1 day from now
+   *
+   * const canDebit = checkDebitAmountForPreAuthorization({
+   *   preAuthorizationAccount,
+   *   requestedDebitAmount,
+   *   solanaTime,
+   * });
+   * ```
+   */
   checkDebitAmountForPreAuthorization(
     params: CheckDebitAmountForPerAuthorizationParams,
   ): boolean;
