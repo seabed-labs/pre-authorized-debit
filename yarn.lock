@@ -1717,7 +1717,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@seabed-labs/pad-library-scripts@workspace:scripts"
   dependencies:
-    "@seabed-labs/pre-authorized-debit": 1.0.0
+    "@seabed-labs/pre-authorized-debit": "file:../sdk/pre-authorized-debit-v1"
     "@solana/spl-token": ^0.3.8
     "@solana/web3.js": ^1.78.4
     "@types/node": ^20.7.0
@@ -1761,7 +1761,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@seabed-labs/pre-authorized-debit@1.0.0, @seabed-labs/pre-authorized-debit@workspace:sdk/pre-authorized-debit-v1":
+"@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1::locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts":
+  version: 1.0.0-rc.1
+  resolution: "@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=0124a7&locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts"
+  dependencies:
+    "@coral-xyz/anchor": ^0.28.0
+    "@coral-xyz/borsh": ^0.28.0
+    "@solana/spl-token": ^0.3.8
+    "@solana/web3.js": ^1.78.4
+    axios: ^1.5.0
+    bn.js: ^5.2.1
+    node-fetch: ^3.3.2
+  checksum: 472fb0e9a60aa78a1b4c3f570dbea665b9677cd70686d663ca1118d85bda22725ad668acb7da73f93f4c65f3c5d11d583a359855c14eb349691bc0f57987e206
+  languageName: node
+  linkType: hard
+
+"@seabed-labs/pre-authorized-debit@workspace:sdk/pre-authorized-debit-v1":
   version: 0.0.0-use.local
   resolution: "@seabed-labs/pre-authorized-debit@workspace:sdk/pre-authorized-debit-v1"
   dependencies:
