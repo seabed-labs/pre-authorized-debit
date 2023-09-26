@@ -423,7 +423,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
     const tokenAccountData = await getAccount(
       this.connection,
       tokenAccount,
-      undefined,
+      this.connection.commitment,
       tokenProgramId,
     );
 
@@ -436,15 +436,17 @@ export class InstructionFactoryImpl implements InstructionFactory {
         await this.readClient.fetchCurrentDelegationOfTokenAccount(
           preAuthorizationAccount.tokenAccount,
         );
-
-      if (!currentDelegation || currentDelegation.delegate !== smartDelegate) {
+      if (
+        !currentDelegation ||
+        !currentDelegation.delegate.equals(smartDelegate)
+      ) {
         throw new SmartDelegateNotSet(
           this.connection.rpcEndpoint,
           tokenAccount,
         );
       }
 
-      if (currentDelegation.delgatedAmount < amount) {
+      if (currentDelegation.delegatedAmount < amount) {
         throw new SmartDelegatedAmountNotEnough(
           this.connection.rpcEndpoint,
           tokenAccount,

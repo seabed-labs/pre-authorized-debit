@@ -85,7 +85,7 @@ export interface PreAuthorizedDebitReadClient {
 
   fetchCurrentDelegationOfTokenAccount(
     tokenAccountPubkey: PublicKey,
-  ): Promise<{ delegate: PublicKey; delgatedAmount: bigint } | null>;
+  ): Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null>;
 
   fetchCurrentOwnerOfPreAuthTokenAccount(
     preAuthorizationPubkey: PublicKey,
@@ -93,5 +93,5 @@ export interface PreAuthorizedDebitReadClient {
 
   fetchCurrentDelegationOfPreAuthTokenAccount(
     preAuthorizationPubkey: PublicKey,
-  ): Promise<{ delegate: PublicKey; delgatedAmount: bigint } | null>;
+  ): Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null>;
 }

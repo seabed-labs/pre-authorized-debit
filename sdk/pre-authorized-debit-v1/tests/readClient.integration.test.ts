@@ -589,7 +589,7 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       expect(delegateData?.delegate.toString()).to.equal(
         smartDelegate.toString(),
       );
-      expect(delegateData?.delgatedAmount.toString()).to.equal(
+      expect(delegateData?.delegatedAmount.toString()).to.equal(
         (BigInt(2) ** BigInt(64) - BigInt(1)).toString(),
       );
     });
@@ -625,7 +625,7 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       expect(delegateData?.delegate.toString()).to.equal(
         smartDelegate.toString(),
       );
-      expect(delegateData?.delgatedAmount.toString()).to.equal(
+      expect(delegateData?.delegatedAmount.toString()).to.equal(
         (BigInt(2) ** BigInt(64) - BigInt(1)).toString(),
       );
       expect(fetchCurrentDelegationOfTokenAccountSpy.calledOnce).to.equal(true);
