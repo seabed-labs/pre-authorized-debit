@@ -370,9 +370,9 @@ export class PreAuthorizedDebitReadClientImpl
     params: CheckDebitAmountParams,
   ): Promise<boolean> {
     const preAuthorization = await this.fetchPreAuthorization(
-      "preAuthorizedDebit" in params
+      "preAuthorization" in params
         ? {
-            publicKey: params.preAuthorizedDebit,
+            publicKey: params.preAuthorization,
           }
         : {
             tokenAccount: params.tokenAccount,
@@ -544,7 +544,7 @@ export class PreAuthorizedDebitReadClientImpl
     tokenAccountPubkey: PublicKey,
   ): Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null> {
     const tokenProgramId = await this.fetchTokenProgramIdForTokenAccount(
-      tokenAccountPubkey
+      tokenAccountPubkey,
     );
 
     let tokenAccount: Account;
