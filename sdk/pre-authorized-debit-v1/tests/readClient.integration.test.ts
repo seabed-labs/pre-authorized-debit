@@ -160,9 +160,8 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
   context("fetchPreAuthorizationsForTokenAccount", () => {
     it("should return preAuthorizations by tokenAccount and type=all", async () => {
       const padAddressStrings = preAuthorizations.map((a) => a.toString());
-      const pads = await readClient.fetchPreAuthorizationsForTokenAccount(
-        tokenAccount,
-      );
+      const pads =
+        await readClient.fetchPreAuthorizationsForTokenAccount(tokenAccount);
       expect(pads.length).to.equal(3);
       pads.forEach((pad) => {
         expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
@@ -361,7 +360,7 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       expect(canDebit).to.equal(false);
     });
 
-    it("should return false for recurring pad if currentCycle > numCycles", async () => {
+    it("should return false for recurring pad if requesting more than authorized", async () => {
       const canDebit = readClient.checkDebitAmountForPreAuthorization({
         preAuthorizationAccount: {
           variant: {
@@ -538,9 +537,8 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     });
 
     it("should return owner of token account", async () => {
-      const owner = await readClient.fetchCurrentOwnerOfTokenAccount(
-        tokenAccount,
-      );
+      const owner =
+        await readClient.fetchCurrentOwnerOfTokenAccount(tokenAccount);
       expect(owner.toString()).to.equal(provider.publicKey.toString());
     });
   });
