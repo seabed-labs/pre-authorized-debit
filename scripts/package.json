@@ -3,16 +3,16 @@
   "packageManager": "yarn@3.6.0",
   "private": true,
   "dependencies": {
-    "@dcaf/pad": "1.0.0",
+    "@seabed-labs/pre-authorized-debit": "0.1.0",
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.78.4",
     "dotenv": "^16.3.1"
   },
   "scripts": {
-    "e2e": "ts-node e2e.ts"
+    "e2e": "yarn run ts-node e2e.ts"
   },
   "devDependencies": {
-    "@types/node": "^20.5.9",
+    "@types/node": "^20.7.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   }

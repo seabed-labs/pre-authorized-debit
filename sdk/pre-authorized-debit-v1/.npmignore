@@ -1,0 +1,8 @@
+badges
+coverage
+node_modules
+src
+tests
+.env
+tsconfig.json
+.nycrc

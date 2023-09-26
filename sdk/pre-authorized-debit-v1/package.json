@@ -1,10 +1,9 @@
 {
-  "name": "@dcaf/pad",
-  "version": "1.0.0",
+  "name": "@seabed-labs/pre-authorized-debit",
+  "version": "0.1.2",
   "packageManager": "yarn@3.6.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "module",
   "scripts": {
     "build": "yarn run tsc",
     "test": "cd ../../ && anchor test \"sdk/pre-authorized-debit-v1\" \"tests/**/*.test.ts\""
@@ -28,6 +27,7 @@
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.6",
     "@types/mocha": "^9.0.0",
+    "@types/node": "^20.7.0",
     "@types/sinon": "^10.0.16",
     "chai": "^4.3.8",
     "chai-as-promised": "^7.1.1",

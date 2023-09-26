@@ -1,12 +1,14 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src" /* Specify the root folder within your source files. */,
+    "rootDir": "./" /* Specify the root folder within your source files. */,
     "outDir": "./dist" /* Specify an output folder for all emitted files. */,
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "esModuleInterop": true
   },
+  "include": ["./**/*.ts", "./*.ts"],
   "exclude": ["tests/**/*", "dist/**/*", "node_modules"]
 }
