@@ -1,6 +1,11 @@
 # Pre Authorized Debit
 
+## CI Status
+
 [![Tests](https://github.com/seabed-labs/pre-authorized-debit/actions/workflows/tests.yml/badge.svg?branch=feat%2Fsdk)](https://github.com/seabed-labs/pre-authorized-debit/actions/workflows/tests.yml)
+
+## SDK Code Coverage
+
 ![SDK Coverage - Statements](./sdk/pre-authorized-debit-v1/badges/coverage-statements.svg)
 
 The Pre Authorized Debit (PAD) program is a Solana primitive to extend functionality of a token account
