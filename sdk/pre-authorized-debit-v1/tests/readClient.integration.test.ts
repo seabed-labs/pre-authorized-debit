@@ -382,7 +382,7 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       expect(canDebit).to.equal(false);
     });
 
-    it("should return true for recurring pad", async () => {
+    it("should return false for recurring pad", async () => {
       const canDebit = readClient.checkDebitAmountForPreAuthorization({
         preAuthorizationAccount: {
           variant: {
@@ -399,7 +399,7 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
         } as unknown as PreAuthorizationAccount,
         solanaTime: BigInt(100),
         // withdrawing 101
-        requestedDebitAmount: BigInt(100),
+        requestedDebitAmount: BigInt(101),
       });
       expect(canDebit).to.equal(false);
     });
