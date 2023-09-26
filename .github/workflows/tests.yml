@@ -126,4 +126,4 @@ jobs:
           commit-user: Seabed Devtools
           commit-user-email: devtools@dcaf.so
           output-folder: ./${{ matrix.test.scope }}/badges
-          target-branch: ${{ matrix.test.scope }}/badges
+          target-branch: ${{ matrix.test.scope }}/ci-badges
