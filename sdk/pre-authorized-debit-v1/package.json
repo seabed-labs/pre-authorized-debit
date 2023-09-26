@@ -1,6 +1,6 @@
 {
   "name": "@seabed-labs/pre-authorized-debit",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "license": "Apache-2.0",
   "packageManager": "yarn@3.6.0",
   "main": "dist/index.js",
