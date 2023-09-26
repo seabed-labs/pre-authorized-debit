@@ -81,6 +81,7 @@ jobs:
       - name: Setup | checkout
         uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           token: ${{ secrets.pat_github }}
       - name: Setup | rust cache
         uses: Swatinem/rust-cache@v2
@@ -122,7 +123,7 @@ jobs:
         with:
           coverage-summary-path: ./${{ matrix.test.scope }}/coverage/coverage-summary.json
           branches: main
-          commit-user: Seabed CI
+          commit-user: Seabed Devtools
           commit-user-email: devtools@dcaf.so
           output-folder: ./${{ matrix.test.scope }}/badges
           target-branch: ${{ matrix.test.scope }}/badges
