@@ -321,22 +321,92 @@ export interface PreAuthorizedDebitReadClient {
    */
   fetchMaxDebitAmount(params: FetchMaxDebitAmountParams): Promise<bigint>;
 
+  /**
+   * Fetch the token program ID (Token or Token2022) for a given token account
+   * @param {PublicKey} tokenAccountPubkey - the token account pubkey
+   * @returns {Promise<PublicKey>} the token program pubkey (Token or Token2022)
+   * @example
+   * ```typescript
+   * const tokenAccount: PublicKey = // token account pubkey
+   * const tokenProgramId = await readClient.fetchTokenProgramIdForTokenAccount(
+   *   tokenAccount
+   * );
+   * ```
+   */
   fetchTokenProgramIdForTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<PublicKey>;
 
+  /**
+   * Fetch the current owner of a token account
+   * @param {PublicKey} tokenAccountPubkey - the token account pubkey
+   * @returns {Promise<PublicKey>} the token account owner's pubkey
+   * @example
+   * ```typescript
+   * const tokenAccount: PublicKey = // token account pubkey
+   * const tokenAccountOwner = await readClient.fetchCurrentOwnerOfTokenAccount(
+   *   tokenAccount
+   * );
+   * ```
+   */
   fetchCurrentOwnerOfTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<PublicKey>;
 
+  /**
+   * Fetch the current delegation (delegate and delegated amount) of a token account
+   * @param {PublicKey} tokenAccountPubkey - the token account pubkey
+   * @returns {Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null>} the delegate and delegated amount (null if no delegate or delegated amount is 0)
+   * @example
+   * ```typescript
+   * const tokenAccount: PublicKey = // token account pubkey
+   * const delegation = await readClient.fetchCurrentDelegationOfTokenAccount(
+   *   tokenAccount
+   * );
+   *
+   * const {
+   *   delegate, // PublicKey
+   *   delegatedAmount, // bigint (on-chain u64)
+   * } = delegation;
+   * ```
+   */
   fetchCurrentDelegationOfTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null>;
 
+  /**
+   * Fetch the current owner of a pre-authorization's token account
+   * @param {PublicKey} preAuthorizationPubkey - the pre-authorization pubkey
+   * @returns {Promise<PublicKey>} the pre-authorization's token account owner's pubkey
+   * @example
+   * ```typescript
+   * const preAuth: PublicKey = // pre-authorization pubkey
+   * const tokenAccountOwner = await readClient.fetchCurrentOwnerOfPreAuthTokenAccount(
+   *   preAuth
+   * );
+   * ```
+   */
   fetchCurrentOwnerOfPreAuthTokenAccount(
     preAuthorizationPubkey: PublicKey,
   ): Promise<PublicKey>;
 
+  /**
+   * Fetch the current delegation (delegate and delegated amount) of a pre-authorization's token account
+   * @param {PublicKey} preAuthorizationPubkey - the pre-authorization pubkey
+   * @returns {Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null>} the delegate and delegated amount (null if no delegate or delegated amount is 0)
+   * @example
+   * ```typescript
+   * const tokenAccount: PublicKey = // token account pubkey
+   * const delegation = await readClient.fetchCurrentDelegationOfTokenAccount(
+   *   tokenAccount
+   * );
+   *
+   * const {
+   *   delegate, // PublicKey
+   *   delegatedAmount, // bigint (on-chain u64)
+   * } = delegation;
+   * ```
+   */
   fetchCurrentDelegationOfPreAuthTokenAccount(
     preAuthorizationPubkey: PublicKey,
   ): Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null>;
