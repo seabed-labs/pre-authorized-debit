@@ -350,10 +350,11 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
           variant: {
             type: "recurring",
             repeatFrequencySeconds: BigInt(1),
-            numCycles: 1,
+            numCycles: BigInt(1),
           },
           activationUnixTimestamp: BigInt(0),
         } as unknown as PreAuthorizationAccount,
+        // current cycle is 101
         solanaTime: BigInt(100),
         requestedDebitAmount: BigInt(1),
       });
@@ -366,8 +367,8 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
           variant: {
             type: "recurring",
             repeatFrequencySeconds: BigInt(1),
-            numCycles: 200,
-            lastDebitedCycle: 101,
+            numCycles: BigInt(200),
+            lastDebitedCycle: BigInt(101),
             // should be authorized for 100
             amountDebitedLastCycle: BigInt(0),
             recurringAmountAuthorized: BigInt(100),
