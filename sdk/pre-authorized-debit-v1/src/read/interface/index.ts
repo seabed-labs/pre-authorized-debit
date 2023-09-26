@@ -43,6 +43,7 @@ export type PreAuthorizationType = "oneTime" | "recurring" | "all";
  * ## Instantiating a PreAuthorizedDebitReadClient
  *
  * ### Mainnet
+ * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
  * import { PreAuthorizedDebitReadClientImpl } from "@seabed/pre-authorized-debit";
@@ -54,6 +55,7 @@ export type PreAuthorizationType = "oneTime" | "recurring" | "all";
  * ```
  *
  * ### Devnet
+ * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
  * import { PreAuthorizedDebitReadClientImpl } from "@seabed/pre-authorized-debit";
@@ -66,6 +68,7 @@ export type PreAuthorizationType = "oneTime" | "recurring" | "all";
  *
  * ### Custom
  * Point the read client to a custom deployment on any cluster:
+ * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
  * import { PreAuthorizedDebitReadClientImpl } from "@seabed/pre-authorized-debit";
@@ -85,26 +88,23 @@ export interface PreAuthorizedDebitReadClient {
   /**
    * Fetch the on-chain IDL
    *
-   * Example:
+   * @returns {Promise<PreAuthorizedDebitV1>} the IDL as JSON
+   * @example
    * ```typescript
    * const OnchainIDL = await readClient.fetchIdlFromChain();
    * ```
-   *
-   * @returns {Promise<PreAuthorizedDebitV1>} the IDL as JSON
-   *
    */
   fetchIdlFromChain(): Promise<PreAuthorizedDebitV1>;
 
   /**
    * Derives the `SmartDelegate` PDA (singleton)
    *
-   * Example:
+   * @returns {PDA} the PDA object with `publicKey` and `bump`
+   * @example
    * ```typescript
    * const smartDelegatePDA = readClient.getSmartDelegatePDA();
    * const { publicKey, bump } = smartDelegatePDA;
    * ```
-   *
-   * @returns {PDA} the PDA object with `publicKey` and `bump`
    */
   getSmartDelegatePDA(): PDA;
 
@@ -113,6 +113,7 @@ export interface PreAuthorizedDebitReadClient {
    *
    * @param {PublicKey} tokenAccount - the token account this pre-authorization is for
    * @param {PublicKey} debitAuthority - the debit authority that can debit the token account via this pre-authorization
+   * @returns {PDA} the PDA object with `publicKey` and `bump`
    * @example
    * ```typescript
    * const tokenAccountPubkey: PublicKey = // token account pubkey
@@ -120,7 +121,6 @@ export interface PreAuthorizedDebitReadClient {
    * const preAuthorizationPDA = readClient.derivePreAuthorizationPDA();
    * const { publicKey, bump } = smartDelegatePDA;
    * ```
-   * @returns {PDA} the PDA object with `publicKey` and `bump`
    */
   derivePreAuthorizationPDA(
     tokenAccount: PublicKey,
@@ -129,6 +129,8 @@ export interface PreAuthorizedDebitReadClient {
 
   /**
    * Fetch the singleton SmartDelegate account
+   *
+   * @returns {Promise<ProgramAccount<SmartDelegateAccount> | null>} the smart delegate account or null if not found
    *
    * @example
    * ```typescript
@@ -142,7 +144,6 @@ export interface PreAuthorizedDebitReadClient {
    *   bump, // number (on-chain type: u8)
    * } = account;
    * ```
-   * @returns {Promise<ProgramAccount<SmartDelegateAccount> | null>} the smart delegate account or null if not found
    */
   fetchSmartDelegate(): Promise<ProgramAccount<SmartDelegateAccount> | null>;
 
@@ -150,6 +151,7 @@ export interface PreAuthorizedDebitReadClient {
    * Fetch a PreAuthorization account given pubkey or token account and debit authority.
    *
    * @param {FetchPreAuthorizationParams} params - either pubkey or token account and debit authority
+   * @returns {Promise<ProgramAccount<PreAuthorizationAccount> | null>} the pre authorization account or null if not found
    * @example
    * Fetch with a pubkey
    * ```typescript
@@ -199,17 +201,58 @@ export interface PreAuthorizedDebitReadClient {
    *
    * // ... (same as previous variant)
    * ```
-   * @returns {Promise<ProgramAccount<PreAuthorizationAccount> | null>} the pre authorization account or null if not found
    */
   fetchPreAuthorization(
     params: FetchPreAuthorizationParams,
   ): Promise<ProgramAccount<PreAuthorizationAccount> | null>;
 
+  /**
+   * Fetch pre-authorizations that are associated with a token account
+   *
+   * @param {PublicKey} tokenAccount - token account pubkey to which pre-auth is associated with
+   * @param {PreAuthorizationType} [type="all"] - type of pre-auth: "oneTime" or "recurring" or "all" (default)
+   * @returns {Promise<ProgramAccount<PreAuthorizationAccount>[]>} array of pre authorization accounts
+   * @example
+   * ```typescript
+   * const tokenAccount: PublicKey = // token account pubkey;
+   * const type = "all";
+   *
+   * const preAuthAccounts = await readClient.fetchPreAuthorizationsForTokenAccount(
+   *   tokenAccount, // pubkey
+   *   type, // "oneTime" or "recurring" or "all"
+   * );
+   *
+   * for (const account of preAuthAccounts) {
+   *   // ... (access them similar to `fetchPreAuthorization` above)
+   * }
+   * ```
+   */
   fetchPreAuthorizationsForTokenAccount(
     tokenAccount: PublicKey,
     type?: PreAuthorizationType,
   ): Promise<ProgramAccount<PreAuthorizationAccount>[]>;
 
+  /**
+   * Fetch pre-authorizations that are associated with a debit authority
+   *
+   * @param {PublicKey} debitAuthority - debit authority pubkey to which pre-auth is associated with
+   * @param {PreAuthorizationType} [type="all"] - type of pre-auth: "oneTime" or "recurring" or "all" (default)
+   * @returns {Promise<ProgramAccount<PreAuthorizationAccount>[]>} array of pre authorization accounts
+   * @example
+   * ```typescript
+   * const debitAuthority: PublicKey = // debit authority pubkey;
+   * const type = "all";
+   *
+   * const preAuthAccounts = await readClient.fetchPreAuthorizationsForDebitAuthority(
+   *   debitAuthority, // pubkey
+   *   type, // "oneTime" or "recurring" or "all"
+   * );
+   *
+   * for (const account of preAuthAccounts) {
+   *   // ... (access them similar to `fetchPreAuthorization` above)
+   * }
+   * ```
+   */
   fetchPreAuthorizationsForDebitAuthority(
     debitAuthority: PublicKey,
     type?: PreAuthorizationType,
@@ -217,10 +260,11 @@ export interface PreAuthorizedDebitReadClient {
 
   /**
    * Checks whether the given debit will go through right now (based on current state of pre-auth if any)
-   * @returns true if above is true
-   * @param params
+   * @param {CheckDebitAmountParams} params - (pre-auth pubkey or token account and debit authority) + amount to debit
+   * @returns {Promise<boolean>} whether or not the debit goes through
    */
   checkDebitAmount(params: CheckDebitAmountParams): Promise<boolean>;
+
   checkDebitAmountForPreAuthorization(
     params: CheckDebitAmountForPerAuthorizationParams,
   ): boolean;
