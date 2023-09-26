@@ -127,4 +127,4 @@ jobs:
           output-folder: ./${{ matrix.test.scope }}/badges
           target-branch: badges
       - name: Setup | push badges branch
-        run: git push origin badges
+        run: git push -u origin ${{ matrix.test.scope }}/badges
