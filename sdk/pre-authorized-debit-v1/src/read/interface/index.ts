@@ -146,6 +146,61 @@ export interface PreAuthorizedDebitReadClient {
    */
   fetchSmartDelegate(): Promise<ProgramAccount<SmartDelegateAccount> | null>;
 
+  /**
+   * Fetch a PreAuthorization account given pubkey or token account and debit authority.
+   *
+   * @param {FetchPreAuthorizationParams} params - either pubkey or token account and debit authority
+   * @example
+   * Fetch with a pubkey
+   * ```typescript
+   * const preAuthorizationProgramAccount = await readClient.fetchPreAuthorization({
+   *   publicKey: // public key for the account
+   * });
+   *
+   * const {
+   *   publicKey, // PublicKey
+   *   account, // PreAuthorizationAccount
+   * } = preAuthorizationProgramAccount;
+   *
+   * const {
+   *   bump, // number (on-chain type: u8)
+   *   tokenAccount, // PublicKey,
+   *   debitAuthority, // PublicKey,
+   *   activationUnixTimestamp, // bigint (on-chain i64)
+   *   paused, // boolean
+   *   variant, // PreAuthorizationVariantOneTime | PreAuthorizationVariantRecurring
+   * } = account;
+   *
+   * if (variant.type === "oneTime") {
+   *   const {
+   *     amountAuthorized, // bigint (on-chain u64)
+   *     amountDebited, // bigint (on-chain u64)
+   *     expiryUnixTimestamp, // bigint (on-chain i64)
+   *   } = variant;
+   * } else if (variant.type === "recurring") {
+   *   const {
+   *     recurringAmountAuthorized, // bigint (on-chain u64)
+   *     repeatFrequencySeconds, // bigint (on-chain u64)
+   *     resetEveryCycle, // boolean
+   *     numCycles, // number | null (on-chain Option<u64>)
+   *     amountDebitedTotal, // bigint (on-chain u64)
+   *     amountDebitedLastCycle, // bigint (on-chain u64)
+   *     lastDebitedCycle, // bigint (on-chain u64)
+   *   } = variant;
+   * }
+   * ```
+   *
+   * Fetch with token account and debit authority
+   * ```typescript
+   * const preAuthorizationProgramAccount = await readClient.fetchPreAuthorization({
+   *   tokenAccount: // token account pubkey,
+   *   debitAuthority: // debit authorityy pubkey,
+   * });
+   *
+   * // ... (same as previous variant)
+   * ```
+   * @returns {Promise<ProgramAccount<PreAuthorizationAccount> | null>} the pre authorization account or null if not found
+   */
   fetchPreAuthorization(
     params: FetchPreAuthorizationParams,
   ): Promise<ProgramAccount<PreAuthorizationAccount> | null>;
