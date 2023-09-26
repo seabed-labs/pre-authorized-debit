@@ -54,7 +54,7 @@ export type UnwrapNativeMintAdditionalParams = {
  * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
- * import { TransactionFactoryImpl } from "@seabed/pre-authorized-debit";
+ * import { TransactionFactoryImpl } from "@seabed-labs/pre-authorized-debit";
  *
  * // You can use any connection object you'd like, this is just an example
  * const connection = new Connection(clusterApiUrl("mainnet-beta"));
@@ -66,7 +66,7 @@ export type UnwrapNativeMintAdditionalParams = {
  * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
- * import { TransactionFactoryImpl } from "@seabed/pre-authorized-debit";
+ * import { TransactionFactoryImpl } from "@seabed-labs/pre-authorized-debit";
  * 
  * // You can use any connection object you'd like, this is just an example
  * const connection = new Connection(clusterApiUrl("devnet"));
@@ -79,7 +79,7 @@ export type UnwrapNativeMintAdditionalParams = {
  * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
- * import { TransactionFactoryImpl } from "@seabed/pre-authorized-debit";
+ * import { TransactionFactoryImpl } from "@seabed-labs/pre-authorized-debit";
  * 
  * const connection = new Connection(...);
  * const CUSTOM_PAD_PROGRAM_ID = ...;

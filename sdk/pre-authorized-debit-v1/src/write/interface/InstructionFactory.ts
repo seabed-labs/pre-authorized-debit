@@ -33,7 +33,7 @@ type IxFactoryFn<Params, Result> = (
  * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
- * import { InstructionFactoryImpl } from "@seabed/pre-authorized-debit";
+ * import { InstructionFactoryImpl } from "@seabed-labs/pre-authorized-debit";
  *
  * // You can use any connection object you'd like, this is just an example
  * const connection = new Connection(clusterApiUrl("mainnet-beta"));
@@ -45,7 +45,7 @@ type IxFactoryFn<Params, Result> = (
  * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
- * import { InstructionFactoryImpl } from "@seabed/pre-authorized-debit";
+ * import { InstructionFactoryImpl } from "@seabed-labs/pre-authorized-debit";
  *
  * // You can use any connection object you'd like, this is just an example
  * const connection = new Connection(clusterApiUrl("devnet"));
@@ -58,7 +58,7 @@ type IxFactoryFn<Params, Result> = (
  * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
- * import { InstructionFactoryImpl } from "@seabed/pre-authorized-debit";
+ * import { InstructionFactoryImpl } from "@seabed-labs/pre-authorized-debit";
  *
  * const connection = new Connection(...);
  * const CUSTOM_PAD_PROGRAM_ID = ...;

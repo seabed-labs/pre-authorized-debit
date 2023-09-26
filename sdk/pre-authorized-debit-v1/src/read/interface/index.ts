@@ -46,7 +46,7 @@ export type PreAuthorizationType = "oneTime" | "recurring" | "all";
  * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
- * import { PreAuthorizedDebitReadClientImpl } from "@seabed/pre-authorized-debit";
+ * import { PreAuthorizedDebitReadClientImpl } from "@seabed-labs/pre-authorized-debit";
  *
  * // You can use any connection object you'd like, this is just an example
  * const connection = new Connection(clusterApiUrl("mainnet-beta"));
@@ -58,7 +58,7 @@ export type PreAuthorizationType = "oneTime" | "recurring" | "all";
  * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
- * import { PreAuthorizedDebitReadClientImpl } from "@seabed/pre-authorized-debit";
+ * import { PreAuthorizedDebitReadClientImpl } from "@seabed-labs/pre-authorized-debit";
  *
  * // You can use any connection object you'd like, this is just an example
  * const connection = new Connection(clusterApiUrl("devnet"));
@@ -71,7 +71,7 @@ export type PreAuthorizationType = "oneTime" | "recurring" | "all";
  * @example
  * ```typescript
  * import { clusterApiUrl, Connection } from "@solana/web3.js";
- * import { PreAuthorizedDebitReadClientImpl } from "@seabed/pre-authorized-debit";
+ * import { PreAuthorizedDebitReadClientImpl } from "@seabed-labs/pre-authorized-debit";
  *
  * const connection = new Connection(
  *   // your connection args
