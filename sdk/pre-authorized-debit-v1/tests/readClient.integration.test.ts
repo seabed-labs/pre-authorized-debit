@@ -114,6 +114,21 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     }
   });
 
+  context("fetchIdlFromChain", () => {
+    it("should throw error if idl not found", async () => {
+      const programId = Keypair.generate().publicKey;
+      const mockReadClient = PreAuthorizedDebitReadClientImpl.custom(
+        connection,
+        programId,
+      );
+      await expect(
+        mockReadClient.fetchIdlFromChain(),
+      ).to.eventually.be.rejectedWith(
+        `IDL not found on-chain for program ${programId.toString()} (rpc: http://127.0.0.1:8899)`,
+      );
+    });
+  });
+
   context("fetchSmartDelegate", () => {
     it("should fetch smartDelegate", async () => {
       const smartDelegate = await readClient.fetchSmartDelegate();
