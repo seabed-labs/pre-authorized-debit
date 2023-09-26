@@ -107,7 +107,6 @@ export class InstructionFactoryImpl implements InstructionFactory {
     };
   }
 
-  // TODO: De-dupe with recurring pre auth IX
   public async buildInitOneTimePreAuthorizationIx(
     params: InitOneTimePreAuthorizationParams,
   ): Promise<InstructionWithMetadata<InitOneTimePreAuthorizationResult>> {
@@ -178,7 +177,6 @@ export class InstructionFactoryImpl implements InstructionFactory {
     };
   }
 
-  // TODO: De-dupe this with the recurring pre-auth IX
   public async buildInitRecurringPreAuthorizationIx(
     params: InitRecurringPreAuthorizationParams,
   ): Promise<InstructionWithMetadata<{ preAuthorization: PublicKey }>> {
@@ -252,7 +250,6 @@ export class InstructionFactoryImpl implements InstructionFactory {
     };
   }
 
-  // TODO: De-dupe this with unpause method
   public async buildPausePreAuthorizationIx(
     params: PausePreAuthorizationParams,
   ): Promise<InstructionWithMetadata<PausePreAuthorizationResult>> {
@@ -289,7 +286,6 @@ export class InstructionFactoryImpl implements InstructionFactory {
     };
   }
 
-  // TODO: De-dupe this with pause method
   public async buildUnpausePreAuthorizationIx(
     params: UnpausePreAuthorizationParams,
   ): Promise<InstructionWithMetadata<UnpausePreAuthorizationResult>> {

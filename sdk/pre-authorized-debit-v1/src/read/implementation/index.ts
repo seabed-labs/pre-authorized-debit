@@ -40,8 +40,6 @@ import {
 } from "@solana/spl-token";
 import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
 
-// TODO: Dedupe across methds in impl
-
 export class PreAuthorizedDebitReadClientImpl
   implements PreAuthorizedDebitReadClient
 {
@@ -253,10 +251,6 @@ export class PreAuthorizedDebitReadClientImpl
         'Must provide a type filter that is not "all" when also filtering by debitAuthority',
       );
     }
-    // TODO: Support pagination?
-    // TODO: After test, make this code more dynamic (i.e. use IDL and anchor convenience functions instead of doing it raw)
-
-    // TODO: After test, make this code more dynamic (i.e. use IDL and anchor convenience functions instead of doing it raw)
 
     const filters: GetProgramAccountsFilter[] = [];
 
@@ -307,7 +301,6 @@ export class PreAuthorizedDebitReadClientImpl
     }));
   }
 
-  // TODO: Support pagination?
   public async fetchPreAuthorizationsForTokenAccount(
     tokenAccount: PublicKey,
     type: PreAuthorizationType = "all",
@@ -315,7 +308,6 @@ export class PreAuthorizedDebitReadClientImpl
     return this.fetchPreAuthorizations(type, { tokenAccount });
   }
 
-  // TODO: Support pagination?
   public async fetchPreAuthorizationsForDebitAuthority(
     debitAuthority: PublicKey,
     type: PreAuthorizationType = "all",
@@ -428,8 +420,6 @@ export class PreAuthorizedDebitReadClientImpl
 
     const variant = preAuthorization.account.variant;
 
-    // TODO: Extract the business logic out to a fn that does not depend on chain data
-    // for better testability
     if (variant.type === "oneTime") {
       const { amountAuthorized, amountDebited, expiryUnixTimestamp } = variant;
       const expiryDate = new Date(Number(expiryUnixTimestamp) * 1e3);

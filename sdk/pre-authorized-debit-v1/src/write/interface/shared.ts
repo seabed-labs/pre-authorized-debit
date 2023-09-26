@@ -28,19 +28,15 @@ export type TransactionWithMetadata<T> = {
   meta: T;
   buildVersionedTransaction(
     signers?: Signer[],
-    // TODO: Add documentation: defaults to signers[0]
     txFeesPayer?: PublicKey,
   ): Promise<VersionedTransaction>;
-  // TODO: How do we implement this?
   simulate(
     signers?: Signer[],
-    // TODO: Add documentation: defaults to signers[0]
     txFeesPayer?: PublicKey,
   ): Promise<TransactionSimulationResultWithMeta<T>>;
   execute(
     options?: SendOptions,
     signers?: Signer[],
-    // TODO: Add documentation: defaults to signers[0]
     txFeesPayer?: PublicKey,
   ): Promise<TransactionResultWithMeta<T>>;
 };

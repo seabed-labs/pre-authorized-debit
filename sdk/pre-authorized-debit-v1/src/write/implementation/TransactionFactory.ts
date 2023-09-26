@@ -49,8 +49,6 @@ import {
   getAccount,
 } from "@solana/spl-token";
 
-// TODO: De-dupe code between methods if applicable
-
 export class TransactionFactoryImpl implements TransactionFactory {
   // eslint-disable-next-line no-useless-constructor
   private constructor(
@@ -184,8 +182,9 @@ export class TransactionFactoryImpl implements TransactionFactory {
   public async buildInitSmartDelegateTx(
     params: InitSmartDelegateParams,
   ): Promise<TransactionWithMetadata<InitSmartDelegateResult>> {
-    const initSmartDelegateIx =
-      await this.ixFactory.buildInitSmartDelegateIx(params);
+    const initSmartDelegateIx = await this.ixFactory.buildInitSmartDelegateIx(
+      params,
+    );
 
     return this.wrapIxsInTx(
       undefined,
@@ -214,8 +213,9 @@ export class TransactionFactoryImpl implements TransactionFactory {
   public async buildPausePreAuthorizationTx(
     params: PausePreAuthorizationParams,
   ): Promise<TransactionWithMetadata<PausePreAuthorizationResult>> {
-    const pausePreAuthIx =
-      await this.ixFactory.buildPausePreAuthorizationIx(params);
+    const pausePreAuthIx = await this.ixFactory.buildPausePreAuthorizationIx(
+      params,
+    );
 
     return this.wrapIxsInTx(
       undefined,
@@ -305,7 +305,6 @@ export class TransactionFactoryImpl implements TransactionFactory {
     );
   }
 
-  // TODO: De-dupe with recurring variant
   public async buildInitOneTimePreAuthorizationTx(
     params: InitOneTimePreAuthorizationParams & WrapNativeMintAdditionalParams,
   ): Promise<TransactionWithMetadata<InitOneTimePreAuthorizationResult>> {
