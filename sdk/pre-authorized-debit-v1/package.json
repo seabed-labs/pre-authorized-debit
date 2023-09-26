@@ -7,7 +7,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "yarn run tsc",
-    "test": "cd ../../ && anchor test \"sdk/pre-authorized-debit-v1\" \"tests/**/*.test.ts\""
+    "test": "cd ../../ && anchor test \"sdk/pre-authorized-debit-v1\" \"tests/**/*.test.ts\"",
+    "prepublish": "yarn test",
+    "prepack": "yarn build"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
