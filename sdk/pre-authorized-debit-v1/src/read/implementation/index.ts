@@ -326,7 +326,7 @@ export class PreAuthorizedDebitReadClientImpl
     requestedDebitAmount,
     solanaTime,
   }: CheckDebitAmountForPerAuthorizationParams): boolean {
-    if (preAuthorizationAccount.activationUnixTimestamp < solanaTime) {
+    if (solanaTime < preAuthorizationAccount.activationUnixTimestamp) {
       return false;
     }
     if (isOneTimePreAuthorizationAccount(preAuthorizationAccount)) {
@@ -346,7 +346,7 @@ export class PreAuthorizedDebitReadClientImpl
       );
       if (
         preAuthorizationAccount.variant.numCycles &&
-        preAuthorizationAccount.variant.numCycles > currentCycle
+        currentCycle > preAuthorizationAccount.variant.numCycles
       ) {
         return false;
       }
@@ -375,9 +375,6 @@ export class PreAuthorizedDebitReadClientImpl
       return false;
     }
     const solanaTime = BigInt(await this.getSolanaUnixTimestamp());
-    if (preAuthorization.account.activationUnixTimestamp < solanaTime) {
-      return false;
-    }
     const preAuthorizationAccount = preAuthorization.account;
     return this.checkDebitAmountForPreAuthorization({
       preAuthorizationAccount,
