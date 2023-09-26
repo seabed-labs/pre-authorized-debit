@@ -10,14 +10,12 @@ import {
 import * as anchor from "@coral-xyz/anchor";
 
 import { program, provider, eventParser } from "./setup";
+import { PreAuthTestVariant, derivePreAuthorization } from "./utils";
 import {
-  PreAuthTestVariant,
-  derivePreAuthorization,
   fundAccounts,
-  waitForTxToConfirm,
   initSmartDelegateIdempotent,
-} from "./utils";
-import { PausePreAuthorizationEventData } from "@dcaf/pad";
+  waitForTxToConfirm,
+} from "@dcaf/pad-test-utils";
 
 describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
   let owner: Keypair, mintAuthority: Keypair, debitAuthority: Keypair;
@@ -54,8 +52,8 @@ describe("pre-authorized-debit-v1#update-pause-pre-authorization", () => {
       expect(pausePreAuthEvent.name).to.equal("PreAuthorizationUnpaused");
     }
     expect(Object.keys(pausePreAuthEvent.data).length).to.equal(1);
-    const pausePreAuthEventData = pausePreAuthEvent.data
-      .data as PausePreAuthorizationEventData;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const pausePreAuthEventData = pausePreAuthEvent.data.data as any;
     expect(Object.keys(pausePreAuthEventData).length).to.equal(4);
     expect(pausePreAuthEventData.owner!.toString()).to.equal(
       ownerPublicKey.toString(),

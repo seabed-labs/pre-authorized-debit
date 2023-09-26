@@ -23,6 +23,7 @@ import {
   Debit,
   DebitParams,
   SmartDelegate,
+  ClosePreAuthorization,
 } from "@dcaf/pad";
 
 dotenv.config();
@@ -319,6 +320,90 @@ export async function testDevnet() {
     "confirmed",
   );
   console.log(`Debited against pre-authorization (tx: ${debitTxSig})`);
+
+  const closePreAuthIx = new ClosePreAuthorization(
+    PRE_AUTHORIZED_DEBIT_PROGRAM_ID,
+    {
+      args: null,
+      accounts: {
+        authority: debitAuthorityKeypair.publicKey,
+        receiver: userKeypair.publicKey,
+        preAuthorization,
+        tokenAccount: userTestMintAta,
+      },
+    },
+  ).build();
+
+  blockhashInfo = await config.connection.getLatestBlockhash();
+  const closePreAuthTx = new Transaction({
+    feePayer: config.signer.publicKey,
+    ...blockhashInfo,
+  }).add(closePreAuthIx);
+
+  closePreAuthTx.sign(config.signer, debitAuthorityKeypair);
+
+  const closePreAuthTxSig = await config.connection.sendRawTransaction(
+    closePreAuthTx.serialize(),
+  );
+  await config.connection.confirmTransaction(
+    {
+      signature: closePreAuthTxSig,
+      ...blockhashInfo,
+    },
+    "confirmed",
+  );
+  console.log(
+    `Closed pre-authorization (signed by debit authority) (tx: ${closePreAuthTxSig})`,
+  );
+
+  const initPreAuthorization2Ix = new InitPreAuthorization(
+    PRE_AUTHORIZED_DEBIT_PROGRAM_ID,
+    {
+      args: {
+        params: new InitPreAuthorizationParams({
+          variant: new InitPreAuthorizationVariant.Recurring({
+            repeatFrequencySeconds: BigInt(2),
+            resetEveryCycle: true,
+            numCycles: null,
+            recurringAmountAuthorized: BigInt(10),
+          }),
+          debitAuthority: debitAuthorityKeypair.publicKey,
+          activationUnixTimestamp: BigInt(now - 60 * 60),
+        }),
+      },
+      accounts: {
+        payer: config.signer.publicKey,
+        owner: userKeypair.publicKey,
+        smartDelegate,
+        tokenAccount: userTestMintAta,
+        preAuthorization,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      },
+    },
+  ).build();
+
+  blockhashInfo = await config.connection.getLatestBlockhash();
+  const initPreAuthorization2Tx = new Transaction({
+    feePayer: config.signer.publicKey,
+    ...blockhashInfo,
+  }).add(initPreAuthorization2Ix);
+
+  initPreAuthorization2Tx.sign(config.signer, userKeypair);
+
+  const initPreAuthorization2TxSig = await config.connection.sendRawTransaction(
+    initPreAuthorization2Tx.serialize(),
+  );
+  await config.connection.confirmTransaction(
+    {
+      signature: initPreAuthorization2TxSig,
+      ...blockhashInfo,
+    },
+    "confirmed",
+  );
+  console.log(
+    `Initialized pre-authorization again ${preAuthorization.toBase58()} (tx: ${initPreAuthorization2TxSig})`,
+  );
 }
 
 if (require.main === module) {

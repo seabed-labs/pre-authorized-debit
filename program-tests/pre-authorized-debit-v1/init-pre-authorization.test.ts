@@ -13,9 +13,6 @@ import {
   PreAuthTestVariant,
   deriveInvalidPreAuthorization,
   derivePreAuthorization,
-  fundAccounts,
-  waitForTxToConfirm,
-  initSmartDelegateIdempotent,
   U64_MAX,
 } from "./utils";
 import {
@@ -28,9 +25,10 @@ import {
 } from "@solana/spl-token";
 import * as anchor from "@coral-xyz/anchor";
 import {
-  PreAuthorizationCreatedEventData,
-  InitPreAuthorizationParams,
-} from "@dcaf/pad";
+  fundAccounts,
+  initSmartDelegateIdempotent,
+  waitForTxToConfirm,
+} from "@dcaf/pad-test-utils";
 
 describe("pre-authorized-debit-v1#init-pre-authorization", () => {
   const program =
@@ -197,8 +195,8 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
               );
             }
             expect(Object.keys(initPreAuthEvent.data).length).to.equal(1);
-            const initPreAuthEventData = initPreAuthEvent.data
-              .data as PreAuthorizationCreatedEventData;
+            // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+            const initPreAuthEventData = initPreAuthEvent.data.data as any;
             expect(Object.keys(initPreAuthEventData).length).to.equal(6);
 
             expect(initPreAuthEventData.debitAuthority.toString()).to.equal(
@@ -217,8 +215,8 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
             expect(initPreAuthEventData.preAuthorization.toString()).to.equal(
               preAuthorization.toString(),
             );
-            const eventDataInitParams =
-              initPreAuthEventData.initParams as InitPreAuthorizationParams;
+            // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+            const eventDataInitParams = initPreAuthEventData.initParams as any;
             expect(
               eventDataInitParams.activationUnixTimestamp.toString(),
             ).to.equal(activationUnixTimestamp.toString());

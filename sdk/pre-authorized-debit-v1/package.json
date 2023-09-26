@@ -1,32 +1,44 @@
 {
-    "name": "@dcaf/pad",
-    "version": "1.0.0",
-    "packageManager": "yarn@3.6.0",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "scripts": {
-        "build": "yarn run tsc",
-        "build:program": "cd ../../ && anchor build -p pre_authorized_debit_v1",
-        "clean:anchor-client": "rm -rf ./src/anchor-client/accounts && rm -rf ./src/anchor-client/errors && rm -rf ./src/anchor-client/instructions && rm -rf ./src/anchor-client/types",
-        "build:anchor-client": "yarn clean:anchor-client && yarn run anchor-client-gen ../../target/idl/pre_authorized_debit_v1.json ./src/anchor-client && yarn lint:fix",
-        "regenerate:anchor-client": "yarn clean:anchor-client && yarn build:program && yarn build:anchor-client"
-    },
-    "dependencies": {
-        "@coral-xyz/anchor": "^0.28.0",
-        "@coral-xyz/borsh": "^0.28.0",
-        "@solana/spl-token": "^0.3.8",
-        "@solana/web3.js": "^1.78.4",
-        "bn.js": "^5.2.1"
-    },
-    "devDependencies": {
-        "@dcaf/anchor-client-gen": "0.28.1-beta.11",
-        "@types/bn.js": "^5.1.0",
-        "@types/chai": "^4.3.0",
-        "@types/mocha": "^9.0.0",
-        "chai": "^4.3.4",
-        "mocha": "10.1.0",
-        "prettier": "^2.6.2",
-        "ts-mocha": "^10.0.0",
-        "typescript": "^4.3.5"
-    }
+  "name": "@dcaf/pad",
+  "version": "1.0.0",
+  "packageManager": "yarn@3.6.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "yarn run tsc",
+    "test": "cd ../../ && anchor test \"sdk/pre-authorized-debit-v1\" \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.28.0",
+    "@coral-xyz/borsh": "^0.28.0",
+    "@solana/spl-token": "^0.3.8",
+    "@solana/web3.js": "^1.78.4",
+    "axios": "^1.5.0",
+    "bn.js": "^5.2.1",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.20",
+    "@babel/preset-env": "^7.22.20",
+    "@babel/preset-typescript": "^7.22.15",
+    "@dcaf/pad-test-utils": "1.0.0",
+    "@istanbuljs/nyc-config-typescript": "^1.0.2",
+    "@types/bn.js": "^5.1.0",
+    "@types/chai": "^4.3.0",
+    "@types/chai-as-promised": "^7.1.6",
+    "@types/mocha": "^9.0.0",
+    "@types/sinon": "^10.0.16",
+    "chai": "^4.3.8",
+    "chai-as-promised": "^7.1.1",
+    "dotenv": "^16.3.1",
+    "mocha": "10.1.0",
+    "mocha-typescript": "^1.1.17",
+    "nyc": "^15.1.0",
+    "prettier": "^2.6.2",
+    "sinon": "^16.0.0",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
 }

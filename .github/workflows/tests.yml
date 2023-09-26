@@ -1,0 +1,125 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feat/**/*
+
+concurrency:
+  group: ${{ github.ref }}-program-tests
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: metaplex-foundation/actions/install-rust@v1
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "unit-tests"
+      - run: cargo test
+
+  build-deps:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Setup | checkout
+        uses: actions/checkout@v3
+      - name: Setup | rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "integration-tests"
+          shared-key: "integration-tests"
+      - name: Setup | cache crates
+        uses: metaplex-foundation/actions/cache-crates@v1
+      - name: Setup | node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.17.1
+          cache: "yarn"
+      - name: Setup | rust
+        uses: metaplex-foundation/actions/install-rust@v1
+      - name: Setup | anchor
+        run: yarn global add @coral-xyz/anchor-cli@0.28.0
+      - name: Setup | solana
+        uses: metaplex-foundation/actions/install-solana@v1
+        with:
+          version: 1.16.10
+          cache: true
+      - name: Setup | yarn deps
+        run: yarn install
+      - name: Build Programs
+        run: anchor build
+
+  program-integration-tests:
+    needs: ["build-deps"]
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        test:
+          [
+            {
+              scope: "program-tests/pre-authorized-debit-v1",
+              testSuffix: "**/*test.ts",
+            },
+            {
+              scope: "program-tests/pre-authorized-debit-v1",
+              testSuffix: "**/*test.2.ts",
+            },
+            {
+              scope: "program-tests/pre-authorized-debit-v1",
+              testSuffix: "**/debit/*.test.ts",
+            },
+            {
+              scope: "sdk/pre-authorized-debit-v1",
+              testSuffix: "tests/**/*.test.ts",
+            },
+          ]
+    steps:
+      - name: Setup | checkout
+        uses: actions/checkout@v3
+      - name: Setup | rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "integration-tests"
+          shared-key: "integration-tests"
+      - name: Setup | cache crates
+        uses: metaplex-foundation/actions/cache-crates@v1
+      - name: Setup | node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.17.1
+          cache: "yarn"
+      - name: Setup | rust
+        uses: metaplex-foundation/actions/install-rust@v1
+      - name: Setup | anchor
+        run: yarn global add @coral-xyz/anchor-cli@0.28.0
+      - name: Setup | solana
+        uses: metaplex-foundation/actions/install-solana@v1
+        with:
+          version: 1.16.10
+          cache: true
+      - name: Setup | solana keypair
+        run: solana-keygen new --no-bip39-passphrase
+      - name: Setup | solaan url
+        run: solana config set --url http:localhost:8899
+      - name: Setup | yarn deps
+        run: yarn install
+      - name: Setup | pacakge deps
+        run: cd ${{ matrix.test.scope }} && yarn install
+      - name: Test
+        env:
+          DEVNET_VALIDATOR_URL: ${{ secrets.DEVNET_VALIDATOR_URL }}
+          MAINNET_VALIDATOR_URL: ${{ secrets.MAINNET_VALIDATOR_URL }}
+        run: anchor test ${{ matrix.test.scope }} ${{ matrix.test.testSuffix }}
+      - name: Test | code coverage
+        if: ${{ contains(matrix.test.scope, 'sdk') }}
+        uses: jpb06/jest-badges-action@latest
+        with:
+          coverage-summary-path: ./${{ matrix.test.scope }}/coverage/coverage-summary.json
+          branches: main,feat/sdk
+          commit-user: Seabed CI
+          commit-user-email: devtools@dcaf.so
+          output-folder: ./${{ matrix.test.scope }}/badges

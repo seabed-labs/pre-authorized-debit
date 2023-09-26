@@ -13,11 +13,13 @@ import {
   DebitEvent,
   U64_MAX,
   derivePreAuthorization,
-  fundAccounts,
   getCurrentUnixTimestamp,
-  waitForTxToConfirm,
-  initSmartDelegateIdempotent,
 } from "../utils";
+import {
+  fundAccounts,
+  initSmartDelegateIdempotent,
+  waitForTxToConfirm,
+} from "@dcaf/pad-test-utils";
 
 export function testRecurringDebit(
   tokenProgramId: PublicKey,

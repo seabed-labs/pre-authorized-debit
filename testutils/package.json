@@ -1,0 +1,15 @@
+{
+  "name": "@dcaf/pad-test-utils",
+  "version": "1.0.0",
+  "packageManager": "yarn@3.6.0",
+  "private": true,
+  "scripts": {
+    "build": "yarn run tsc"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.28.0",
+    "@noble/hashes": "^1.3.2",
+    "@solana/spl-token": "^0.3.8",
+    "@solana/web3.js": "^1.78.4"
+  }
+}
