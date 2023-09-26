@@ -1,6 +1,6 @@
 # Pre Authorized Debit
 
-[![Program Tests](https://github.com/dcaf-labs/pre-authorized-debit/actions/workflows/program-tests.yml/badge.svg)](https://github.com/dcaf-labs/pre-authorized-debit/actions/workflows/program-tests.yml)
+[![Tests](https://github.com/seabed-labs/pre-authorized-debit/actions/workflows/tests.yml/badge.svg?branch=feat%2Fsdk)](https://github.com/seabed-labs/pre-authorized-debit/actions/workflows/tests.yml)
 ![SDK Coverage - Statements](./sdk/pre-authorized-debit-v1/badges/coverage-jest%20coverage.svg)
 ![SDK Coverage - Lines](./sdk/pre-authorized-debit-v1/badges/coverage-lines.svg)
 
