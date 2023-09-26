@@ -121,7 +121,10 @@ jobs:
         uses: jpb06/jest-badges-action@latest
         with:
           coverage-summary-path: ./${{ matrix.test.scope }}/coverage/coverage-summary.json
-          branches: main,feat/sdk
+          branches: main
           commit-user: Seabed CI
           commit-user-email: devtools@dcaf.so
           output-folder: ./${{ matrix.test.scope }}/badges
+          target-branch: badges
+      - name: Setup | push badges branch
+        run: git push origin badges
