@@ -304,7 +304,21 @@ export interface PreAuthorizedDebitReadClient {
     params: CheckDebitAmountForPerAuthorizationParams,
   ): boolean;
 
-  // Returns the maximum debitable amount given the current state of pre-auth given params (if any)
+  /**
+   * Fetch the maximum amount that can de debited now for a pre-authorization given a token account and debit authority
+   * @param {FetchMaxDebitAmountParams} params - token account and debit authority pubkeys
+   * @returns {Promise<bigint>} the max amount that can be debited now
+   * @example
+   * ```typescript
+   * const tokenAccount: PublicKey = // token account pubkey
+   * const debitAuthority: PublicKey = // debit authority pubkey
+   *
+   * const maxDebitAmount = await readClient.fetchMaxDebitAmount({
+   *   tokenAccount,
+   *   debitAuthority,
+   * });
+   * ```
+   */
   fetchMaxDebitAmount(params: FetchMaxDebitAmountParams): Promise<bigint>;
 
   fetchTokenProgramIdForTokenAccount(
