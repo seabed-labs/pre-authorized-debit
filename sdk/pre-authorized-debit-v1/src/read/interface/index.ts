@@ -36,6 +36,51 @@ export type PDA = {
 
 export type PreAuthorizationType = "oneTime" | "recurring" | "all";
 
+/**
+ * # PreAuthorizedDebitReadClient
+ * The `PreAuthorizedDebitReadClient` client exposes methods that can be used to read and process information from on-chain data.
+ *
+ * ## Instantiating a PreAuthorizedDebitReadClient
+ *
+ * ### Mainnet
+ * ```typescript
+ * import { clusterApiUrl, Connection } from "@solana/web3.js";
+ * import { PreAuthorizedDebitReadClientImpl } from "@seabed/pre-authorized-debit";
+ *
+ * // You can use any connection object you'd like, this is just an example
+ * const connection = new Connection(clusterApiUrl("mainnet-beta"));
+ *
+ * const readClient = PreAuthorizedDebitReadClientImpl.mainnet(connection);
+ * ```
+ *
+ * ### Devnet
+ * ```typescript
+ * import { clusterApiUrl, Connection } from "@solana/web3.js";
+ * import { PreAuthorizedDebitReadClientImpl } from "@seabed/pre-authorized-debit";
+ *
+ * // You can use any connection object you'd like, this is just an example
+ * const connection = new Connection(clusterApiUrl("devnet"));
+ *
+ * const readClient = PreAuthorizedDebitReadClientImpl.devnet(connection);
+ * ```
+ *
+ * ### Custom
+ * Point the read client to a custom deployment on any cluster:
+ * ```typescript
+ * import { clusterApiUrl, Connection } from "@solana/web3.js";
+ * import { PreAuthorizedDebitReadClientImpl } from "@seabed/pre-authorized-debit";
+ *
+ * const connection = new Connection(
+ *   // your connection args
+ * );
+ * const CUSTOM_PAD_PROGRAM_ID = "<your custom program ID>";
+ *
+ * const readClient = PreAuthorizedDebitReadClientImpl.custom(
+ *   connection,
+ *   CUSTOM_PAD_PROGRAM_ID
+ * );
+ * ```
+ */
 export interface PreAuthorizedDebitReadClient {
   fetchIdlFromChain(): Promise<PreAuthorizedDebitV1>;
 
