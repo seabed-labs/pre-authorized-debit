@@ -102,8 +102,9 @@ describe("InstructionFactory Unit Tests", () => {
         .stub(readClient, "fetchTokenProgramIdForTokenAccount")
         .resolves(mockTokenProgramId);
 
-      const ix =
-        await instructionFactory.buildInitOneTimePreAuthorizationIx(params);
+      const ix = await instructionFactory.buildInitOneTimePreAuthorizationIx(
+        params,
+      );
 
       const ixData =
         // eslint-disable-next-line  @typescript-eslint/no-explicit-any
@@ -221,8 +222,9 @@ describe("InstructionFactory Unit Tests", () => {
         .stub(readClient, "fetchTokenProgramIdForTokenAccount")
         .resolves(mockTokenProgramId);
 
-      const ix =
-        await instructionFactory.buildInitRecurringPreAuthorizationIx(params);
+      const ix = await instructionFactory.buildInitRecurringPreAuthorizationIx(
+        params,
+      );
 
       const ixData =
         // eslint-disable-next-line  @typescript-eslint/no-explicit-any
@@ -420,8 +422,9 @@ describe("InstructionFactory Unit Tests", () => {
         .stub(readClient, "fetchCurrentOwnerOfPreAuthTokenAccount")
         .resolves(mockTokenAccountOwner);
 
-      const ix =
-        await instructionFactory.buildUnpausePreAuthorizationIx(params);
+      const ix = await instructionFactory.buildUnpausePreAuthorizationIx(
+        params,
+      );
 
       const ixData =
         // eslint-disable-next-line  @typescript-eslint/no-explicit-any
@@ -629,14 +632,6 @@ describe("InstructionFactory Unit Tests", () => {
         ),
       ).to.equal(true);
     });
-  });
-
-  context("buildDebitIx", () => {
-    it("should throw if smart delegate is not token account delegate", async () => {});
-
-    it("should throw if token account delegated mount is less than requested debit amount", async () => {});
-
-    it("should build debit instruction", async () => {});
   });
 
   context("buildApproveSmartDelegateIx", () => {
