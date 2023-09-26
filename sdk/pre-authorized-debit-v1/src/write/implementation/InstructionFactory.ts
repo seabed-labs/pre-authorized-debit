@@ -25,6 +25,7 @@ import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import {
   DEVNET_PAD_PROGRAM_ID,
+  I64_MAX,
   MAINNET_PAD_PROGRAM_ID,
   U64_MAX,
 } from "../../constants";
@@ -122,7 +123,7 @@ export class InstructionFactoryImpl implements InstructionFactory {
     const activationUnixTimestamp = BigInt(dateToUnixTimestamp(activation));
     const expiryUnixTimestamp = expiry
       ? BigInt(dateToUnixTimestamp(expiry))
-      : U64_MAX;
+      : I64_MAX;
 
     const tokenAccountOwner =
       await this.readClient.fetchCurrentOwnerOfTokenAccount(tokenAccount);

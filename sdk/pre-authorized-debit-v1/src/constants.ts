@@ -9,3 +9,4 @@ export const DEVNET_PAD_PROGRAM_ID = new PublicKey(
 );
 
 export const U64_MAX = BigInt(2) ** BigInt(64) - BigInt(1);
+export const I64_MAX = BigInt(2) ** BigInt(63) - BigInt(1);
