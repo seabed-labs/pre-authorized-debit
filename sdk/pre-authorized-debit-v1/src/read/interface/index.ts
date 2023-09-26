@@ -96,7 +96,7 @@ export interface PreAuthorizedDebitReadClient {
   fetchIdlFromChain(): Promise<PreAuthorizedDebitV1>;
 
   /**
-   * Derives the SmartDelegate PDA (singleton).
+   * Derives the `SmartDelegate` PDA (singleton)
    *
    * Example:
    * ```typescript
@@ -108,11 +108,42 @@ export interface PreAuthorizedDebitReadClient {
    */
   getSmartDelegatePDA(): PDA;
 
+  /**
+   * Derive the PDA for a `PreAuthorization` account given a token account and debit authority
+   *
+   * @param {PublicKey} tokenAccount - the token account this pre-authorization is for
+   * @param {PublicKey} debitAuthority - the debit authority that can debit the token account via this pre-authorization
+   * @example
+   * ```typescript
+   * const tokenAccountPubkey: PublicKey = // token account pubkey
+   * const debitAuthorityPubkey: PublicKey = // any pubkey
+   * const preAuthorizationPDA = readClient.derivePreAuthorizationPDA();
+   * const { publicKey, bump } = smartDelegatePDA;
+   * ```
+   * @returns {PDA} the PDA object with `publicKey` and `bump`
+   */
   derivePreAuthorizationPDA(
     tokenAccount: PublicKey,
     debitAuthority: PublicKey,
   ): PDA;
 
+  /**
+   * Fetch the singleton SmartDelegate account
+   *
+   * @example
+   * ```typescript
+   * const smartDelegateProgramAccount = await readClient.fetchSmartDelegate();
+   * const {
+   *   publicKey, // PublicKey
+   *   account, // SmartDelegateAccount
+   * } = smartDelegateProgramAccount;
+   *
+   * const {
+   *   bump, // number (on-chain type: u8)
+   * } = account;
+   * ```
+   * @returns {Promise<ProgramAccount<SmartDelegateAccount> | null>} the smart delegate account or null if not found
+   */
   fetchSmartDelegate(): Promise<ProgramAccount<SmartDelegateAccount> | null>;
 
   fetchPreAuthorization(
