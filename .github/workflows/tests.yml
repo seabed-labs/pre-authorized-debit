@@ -49,7 +49,9 @@ jobs:
           version: 1.16.10
           cache: true
       - name: Setup | yarn deps
-        run: yarn install
+        run: |
+          yarn config set -H enableImmutableInstalls false
+          yarn install
       - name: Build Programs
         run: anchor build
 
@@ -109,9 +111,11 @@ jobs:
       - name: Setup | solaan url
         run: solana config set --url http:localhost:8899
       - name: Setup | yarn deps
-        run: yarn install
-      - name: Setup | pacakge deps
-        run: cd ${{ matrix.test.scope }} && yarn install
+        run: |
+          yarn config set -H enableImmutableInstalls false
+          yarn install
+#      - name: Setup | package deps
+#        run: cd ${{ matrix.test.scope }} && yarn install
       - name: Test
         env:
           DEVNET_VALIDATOR_URL: ${{ secrets.DEVNET_VALIDATOR_URL }}
