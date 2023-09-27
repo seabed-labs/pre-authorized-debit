@@ -15,6 +15,7 @@ import {
 } from "@solana/web3.js";
 import {
   CheckDebitAmountParams,
+  CheckDebitAmountResult,
   PDA,
   PreAuthorizationType,
   PreAuthorizedDebitReadClient,
@@ -310,7 +311,7 @@ export class PreAuthorizedDebitReadClientImpl
 
   public async checkDebitAmount(
     params: CheckDebitAmountParams,
-  ): Promise<boolean> {
+  ): Promise<CheckDebitAmountResult> {
     const { txFeePayer } = params;
     let tokenAccountPubkey: PublicKey,
       debitAuthorityPubkey: PublicKey,
@@ -321,7 +322,10 @@ export class PreAuthorizedDebitReadClientImpl
         publicKey: params.preAuthorization,
       });
       if (preAuthorizationAccount === null) {
-        return false;
+        return {
+          successful: false,
+          reason: "Pre-authorization account not found on-chain",
+        };
       }
       tokenAccountPubkey = preAuthorizationAccount.account.tokenAccount;
       debitAuthorityPubkey = preAuthorizationAccount.account.debitAuthority;
@@ -332,7 +336,10 @@ export class PreAuthorizedDebitReadClientImpl
         debitAuthority: params.debitAuthority,
       });
       if (preAuthorizationAccount === null) {
-        return false;
+        return {
+          successful: false,
+          reason: "Pre-authorization account not found on-chain",
+        };
       }
       tokenAccountPubkey = params.tokenAccount;
       debitAuthorityPubkey = params.debitAuthority;
@@ -356,10 +363,6 @@ export class PreAuthorizedDebitReadClientImpl
         this.connection.rpcEndpoint,
         tokenAccountPubkey,
       );
-    }
-
-    if (preAuthorizationPubkey == null) {
-      return false;
     }
 
     const tokenAccount = await getAccount(
@@ -410,7 +413,18 @@ export class PreAuthorizedDebitReadClientImpl
       replaceRecentBlockhash: true,
     });
 
-    return res.value.err === null;
+    const isSimulationSuccessful = res.value.err === null;
+
+    if (isSimulationSuccessful) {
+      return { successful: true };
+    }
+
+    return {
+      successful: false,
+      reason: res.value.logs
+        ? ["simulation failed; logs:", ...res.value.logs]
+        : "simulation failed",
+    };
   }
 
   public async fetchMaxDebitAmount(params: {

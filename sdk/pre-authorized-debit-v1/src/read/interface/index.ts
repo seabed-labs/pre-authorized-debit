@@ -32,6 +32,15 @@ export type PDA = {
 
 export type PreAuthorizationType = "oneTime" | "recurring" | "all";
 
+export type CheckDebitAmountResult =
+  | {
+      successful: true;
+    }
+  | {
+      successful: false;
+      reason: string | string[];
+    };
+
 /**
  * # PreAuthorizedDebitReadClient
  * The `PreAuthorizedDebitReadClient` client exposes methods that can be used to read and process information from on-chain data.
@@ -264,7 +273,7 @@ export interface PreAuthorizedDebitReadClient {
    * @example
    * Check with pre-authorization pubkey
    * ```typescript
-   * const canDebit = await readClient.checkDebitAmount({
+   * const res = await readClient.checkDebitAmount({
    *   preAuthorization: // pre-auth pubkey,
    *   requestedDebitAmount: // amount to debit (bigint),
    *   txFeePayer: // the lamports fee payer pubkey for the tx,
@@ -272,7 +281,7 @@ export interface PreAuthorizedDebitReadClient {
    * ```
    * Check with token account and debit authority pubkeys
    * ```typescript
-   * const canDebit = await readClient.checkDebitAmount({
+   * const res = await readClient.checkDebitAmount({
    *   tokenAccount: // token account pubkey,
    *   debitAuthority: // debit authority pubkey,
    *   requestedDebitAmount: // amount to debit (bigint),
@@ -280,7 +289,9 @@ export interface PreAuthorizedDebitReadClient {
    * });
    * ```
    */
-  checkDebitAmount(params: CheckDebitAmountParams): Promise<boolean>;
+  checkDebitAmount(
+    params: CheckDebitAmountParams,
+  ): Promise<CheckDebitAmountResult>;
 
   /**
    * Fetch the maximum amount that can de debited now for a pre-authorization given a token account and debit authority
