@@ -15,10 +15,17 @@ import {
   PreAuthorizedDebitReadClientImpl,
   TokenAccountDoesNotExist,
   PreAuthorizationAccount,
+  I64_MAX,
 } from "../src";
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { getProviderNodeWallet } from "./util";
-import { TOKEN_PROGRAM_ID, createMint, createAccount } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  createMint,
+  createAccount,
+  mintTo,
+  createAssociatedTokenAccountIdempotent,
+} from "@solana/spl-token";
 import {
   fundAccounts,
   initSmartDelegateIdempotent,
@@ -160,9 +167,8 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
   context("fetchPreAuthorizationsForTokenAccount", () => {
     it("should return preAuthorizations by tokenAccount and type=all", async () => {
       const padAddressStrings = preAuthorizations.map((a) => a.toString());
-      const pads = await readClient.fetchPreAuthorizationsForTokenAccount(
-        tokenAccount,
-      );
+      const pads =
+        await readClient.fetchPreAuthorizationsForTokenAccount(tokenAccount);
       expect(pads.length).to.equal(3);
       pads.forEach((pad) => {
         expect(padAddressStrings.includes(pad.publicKey.toString())).to.equal(
@@ -271,138 +277,6 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
         );
         expect(pad.account.variant.type).to.equal("oneTime");
       });
-    });
-  });
-
-  context("checkDebitAmountForPreAuthorization", () => {
-    it("should return false if pad is not activated", async () => {
-      const canDebit = readClient.checkDebitAmountForPreAuthorization({
-        preAuthorizationAccount: {
-          variant: {
-            type: "oneTime",
-          },
-          // activates at 101
-          activationUnixTimestamp: BigInt(101),
-        } as unknown as PreAuthorizationAccount,
-        // current time is 100
-        solanaTime: BigInt(100),
-        requestedDebitAmount: BigInt(100),
-      });
-      expect(canDebit).to.equal(false);
-    });
-
-    it("should return false for oneTime pad that is requesting a debit larger than the authorized amount", async () => {
-      const canDebit = readClient.checkDebitAmountForPreAuthorization({
-        preAuthorizationAccount: {
-          variant: {
-            type: "oneTime",
-            // amount authorized is 100
-            amountAuthorized: BigInt(100),
-            amountDebited: BigInt(0),
-          },
-          activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
-        solanaTime: BigInt(100),
-        // withdrawing 101
-        requestedDebitAmount: BigInt(101),
-      });
-      expect(canDebit).to.equal(false);
-    });
-
-    it("should return false for oneTime pad that is requesting a debit larger than the available amount", async () => {
-      const canDebit = readClient.checkDebitAmountForPreAuthorization({
-        preAuthorizationAccount: {
-          variant: {
-            type: "oneTime",
-            // amount available is 1
-            amountAuthorized: BigInt(100),
-            amountDebited: BigInt(99),
-          },
-          activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
-        solanaTime: BigInt(100),
-        // withdrawing 2
-        requestedDebitAmount: BigInt(2),
-      });
-      expect(canDebit).to.equal(false);
-    });
-
-    it("should return true for oneTime pad", async () => {
-      const canDebit = readClient.checkDebitAmountForPreAuthorization({
-        preAuthorizationAccount: {
-          variant: {
-            type: "oneTime",
-            // amount available is 1
-            amountAuthorized: BigInt(100),
-            amountDebited: BigInt(99),
-          },
-          activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
-        solanaTime: BigInt(100),
-        // withdrawing 1
-        requestedDebitAmount: BigInt(1),
-      });
-      expect(canDebit).to.equal(false);
-    });
-
-    it("should return false for recurring pad if currentCycle > numCycles", async () => {
-      const canDebit = readClient.checkDebitAmountForPreAuthorization({
-        preAuthorizationAccount: {
-          variant: {
-            type: "recurring",
-            repeatFrequencySeconds: BigInt(1),
-            numCycles: 1,
-          },
-          activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
-        solanaTime: BigInt(100),
-        requestedDebitAmount: BigInt(1),
-      });
-      expect(canDebit).to.equal(false);
-    });
-
-    it("should return false for recurring pad if currentCycle > numCycles", async () => {
-      const canDebit = readClient.checkDebitAmountForPreAuthorization({
-        preAuthorizationAccount: {
-          variant: {
-            type: "recurring",
-            repeatFrequencySeconds: BigInt(1),
-            numCycles: 200,
-            lastDebitedCycle: 101,
-            // should be authorized for 100
-            amountDebitedLastCycle: BigInt(0),
-            recurringAmountAuthorized: BigInt(100),
-            resetEveryCycle: true,
-          },
-          activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
-        solanaTime: BigInt(100),
-        // withdrawing 101
-        requestedDebitAmount: BigInt(101),
-      });
-      expect(canDebit).to.equal(false);
-    });
-
-    it("should return true for recurring pad", async () => {
-      const canDebit = readClient.checkDebitAmountForPreAuthorization({
-        preAuthorizationAccount: {
-          variant: {
-            type: "recurring",
-            repeatFrequencySeconds: BigInt(1),
-            numCycles: 200,
-            lastDebitedCycle: 101,
-            // should be authorized for 100
-            amountDebitedLastCycle: BigInt(0),
-            recurringAmountAuthorized: BigInt(100),
-            resetEveryCycle: true,
-          },
-          activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
-        solanaTime: BigInt(100),
-        // withdrawing 101
-        requestedDebitAmount: BigInt(100),
-      });
-      expect(canDebit).to.equal(false);
     });
   });
 
@@ -538,9 +412,8 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     });
 
     it("should return owner of token account", async () => {
-      const owner = await readClient.fetchCurrentOwnerOfTokenAccount(
-        tokenAccount,
-      );
+      const owner =
+        await readClient.fetchCurrentOwnerOfTokenAccount(tokenAccount);
       expect(owner.toString()).to.equal(provider.publicKey.toString());
     });
   });
@@ -646,6 +519,148 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
         (BigInt(2) ** BigInt(64) - BigInt(1)).toString(),
       );
       expect(fetchCurrentDelegationOfTokenAccountSpy.calledOnce).to.equal(true);
+    });
+  });
+
+  context("checkDebitAmount", () => {
+    const payer = new Keypair();
+
+    let userTokenAcount: PublicKey,
+      oneTimePad: PublicKey,
+      recurringPad: PublicKey;
+    const oneTimeDebitAuthority = new Keypair();
+    const recurringDebitAuthority = new Keypair();
+
+    const oneDayAgo = new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 2);
+
+    before(async () => {
+      const tx = await fundAccounts(provider, [payer.publicKey], 5000e6);
+      await connection.confirmTransaction(tx);
+      const tokenMint = await createMint(
+        connection,
+        payer,
+        payer.publicKey,
+        null,
+        6,
+        Keypair.generate(),
+        undefined,
+        TOKEN_PROGRAM_ID,
+      );
+      [userTokenAcount] = await Promise.all([
+        createAccount(
+          provider.connection,
+          payer,
+          tokenMint,
+          provider.publicKey,
+          Keypair.generate(),
+          undefined,
+          TOKEN_PROGRAM_ID,
+        ),
+        createAssociatedTokenAccountIdempotent(
+          connection,
+          payer,
+          tokenMint,
+          oneTimeDebitAuthority.publicKey,
+        ),
+        createAssociatedTokenAccountIdempotent(
+          connection,
+          payer,
+          tokenMint,
+          recurringDebitAuthority.publicKey,
+        ),
+      ]);
+      await mintTo(connection, payer, tokenMint, userTokenAcount, payer, 100e6);
+      // setup oneTime pad
+      oneTimePad = readClient.derivePreAuthorizationPDA(
+        userTokenAcount,
+        oneTimeDebitAuthority.publicKey,
+      ).publicKey;
+      await program.methods
+        .initPreAuthorization({
+          variant: {
+            oneTime: {
+              amountAuthorized: new BN(100e6),
+              expiryUnixTimestamp: new BN(I64_MAX.toString()),
+            },
+          },
+          debitAuthority: oneTimeDebitAuthority.publicKey,
+          activationUnixTimestamp: new BN(oneDayAgo.getTime() / 1e3),
+        })
+        .accounts({
+          payer: provider.publicKey,
+          owner: provider.publicKey,
+          smartDelegate: readClient.getSmartDelegatePDA().publicKey,
+          tokenAccount: userTokenAcount,
+          preAuthorization: oneTimePad,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      // setup recurring pad
+      recurringPad = readClient.derivePreAuthorizationPDA(
+        userTokenAcount,
+        recurringDebitAuthority.publicKey,
+      ).publicKey;
+      await program.methods
+        .initPreAuthorization({
+          variant: {
+            recurring: {
+              repeatFrequencySeconds: new anchor.BN(100),
+              recurringAmountAuthorized: new anchor.BN(100),
+              numCycles: null,
+              resetEveryCycle: true,
+            },
+          },
+          debitAuthority: recurringDebitAuthority.publicKey,
+          activationUnixTimestamp: new BN(oneDayAgo.getTime() / 1e3),
+        })
+        .accounts({
+          payer: provider.publicKey,
+          owner: provider.publicKey,
+          smartDelegate: readClient.getSmartDelegatePDA().publicKey,
+          tokenAccount: userTokenAcount,
+          preAuthorization: recurringPad,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+    });
+
+    it("should return true for oneTime pad", async () => {
+      const res = await readClient.checkDebitAmount({
+        preAuthorization: oneTimePad,
+        requestedDebitAmount: BigInt(100e6),
+        txFeePayer: payer.publicKey,
+      });
+      expect(res).to.equal(true);
+    });
+
+    it("should return false for oneTime pad", async () => {
+      const res = await readClient.checkDebitAmount({
+        preAuthorization: oneTimePad,
+        requestedDebitAmount: BigInt(101e6),
+        txFeePayer: payer.publicKey,
+      });
+      expect(res).to.equal(false);
+    });
+
+    it("should return true for recurring pad", async () => {
+      const res = await readClient.checkDebitAmount({
+        preAuthorization: recurringPad,
+        requestedDebitAmount: BigInt(100),
+        txFeePayer: payer.publicKey,
+      });
+      expect(res).to.equal(true);
+    });
+
+    it("should return false for recurring pad", async () => {
+      const res = await readClient.checkDebitAmount({
+        preAuthorization: recurringPad,
+        requestedDebitAmount: BigInt(101),
+        txFeePayer: payer.publicKey,
+      });
+      expect(res).to.equal(false);
     });
   });
 });

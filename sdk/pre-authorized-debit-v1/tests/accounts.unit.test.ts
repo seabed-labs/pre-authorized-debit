@@ -5,7 +5,6 @@ import {
   isOneTimePreAuthorizationAccount,
   isRecurringPreAuthorizationAccount,
   PreAuthorizationAccount,
-  PreAuthorizationVariantRecurring,
 } from "../src";
 import { expect } from "chai";
 
@@ -61,7 +60,7 @@ describe("PreAuthorizedDebitReadClientImpl unit", () => {
           activationUnixTimestamp: testCase.activationTime,
           variant: {
             repeatFrequencySeconds: testCase.repeatFrequency,
-          } as unknown as PreAuthorizationVariantRecurring,
+          },
         });
         expect(cycle).to.equal(testCase.expectedRes);
       });

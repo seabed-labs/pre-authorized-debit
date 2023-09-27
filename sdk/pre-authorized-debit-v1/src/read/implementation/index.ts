@@ -1,5 +1,6 @@
 import {
   AnchorProvider,
+  BN,
   Program,
   ProgramAccount,
   utils,
@@ -8,10 +9,11 @@ import {
   Connection,
   GetProgramAccountsFilter,
   Keypair,
+  Message,
   PublicKey,
+  VersionedTransaction,
 } from "@solana/web3.js";
 import {
-  CheckDebitAmountForPerAuthorizationParams,
   CheckDebitAmountParams,
   PDA,
   PreAuthorizationType,
@@ -24,19 +26,13 @@ import {
   TokenAccountDoesNotExist,
 } from "../../errors";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import {
-  assertsIsRecurringPreAuthorizationAccount,
-  computeAvailableAmountForRecurringDebit,
-  computePreAuthorizationCurrentCycle,
-  isOneTimePreAuthorizationAccount,
-  PreAuthorizationAccount,
-  SmartDelegateAccount,
-} from "../accounts";
+import { PreAuthorizationAccount, SmartDelegateAccount } from "../accounts";
 import {
   Account,
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   getAccount,
+  getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
 import { IDL, PreAuthorizedDebitV1 } from "../../pre_authorized_debit_v1";
 
@@ -291,9 +287,8 @@ export class PreAuthorizedDebitReadClientImpl
         },
       });
     }
-    const programAccounts = await this.program.account.preAuthorization.all(
-      filters,
-    );
+    const programAccounts =
+      await this.program.account.preAuthorization.all(filters);
 
     return programAccounts.map((programAccount) => ({
       publicKey: programAccount.publicKey,
@@ -321,66 +316,108 @@ export class PreAuthorizedDebitReadClientImpl
     return this.fetchPreAuthorizations(type, { debitAuthority });
   }
 
-  public checkDebitAmountForPreAuthorization({
-    preAuthorizationAccount,
-    requestedDebitAmount,
-    solanaTime,
-  }: CheckDebitAmountForPerAuthorizationParams): boolean {
-    if (solanaTime < preAuthorizationAccount.activationUnixTimestamp) {
-      return false;
-    }
-    if (isOneTimePreAuthorizationAccount(preAuthorizationAccount)) {
-      const amountAvailable =
-        preAuthorizationAccount.variant.amountAuthorized -
-        preAuthorizationAccount.variant.amountDebited;
-      return (
-        amountAvailable >= requestedDebitAmount &&
-        solanaTime < preAuthorizationAccount.variant.expiryUnixTimestamp
-      );
-    } else {
-      assertsIsRecurringPreAuthorizationAccount(preAuthorizationAccount);
-      const variant = preAuthorizationAccount.variant;
-      const currentCycle = computePreAuthorizationCurrentCycle(
-        solanaTime,
-        preAuthorizationAccount,
-      );
-      if (
-        preAuthorizationAccount.variant.numCycles &&
-        currentCycle > preAuthorizationAccount.variant.numCycles
-      ) {
-        return false;
-      }
-      const amountAvailable = computeAvailableAmountForRecurringDebit(
-        currentCycle,
-        variant,
-      );
-      return amountAvailable >= requestedDebitAmount;
-    }
-  }
-
   public async checkDebitAmount(
     params: CheckDebitAmountParams,
   ): Promise<boolean> {
-    const preAuthorization = await this.fetchPreAuthorization(
-      "preAuthorization" in params
-        ? {
-            publicKey: params.preAuthorization,
-          }
-        : {
-            tokenAccount: params.tokenAccount,
-            debitAuthority: params.debitAuthority,
-          },
-    );
-    if (preAuthorization == null) {
+    const { txFeePayer } = params;
+    let tokenAccountPubkey: PublicKey,
+      debitAuthorityPubkey: PublicKey,
+      preAuthorizationPubkey: PublicKey;
+
+    if ("preAuthorization" in params) {
+      const preAuthorizationAccount = await this.fetchPreAuthorization({
+        publicKey: params.preAuthorization,
+      });
+      if (preAuthorizationAccount === null) {
+        return false;
+      }
+      tokenAccountPubkey = preAuthorizationAccount.account.tokenAccount;
+      debitAuthorityPubkey = preAuthorizationAccount.account.debitAuthority;
+      preAuthorizationPubkey = params.preAuthorization;
+    } else {
+      const preAuthorizationAccount = await this.fetchPreAuthorization({
+        tokenAccount: params.tokenAccount,
+        debitAuthority: params.debitAuthority,
+      });
+      if (preAuthorizationAccount === null) {
+        return false;
+      }
+      tokenAccountPubkey = params.tokenAccount;
+      debitAuthorityPubkey = params.debitAuthority;
+      preAuthorizationPubkey = preAuthorizationAccount.publicKey;
+    }
+
+    const tokenAccountInfo =
+      await this.connection.getAccountInfo(tokenAccountPubkey);
+
+    const tokenProgramId = tokenAccountInfo?.owner;
+
+    if (
+      tokenAccountInfo == null ||
+      tokenProgramId == null || // for typescript
+      ![TOKEN_PROGRAM_ID.toString(), TOKEN_2022_PROGRAM_ID.toString()].includes(
+        tokenProgramId.toString(),
+      )
+    ) {
+      throw new TokenAccountDoesNotExist(
+        this.connection.rpcEndpoint,
+        tokenAccountPubkey,
+      );
+    }
+
+    if (preAuthorizationPubkey == null) {
       return false;
     }
-    const solanaTime = BigInt(await this.getSolanaUnixTimestamp());
-    const preAuthorizationAccount = preAuthorization.account;
-    return this.checkDebitAmountForPreAuthorization({
-      preAuthorizationAccount,
-      requestedDebitAmount: params.requestedDebitAmount,
-      solanaTime,
+
+    const tokenAccount = await getAccount(
+      this.connection,
+      tokenAccountPubkey,
+      this.connection.commitment,
+      tokenProgramId,
+    );
+
+    // NOTE: The debit authority can debit to any token account.
+    //       But, we just use the ATA to keep this method's interface simple.
+    const debitAuthortyAta = getAssociatedTokenAddressSync(
+      tokenAccount.mint,
+      debitAuthorityPubkey,
+      true,
+      tokenProgramId,
+    );
+
+    const { publicKey: smartDelegate } = this.getSmartDelegatePDA();
+
+    const tx = await this.program.methods
+      .debit({
+        amount: new BN(params.requestedDebitAmount.toString()),
+      })
+      .accounts({
+        debitAuthority: debitAuthorityPubkey,
+        mint: tokenAccount.mint,
+        tokenAccount: tokenAccountPubkey,
+        destinationTokenAccount: debitAuthortyAta,
+        smartDelegate,
+        preAuthorization: preAuthorizationPubkey,
+        tokenProgram: tokenProgramId,
+      })
+      .transaction();
+
+    const latestBlockhash = await this.connection.getLatestBlockhash();
+
+    const message = Message.compile({
+      payerKey: txFeePayer,
+      instructions: tx.instructions,
+      recentBlockhash: latestBlockhash.blockhash,
     });
+
+    const versionedTx = new VersionedTransaction(message);
+
+    const res = await this.connection.simulateTransaction(versionedTx, {
+      sigVerify: false,
+      replaceRecentBlockhash: true,
+    });
+
+    return res.value.err === null;
   }
 
   public async fetchMaxDebitAmount(params: {
@@ -469,9 +506,8 @@ export class PreAuthorizedDebitReadClientImpl
   public async fetchCurrentOwnerOfTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<PublicKey> {
-    const tokenProgramId = await this.fetchTokenProgramIdForTokenAccount(
-      tokenAccountPubkey,
-    );
+    const tokenProgramId =
+      await this.fetchTokenProgramIdForTokenAccount(tokenAccountPubkey);
     let tokenAccount: Account;
 
     try {
@@ -513,9 +549,8 @@ export class PreAuthorizedDebitReadClientImpl
   public async fetchTokenProgramIdForTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<PublicKey> {
-    const tokenAccountInfo = await this.connection.getAccountInfo(
-      tokenAccountPubkey,
-    );
+    const tokenAccountInfo =
+      await this.connection.getAccountInfo(tokenAccountPubkey);
 
     if (!this.isOwnerTokenProgram(tokenAccountInfo)) {
       throw new TokenAccountDoesNotExist(
@@ -530,9 +565,8 @@ export class PreAuthorizedDebitReadClientImpl
   public async fetchCurrentDelegationOfTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null> {
-    const tokenProgramId = await this.fetchTokenProgramIdForTokenAccount(
-      tokenAccountPubkey,
-    );
+    const tokenProgramId =
+      await this.fetchTokenProgramIdForTokenAccount(tokenAccountPubkey);
 
     let tokenAccount: Account;
 
@@ -591,9 +625,8 @@ export class PreAuthorizedDebitReadClientImpl
 
   private async getSolanaUnixTimestamp(): Promise<number> {
     const latestSlot = await this.connection.getSlot();
-    const latestSlotUnixTimestamp = await this.connection.getBlockTime(
-      latestSlot,
-    );
+    const latestSlotUnixTimestamp =
+      await this.connection.getBlockTime(latestSlot);
     return latestSlotUnixTimestamp || Math.floor(new Date().getTime() / 1e3); // fallback to client side current timestamp
   }
 }

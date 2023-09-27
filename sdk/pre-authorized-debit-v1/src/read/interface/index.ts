@@ -12,17 +12,13 @@ export type CheckDebitAmountParams =
       tokenAccount: PublicKey;
       debitAuthority: PublicKey;
       requestedDebitAmount: bigint;
+      txFeePayer: PublicKey;
     }
   | {
       preAuthorization: PublicKey;
       requestedDebitAmount: bigint;
+      txFeePayer: PublicKey;
     };
-
-export type CheckDebitAmountForPerAuthorizationParams = {
-  preAuthorizationAccount: PreAuthorizationAccount;
-  requestedDebitAmount: bigint;
-  solanaTime: bigint;
-};
 
 export type FetchMaxDebitAmountParams = {
   tokenAccount: PublicKey;
@@ -280,29 +276,6 @@ export interface PreAuthorizedDebitReadClient {
    * ```
    */
   checkDebitAmount(params: CheckDebitAmountParams): Promise<boolean>;
-
-  /**
-   * Synchronously check whether a debit will go through given the actual pre-authorization account, debit amount, and solana timestamp.
-   * @param {CheckDebitAmountForPerAuthorizationParams} params - the actual pre-authorization account, debit amount, and solana timestamp
-   * @returns {boolean} whether or not the debit goes through
-   * @example
-   * ```typescript
-   * const preAuthorization: PreAuthorizationAccount = // make or fetch this however
-   * const requestedDebitAmount = BigInt(100e6); // example
-   * const solanaTime = BigInt(
-   *   Math.floor(new Date().getTime() / 1e3)
-   * ) - 24 * 3600; // -1 day from now
-   *
-   * const canDebit = checkDebitAmountForPreAuthorization({
-   *   preAuthorizationAccount,
-   *   requestedDebitAmount,
-   *   solanaTime,
-   * });
-   * ```
-   */
-  checkDebitAmountForPreAuthorization(
-    params: CheckDebitAmountForPerAuthorizationParams,
-  ): boolean;
 
   /**
    * Fetch the maximum amount that can de debited now for a pre-authorization given a token account and debit authority
