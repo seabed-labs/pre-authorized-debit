@@ -47,11 +47,11 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
   let mint: PublicKey, tokenAccount: PublicKey, smartDelegate: PublicKey;
   const debitAuthorities: Keypair[] = [];
   const preAuthorizations: PublicKey[] = [];
+  const payerKeypair = new Keypair();
 
   before(async () => {
     smartDelegate = await initSmartDelegateIdempotent(program, provider);
     const mintAuthority = new Keypair();
-    const payerKeypair = new Keypair();
     for (let i = 0; i < 3; i++) {
       debitAuthorities.push(Keypair.generate());
     }
@@ -482,6 +482,18 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       expect(delegateData?.delegatedAmount.toString()).to.equal(
         (BigInt(2) ** BigInt(64) - BigInt(1)).toString(),
       );
+    });
+
+    it("should return null", async () => {
+      const newTokenAccount = await createAccount(
+        connection,
+        payerKeypair,
+        mint,
+        Keypair.generate().publicKey,
+      );
+      const delegateData =
+        await readClient.fetchCurrentDelegationOfTokenAccount(newTokenAccount);
+      expect(delegateData).to.equal(null);
     });
   });
 
