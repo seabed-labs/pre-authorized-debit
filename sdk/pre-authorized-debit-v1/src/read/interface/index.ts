@@ -255,23 +255,28 @@ export interface PreAuthorizedDebitReadClient {
   ): Promise<ProgramAccount<PreAuthorizationAccount>[]>;
 
   /**
-   * Asynchronously checks whether the given debit will go through right now (based on current state of pre-auth if any)
+   * Checks whether the given debit will go through right now (based on current state of pre-auth if any)
+   *
+   * NOTE: To actually perform this as a TX, the debit authority will have to sign the TX.
+   *
    * @param {CheckDebitAmountParams} params - (pre-auth pubkey or token account and debit authority) + amount to debit
    * @returns {Promise<boolean>} whether or not the debit goes through
    * @example
    * Check with pre-authorization pubkey
    * ```typescript
-   * const canDebit = await checkDebitAmount({
+   * const canDebit = await readClient.checkDebitAmount({
    *   preAuthorization: // pre-auth pubkey,
-   *   requestedDebitAmount: // amount to debit (bigint)
+   *   requestedDebitAmount: // amount to debit (bigint),
+   *   txFeePayer: // the lamports fee payer pubkey for the tx,
    * });
    * ```
    * Check with token account and debit authority pubkeys
    * ```typescript
-   * const canDebit = await checkDebitAmount({
-   *   tokenAccount: // token account pubkey
-   *   debitAuthority: // debit authority pubkey
-   *   requestedDebitAmount: // amount to debit (bigint)
+   * const canDebit = await readClient.checkDebitAmount({
+   *   tokenAccount: // token account pubkey,
+   *   debitAuthority: // debit authority pubkey,
+   *   requestedDebitAmount: // amount to debit (bigint),
+   *   txFeePayer: // the lamports fee payer pubkey for the tx,
    * });
    * ```
    */
