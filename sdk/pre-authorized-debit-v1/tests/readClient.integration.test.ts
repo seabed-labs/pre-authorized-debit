@@ -15,6 +15,7 @@ import {
   PreAuthorizedDebitReadClientImpl,
   TokenAccountDoesNotExist,
   PreAuthorizationAccount,
+  I64_MAX,
 } from "../src";
 import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
 import { getProviderNodeWallet } from "./util";
@@ -279,10 +280,18 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
         preAuthorizationAccount: {
           variant: {
             type: "oneTime",
+            amountAuthorized: BigInt(0),
+            amountDebited: BigInt(0),
+            expiryUnixTimestamp: BigInt(I64_MAX),
           },
           // activates at 101
           activationUnixTimestamp: BigInt(101),
-        } as unknown as PreAuthorizationAccount,
+          // don't care about the below
+          bump: 0,
+          tokenAccount: Keypair.generate().publicKey,
+          debitAuthority: Keypair.generate().publicKey,
+          paused: false,
+        },
         // current time is 100
         solanaTime: BigInt(100),
         requestedDebitAmount: BigInt(100),
@@ -298,9 +307,15 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
             // amount authorized is 100
             amountAuthorized: BigInt(100),
             amountDebited: BigInt(0),
+            expiryUnixTimestamp: BigInt(I64_MAX),
           },
           activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
+          // don't care about the below
+          bump: 0,
+          tokenAccount: Keypair.generate().publicKey,
+          debitAuthority: Keypair.generate().publicKey,
+          paused: false,
+        },
         solanaTime: BigInt(100),
         // withdrawing 101
         requestedDebitAmount: BigInt(101),
@@ -316,9 +331,15 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
             // amount available is 1
             amountAuthorized: BigInt(100),
             amountDebited: BigInt(99),
+            expiryUnixTimestamp: BigInt(I64_MAX),
           },
           activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
+          // don't care about the below
+          bump: 0,
+          tokenAccount: Keypair.generate().publicKey,
+          debitAuthority: Keypair.generate().publicKey,
+          paused: false,
+        },
         solanaTime: BigInt(100),
         // withdrawing 2
         requestedDebitAmount: BigInt(2),
@@ -334,14 +355,20 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
             // amount available is 1
             amountAuthorized: BigInt(100),
             amountDebited: BigInt(99),
+            expiryUnixTimestamp: BigInt(I64_MAX),
           },
           activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
+          // don't care about the below
+          bump: 0,
+          tokenAccount: Keypair.generate().publicKey,
+          debitAuthority: Keypair.generate().publicKey,
+          paused: false,
+        },
         solanaTime: BigInt(100),
         // withdrawing 1
         requestedDebitAmount: BigInt(1),
       });
-      expect(canDebit).to.equal(false);
+      expect(canDebit).to.equal(true);
     });
 
     it("should return false for recurring pad if currentCycle > numCycles", async () => {
@@ -351,9 +378,20 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
             type: "recurring",
             repeatFrequencySeconds: BigInt(1),
             numCycles: BigInt(1),
+            // don't care about the below
+            lastDebitedCycle: BigInt(101),
+            amountDebitedLastCycle: BigInt(0),
+            amountDebitedTotal: BigInt(0),
+            recurringAmountAuthorized: BigInt(0),
+            resetEveryCycle: true,
           },
           activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
+          // don't care about the below
+          bump: 0,
+          tokenAccount: Keypair.generate().publicKey,
+          debitAuthority: Keypair.generate().publicKey,
+          paused: false,
+        },
         // current cycle is 101
         solanaTime: BigInt(100),
         requestedDebitAmount: BigInt(1),
@@ -371,11 +409,17 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
             lastDebitedCycle: BigInt(101),
             // should be authorized for 100
             amountDebitedLastCycle: BigInt(0),
+            amountDebitedTotal: BigInt(0),
             recurringAmountAuthorized: BigInt(100),
             resetEveryCycle: true,
           },
           activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
+          // don't care about the below
+          bump: 0,
+          tokenAccount: Keypair.generate().publicKey,
+          debitAuthority: Keypair.generate().publicKey,
+          paused: false,
+        },
         solanaTime: BigInt(100),
         // withdrawing 101
         requestedDebitAmount: BigInt(101),
@@ -383,26 +427,32 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       expect(canDebit).to.equal(false);
     });
 
-    it("should return false for recurring pad", async () => {
+    it("should return true for recurring pad", async () => {
       const canDebit = readClient.checkDebitAmountForPreAuthorization({
         preAuthorizationAccount: {
           variant: {
             type: "recurring",
             repeatFrequencySeconds: BigInt(1),
-            numCycles: 200,
-            lastDebitedCycle: 101,
+            numCycles: BigInt(200),
+            lastDebitedCycle: BigInt(101),
             // should be authorized for 100
             amountDebitedLastCycle: BigInt(0),
+            amountDebitedTotal: BigInt(0),
             recurringAmountAuthorized: BigInt(100),
             resetEveryCycle: true,
           },
           activationUnixTimestamp: BigInt(0),
-        } as unknown as PreAuthorizationAccount,
+          // don't care about the below
+          bump: 0,
+          tokenAccount: Keypair.generate().publicKey,
+          debitAuthority: Keypair.generate().publicKey,
+          paused: false,
+        },
         solanaTime: BigInt(100),
         // withdrawing 101
-        requestedDebitAmount: BigInt(101),
+        requestedDebitAmount: BigInt(100),
       });
-      expect(canDebit).to.equal(false);
+      expect(canDebit).to.equal(true);
     });
   });
 
