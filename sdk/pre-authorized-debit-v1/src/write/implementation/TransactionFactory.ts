@@ -2,9 +2,7 @@ import {
   Connection,
   Message,
   PublicKey,
-  SendOptions,
   Signer,
-  SimulateTransactionConfig,
   SystemProgram,
   TransactionInstruction,
   VersionedTransaction,
@@ -18,6 +16,7 @@ import {
   ClosePreAuthorizationAsOwnerResult,
   DebitParams,
   DebitResult,
+  ExecuteParams,
   ExpectedSigner,
   InitOneTimePreAuthorizationParams,
   InitOneTimePreAuthorizationResult,
@@ -28,6 +27,7 @@ import {
   InstructionFactory,
   PausePreAuthorizationParams,
   PausePreAuthorizationResult,
+  SimulateParams,
   TransactionFactory,
   TransactionWithMetadata,
   UnpausePreAuthorizationParams,
@@ -111,20 +111,16 @@ export class TransactionFactoryImpl implements TransactionFactory {
     txInstructions: TransactionInstruction[],
     meta: T,
   ) {
-    return async (
-      signers?: Signer[],
-      txFeesPayer?: PublicKey,
-      simulateConfig?: SimulateTransactionConfig,
-    ) => {
+    return async (params: SimulateParams) => {
       const tx = await this.buildAndSignTx(
         txInstructions,
-        signers,
-        txFeesPayer,
+        "signers" in params ? params.signers : undefined,
+        params.txFeesPayer,
       );
 
       const result = await this.connection.simulateTransaction(
         tx,
-        simulateConfig,
+        params.simulateConfig,
       );
 
       return {
@@ -135,18 +131,17 @@ export class TransactionFactoryImpl implements TransactionFactory {
   }
 
   private buildExecuteFn<T>(txInstructions: TransactionInstruction[], meta: T) {
-    return async (
-      options?: SendOptions,
-      signers?: Signer[],
-      txFeesPayer?: PublicKey,
-    ) => {
+    return async (params: ExecuteParams) => {
       const tx = await this.buildAndSignTx(
         txInstructions,
-        signers,
-        txFeesPayer,
+        "signers" in params ? params.signers : undefined,
+        params.txFeesPayer,
       );
 
-      const signature = await this.connection.sendTransaction(tx, options);
+      const signature = await this.connection.sendTransaction(
+        tx,
+        params.sendOptions,
+      );
       const latestBlockhash = await this.connection.getLatestBlockhash();
       await this.connection.confirmTransaction({
         ...latestBlockhash,
@@ -179,8 +174,12 @@ export class TransactionFactoryImpl implements TransactionFactory {
       cleanupInstructions,
       expectedSigners,
       meta,
-      buildVersionedTransaction: async (signers, txFeesPayer) => {
-        return this.buildAndSignTx(coreTxInstructions, signers, txFeesPayer);
+      buildVersionedTransaction: async (params) => {
+        return this.buildAndSignTx(
+          coreTxInstructions,
+          "signers" in params ? params.signers : undefined,
+          params.txFeesPayer,
+        );
       },
       simulate: this.buildSimulateFn(coreTxInstructions, meta),
       execute: this.buildExecuteFn(coreTxInstructions, meta),
