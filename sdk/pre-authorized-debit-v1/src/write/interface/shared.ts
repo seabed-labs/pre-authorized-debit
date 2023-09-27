@@ -3,6 +3,7 @@ import {
   PublicKey,
   SendOptions,
   Signer,
+  SimulateTransactionConfig,
   TransactionInstruction,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -33,6 +34,7 @@ export type TransactionWithMetadata<T> = {
   simulate(
     signers?: Signer[],
     txFeesPayer?: PublicKey,
+    simulateConfig?: SimulateTransactionConfig,
   ): Promise<TransactionSimulationResultWithMeta<T>>;
   execute(
     options?: SendOptions,
