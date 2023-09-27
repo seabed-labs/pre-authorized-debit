@@ -1,9 +1,11 @@
 import {
   Connection,
   PublicKey,
+  RpcResponseAndContext,
   SendOptions,
   Signer,
   SimulateTransactionConfig,
+  SimulatedTransactionResponse,
   TransactionInstruction,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -60,7 +62,7 @@ export type TransactionWithMetadata<T> = {
 };
 
 export type TransactionSimulationResultWithMeta<T> = {
-  result: Awaited<ReturnType<typeof Connection.prototype.simulateTransaction>>;
+  result: RpcResponseAndContext<SimulatedTransactionResponse>;
   meta: T;
 };
 
