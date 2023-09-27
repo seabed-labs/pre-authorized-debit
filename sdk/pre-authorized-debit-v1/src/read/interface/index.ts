@@ -13,11 +13,19 @@ export type CheckDebitAmountParams =
       debitAuthority: PublicKey;
       requestedDebitAmount: bigint;
       txFeePayer: PublicKey;
+      /**
+       * Defaults to the ATA of debit authority
+       */
+      destinationTokenAccount?: PublicKey;
     }
   | {
       preAuthorization: PublicKey;
       requestedDebitAmount: bigint;
       txFeePayer: PublicKey;
+      /**
+       * Defaults to the ATA of debit authority
+       */
+      destinationTokenAccount?: PublicKey;
     };
 
 export type FetchMaxDebitAmountParams = {
@@ -277,6 +285,7 @@ export interface PreAuthorizedDebitReadClient {
    *   preAuthorization: // pre-auth pubkey,
    *   requestedDebitAmount: // amount to debit (bigint),
    *   txFeePayer: // the lamports fee payer pubkey for the tx,
+   *   destinationTokenAccount: // optional - defaults to ATA of debitAuthority,
    * });
    *
    * if (!res.successful) {
@@ -290,6 +299,7 @@ export interface PreAuthorizedDebitReadClient {
    *   debitAuthority: // debit authority pubkey,
    *   requestedDebitAmount: // amount to debit (bigint),
    *   txFeePayer: // the lamports fee payer pubkey for the tx,
+   *   destinationTokenAccount: // optional - defaults to ATA of debitAuthority,
    * });
    *
    * if (!res.successful) {

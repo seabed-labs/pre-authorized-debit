@@ -372,14 +372,14 @@ export class PreAuthorizedDebitReadClientImpl
       tokenProgramId,
     );
 
-    // NOTE: The debit authority can debit to any token account.
-    //       But, we just use the ATA to keep this method's interface simple.
-    const debitAuthortyAta = getAssociatedTokenAddressSync(
-      tokenAccount.mint,
-      debitAuthorityPubkey,
-      true,
-      tokenProgramId,
-    );
+    const destinationTokenAccount =
+      params.destinationTokenAccount ??
+      getAssociatedTokenAddressSync(
+        tokenAccount.mint,
+        debitAuthorityPubkey,
+        true,
+        tokenProgramId,
+      );
 
     const { publicKey: smartDelegate } = this.getSmartDelegatePDA();
 
@@ -391,7 +391,7 @@ export class PreAuthorizedDebitReadClientImpl
         debitAuthority: debitAuthorityPubkey,
         mint: tokenAccount.mint,
         tokenAccount: tokenAccountPubkey,
-        destinationTokenAccount: debitAuthortyAta,
+        destinationTokenAccount,
         smartDelegate,
         preAuthorization: preAuthorizationPubkey,
         tokenProgram: tokenProgramId,
