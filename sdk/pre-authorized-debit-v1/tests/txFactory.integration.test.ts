@@ -26,6 +26,7 @@ import {
   createMint,
   createWrappedNativeAccount,
   mintTo,
+  NATIVE_MINT,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
@@ -175,7 +176,7 @@ describe("Transaction Factory Integration Tests", () => {
         activation: new Date(),
         repeatFrequencySeconds: BigInt(5),
         recurringAmountAuthorized: BigInt(100),
-        numCycles: null,
+        numCycles: BigInt(10),
         resetEveryCycle: false,
         wrapNativeMintParams: {
           lamportsSourceAccount: payer.publicKey,
@@ -198,6 +199,27 @@ describe("Transaction Factory Integration Tests", () => {
   });
 
   context("buildApproveSmartDelegateTx", () => {
+    it("fails if neither txFeesPayer nor signer[0] is provided", async () => {
+      const spyBuildApproveSmartDelegateTx = sandbox.spy(
+        ixFactory,
+        "buildApproveSmartDelegateIx",
+      );
+      const params = {
+        tokenAccount,
+      };
+      const tx = await txFactory.buildApproveSmartDelegateTx(params);
+      expect(tx.setupInstructions.length).to.equal(0);
+      expect(tx.coreInstructions.length).to.equal(1);
+      expect(tx.cleanupInstructions.length).to.equal(0);
+      expect(spyBuildApproveSmartDelegateTx.calledWith(params)).to.equal(true);
+
+      expect(
+        tx.buildVersionedTransaction({
+          signers: [],
+        }),
+      ).to.be.eventually.rejectedWith(/Error: TX fees payer not provided/);
+    });
+
     it("should build and broadcast tx", async () => {
       const spyBuildApproveSmartDelegateTx = sandbox.spy(
         ixFactory,
@@ -213,7 +235,6 @@ describe("Transaction Factory Integration Tests", () => {
       expect(spyBuildApproveSmartDelegateTx.calledWith(params)).to.equal(true);
 
       const versionedTx = await tx.buildVersionedTransaction({
-        txFeesPayer: payer.publicKey,
         signers: [payer],
       });
       await provider.sendAndConfirm(versionedTx);
@@ -314,6 +335,70 @@ describe("Transaction Factory Integration Tests", () => {
         expect(tx.setupInstructions.length).to.equal(0);
         expect(tx.coreInstructions.length).to.equal(1);
         expect(tx.cleanupInstructions.length).to.equal(0);
+        expect(
+          spyBuildClosePreAuthorizationAsOwnerIx.calledWith(params),
+        ).to.equal(true);
+
+        const versionedTx = await tx.buildVersionedTransaction({
+          signers: [payer],
+          txFeesPayer: payer.publicKey,
+        });
+        await provider.sendAndConfirm(versionedTx);
+      });
+
+      it("should build and broadcast tx when mint is NATIVE_MINT (SOL)", async () => {
+        const spyBuildClosePreAuthorizationAsOwnerIx = sandbox.spy(
+          ixFactory,
+          "buildClosePreAuthorizationAsOwnerIx",
+        );
+
+        const nativeMintTokenAccount = await createAccount(
+          provider.connection,
+          payer,
+          NATIVE_MINT,
+          provider.publicKey,
+          Keypair.generate(),
+          undefined,
+          TOKEN_PROGRAM_ID,
+        );
+
+        const pad = readClient.derivePreAuthorizationPDA(
+          nativeMintTokenAccount,
+          newDebitAuthority.publicKey,
+        ).publicKey;
+
+        await program.methods
+          .initPreAuthorization({
+            variant: {
+              oneTime: {
+                amountAuthorized: new BN(100e6),
+                expiryUnixTimestamp: new BN(expirationUnixTimestamp),
+              },
+            },
+            debitAuthority: newDebitAuthority.publicKey,
+            activationUnixTimestamp: new BN(activationUnixTimestamp),
+          })
+          .accounts({
+            payer: provider.publicKey,
+            owner: provider.publicKey,
+            smartDelegate,
+            tokenAccount: nativeMintTokenAccount,
+            preAuthorization: pad,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            systemProgram: SystemProgram.programId,
+          })
+          .rpc();
+
+        const params: Parameters<
+          typeof txFactory.buildClosePreAuthorizationAsOwnerTx
+        >[0] = {
+          preAuthorization: pad,
+          unwrapNativeMintParams: {},
+        };
+        const tx = await txFactory.buildClosePreAuthorizationAsOwnerTx(params);
+        expect(tx.setupInstructions.length).to.equal(0);
+        expect(tx.coreInstructions.length).to.equal(1);
+        expect(tx.cleanupInstructions.length).to.equal(1);
         expect(
           spyBuildClosePreAuthorizationAsOwnerIx.calledWith(params),
         ).to.equal(true);
@@ -531,7 +616,6 @@ describe("Transaction Factory Integration Tests", () => {
         preAuthorization: initPreAuthTx.meta.preAuthorization,
         amount: BigInt(10e6),
         destinationTokenAccount: debitNativeTokenAccount,
-        checkSmartDelegateEnabled: true,
         unwrapNativeMintParams: {
           lamportsDestinationAccount: debitAuthority.publicKey,
         },
