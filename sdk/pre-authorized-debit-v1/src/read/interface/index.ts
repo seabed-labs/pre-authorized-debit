@@ -278,6 +278,10 @@ export interface PreAuthorizedDebitReadClient {
    *   requestedDebitAmount: // amount to debit (bigint),
    *   txFeePayer: // the lamports fee payer pubkey for the tx,
    * });
+   *
+   * if (!res.successful) {
+   *   const { reason } = res;
+   * }
    * ```
    * Check with token account and debit authority pubkeys
    * ```typescript
@@ -287,6 +291,10 @@ export interface PreAuthorizedDebitReadClient {
    *   requestedDebitAmount: // amount to debit (bigint),
    *   txFeePayer: // the lamports fee payer pubkey for the tx,
    * });
+   *
+   * if (!res.successful) {
+   *   const { reason } = res;
+   * }
    * ```
    */
   checkDebitAmount(
