@@ -1,5 +1,4 @@
 import {
-  Connection,
   PublicKey,
   RpcResponseAndContext,
   SendOptions,

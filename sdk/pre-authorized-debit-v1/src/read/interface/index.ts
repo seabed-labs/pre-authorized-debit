@@ -43,10 +43,11 @@ export type PreAuthorizationType = "oneTime" | "recurring" | "all";
 export type CheckDebitAmountResult =
   | {
       successful: true;
+      reason: undefined;
     }
   | {
       successful: false;
-      reason: string | string[];
+      reason: string[];
     };
 
 /**

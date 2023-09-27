@@ -279,9 +279,8 @@ export class PreAuthorizedDebitReadClientImpl
         },
       });
     }
-    const programAccounts = await this.program.account.preAuthorization.all(
-      filters,
-    );
+    const programAccounts =
+      await this.program.account.preAuthorization.all(filters);
 
     return programAccounts.map((programAccount) => ({
       publicKey: programAccount.publicKey,
@@ -324,7 +323,7 @@ export class PreAuthorizedDebitReadClientImpl
       if (preAuthorizationAccount === null) {
         return {
           successful: false,
-          reason: "Pre-authorization account not found on-chain",
+          reason: ["Pre-authorization account not found on-chain"],
         };
       }
       tokenAccountPubkey = preAuthorizationAccount.account.tokenAccount;
@@ -338,7 +337,7 @@ export class PreAuthorizedDebitReadClientImpl
       if (preAuthorizationAccount === null) {
         return {
           successful: false,
-          reason: "Pre-authorization account not found on-chain",
+          reason: ["Pre-authorization account not found on-chain"],
         };
       }
       tokenAccountPubkey = params.tokenAccount;
@@ -346,9 +345,8 @@ export class PreAuthorizedDebitReadClientImpl
       preAuthorizationPubkey = preAuthorizationAccount.publicKey;
     }
 
-    const tokenAccountInfo = await this.connection.getAccountInfo(
-      tokenAccountPubkey,
-    );
+    const tokenAccountInfo =
+      await this.connection.getAccountInfo(tokenAccountPubkey);
 
     const tokenProgramId = tokenAccountInfo?.owner;
 
@@ -416,14 +414,14 @@ export class PreAuthorizedDebitReadClientImpl
     const isSimulationSuccessful = res.value.err === null;
 
     if (isSimulationSuccessful) {
-      return { successful: true };
+      return { successful: true, reason: undefined };
     }
 
     return {
       successful: false,
       reason: res.value.logs
         ? ["simulation failed; logs:", ...res.value.logs]
-        : "simulation failed",
+        : ["simulation failed"],
     };
   }
 
@@ -513,9 +511,8 @@ export class PreAuthorizedDebitReadClientImpl
   public async fetchCurrentOwnerOfTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<PublicKey> {
-    const tokenProgramId = await this.fetchTokenProgramIdForTokenAccount(
-      tokenAccountPubkey,
-    );
+    const tokenProgramId =
+      await this.fetchTokenProgramIdForTokenAccount(tokenAccountPubkey);
     let tokenAccount: Account;
 
     try {
@@ -557,9 +554,8 @@ export class PreAuthorizedDebitReadClientImpl
   public async fetchTokenProgramIdForTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<PublicKey> {
-    const tokenAccountInfo = await this.connection.getAccountInfo(
-      tokenAccountPubkey,
-    );
+    const tokenAccountInfo =
+      await this.connection.getAccountInfo(tokenAccountPubkey);
 
     if (!this.isOwnerTokenProgram(tokenAccountInfo)) {
       throw new TokenAccountDoesNotExist(
@@ -574,9 +570,8 @@ export class PreAuthorizedDebitReadClientImpl
   public async fetchCurrentDelegationOfTokenAccount(
     tokenAccountPubkey: PublicKey,
   ): Promise<{ delegate: PublicKey; delegatedAmount: bigint } | null> {
-    const tokenProgramId = await this.fetchTokenProgramIdForTokenAccount(
-      tokenAccountPubkey,
-    );
+    const tokenProgramId =
+      await this.fetchTokenProgramIdForTokenAccount(tokenAccountPubkey);
 
     let tokenAccount: Account;
 
@@ -635,9 +630,8 @@ export class PreAuthorizedDebitReadClientImpl
 
   private async getSolanaUnixTimestamp(): Promise<number> {
     const latestSlot = await this.connection.getSlot();
-    const latestSlotUnixTimestamp = await this.connection.getBlockTime(
-      latestSlot,
-    );
+    const latestSlotUnixTimestamp =
+      await this.connection.getBlockTime(latestSlot);
     return latestSlotUnixTimestamp || Math.floor(new Date().getTime() / 1e3); // fallback to client side current timestamp
   }
 }
