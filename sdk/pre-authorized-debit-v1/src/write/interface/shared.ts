@@ -20,6 +20,9 @@ export type InstructionWithMetadata<T> = {
   meta: T;
 };
 
+/**
+ * Provide either signers[0] or txFeesPayer at minimum, else method will throw.
+ */
 export type SignerAndTxFeePayerParams =
   | {
       signers: Signer[];
