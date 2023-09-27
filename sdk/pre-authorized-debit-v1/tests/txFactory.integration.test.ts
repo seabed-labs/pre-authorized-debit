@@ -176,7 +176,7 @@ describe("Transaction Factory Integration Tests", () => {
         activation: new Date(),
         repeatFrequencySeconds: BigInt(5),
         recurringAmountAuthorized: BigInt(100),
-        numCycles: null,
+        numCycles: BigInt(10),
         resetEveryCycle: false,
         wrapNativeMintParams: {
           lamportsSourceAccount: payer.publicKey,
@@ -616,7 +616,6 @@ describe("Transaction Factory Integration Tests", () => {
         preAuthorization: initPreAuthTx.meta.preAuthorization,
         amount: BigInt(10e6),
         destinationTokenAccount: debitNativeTokenAccount,
-        checkSmartDelegateEnabled: true,
         unwrapNativeMintParams: {
           lamportsDestinationAccount: debitAuthority.publicKey,
         },
