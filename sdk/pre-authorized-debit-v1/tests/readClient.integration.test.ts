@@ -538,6 +538,7 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     const payer = new Keypair();
 
     let userTokenAcount: PublicKey,
+      tokenMint: PublicKey,
       oneTimePad: PublicKey,
       recurringPad: PublicKey;
     const oneTimeDebitAuthority = new Keypair();
@@ -548,7 +549,7 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
     before(async () => {
       const tx = await fundAccounts(provider, [payer.publicKey], 5000e6);
       await connection.confirmTransaction(tx);
-      const tokenMint = await createMint(
+      tokenMint = await createMint(
         connection,
         payer,
         payer.publicKey,
@@ -664,16 +665,48 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       });
       expect(res.successful).to.equal(true);
       expect(res.reason).to.equal(undefined);
+
+      const newDebitAuthTokenAccount = await createAccount(
+        connection,
+        payer,
+        tokenMint,
+        oneTimeDebitAuthority.publicKey,
+        Keypair.generate(),
+      );
+      console.log(newDebitAuthTokenAccount.toString());
+      res = await readClient.checkDebitAmount({
+        tokenAccount: userTokenAcount,
+        debitAuthority: oneTimeDebitAuthority.publicKey,
+        requestedDebitAmount: BigInt(100e6),
+        txFeePayer: payer.publicKey,
+        destinationTokenAccount: newDebitAuthTokenAccount,
+      });
+      expect(res.successful).to.equal(true);
+      expect(res.reason).to.equal(undefined);
     });
 
     it("should return false for oneTime pad", async () => {
-      const res = await readClient.checkDebitAmount({
+      let res = await readClient.checkDebitAmount({
         preAuthorization: oneTimePad,
         requestedDebitAmount: BigInt(101e6),
         txFeePayer: payer.publicKey,
       });
       expect(res.successful).to.equal(false);
       expect(res.reason).to.not.equal(undefined);
+      res = await readClient.checkDebitAmount({
+        preAuthorization: oneTimePad,
+        requestedDebitAmount: BigInt(100e6),
+        txFeePayer: payer.publicKey,
+        destinationTokenAccount: Keypair.generate().publicKey,
+      });
+      expect(res.successful).to.equal(false);
+      expect(
+        res.reason
+          ?.join(" ")
+          .includes(
+            "AnchorError caused by account: destination_token_account. Error Code: AccountNotInitialized. Error Number: 3012. Error Message: The program expected this account to be already initialized.",
+          ),
+      ).to.equal(true);
     });
 
     it("should return true for recurring pad", async () => {
@@ -692,16 +725,48 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
       });
       expect(res.successful).to.equal(true);
       expect(res.reason).to.equal(undefined);
+
+      const newDebitAuthTokenAccount = await createAccount(
+        connection,
+        payer,
+        tokenMint,
+        recurringDebitAuthority.publicKey,
+        Keypair.generate(),
+      );
+      res = await readClient.checkDebitAmount({
+        tokenAccount: userTokenAcount,
+        debitAuthority: recurringDebitAuthority.publicKey,
+        requestedDebitAmount: BigInt(100),
+        txFeePayer: payer.publicKey,
+        destinationTokenAccount: newDebitAuthTokenAccount,
+      });
+      expect(res.successful).to.equal(true);
+      expect(res.reason).to.equal(undefined);
     });
 
     it("should return false for recurring pad", async () => {
-      const res = await readClient.checkDebitAmount({
+      let res = await readClient.checkDebitAmount({
         preAuthorization: recurringPad,
         requestedDebitAmount: BigInt(101),
         txFeePayer: payer.publicKey,
       });
       expect(res.successful).to.equal(false);
       expect(res.reason).to.not.equal(undefined);
+
+      res = await readClient.checkDebitAmount({
+        preAuthorization: recurringPad,
+        requestedDebitAmount: BigInt(100),
+        txFeePayer: payer.publicKey,
+        destinationTokenAccount: Keypair.generate().publicKey,
+      });
+      expect(res.successful).to.equal(false);
+      expect(
+        res.reason
+          ?.join(" ")
+          .includes(
+            "AnchorError caused by account: destination_token_account. Error Code: AccountNotInitialized. Error Number: 3012. Error Message: The program expected this account to be already initialized.",
+          ),
+      ).to.equal(true);
     });
   });
 });
