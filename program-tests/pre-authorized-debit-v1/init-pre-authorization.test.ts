@@ -397,9 +397,8 @@ describe("pre-authorized-debit-v1#init-pre-authorization", () => {
           .signers([owner, payer])
           .rpc();
 
-        const preAuthAccount = await program.account.preAuthorization.fetch(
-          preAuthorization,
-        );
+        const preAuthAccount =
+          await program.account.preAuthorization.fetch(preAuthorization);
         expect(
           preAuthAccount.variant.oneTime?.expiryUnixTimestamp.toString(),
         ).to.equal("-1");

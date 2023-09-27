@@ -102,9 +102,8 @@ describe("InstructionFactory Unit Tests", () => {
         .stub(readClient, "fetchTokenProgramIdForTokenAccount")
         .resolves(mockTokenProgramId);
 
-      const ix = await instructionFactory.buildInitOneTimePreAuthorizationIx(
-        params,
-      );
+      const ix =
+        await instructionFactory.buildInitOneTimePreAuthorizationIx(params);
 
       const ixData =
         // eslint-disable-next-line  @typescript-eslint/no-explicit-any
@@ -222,9 +221,8 @@ describe("InstructionFactory Unit Tests", () => {
         .stub(readClient, "fetchTokenProgramIdForTokenAccount")
         .resolves(mockTokenProgramId);
 
-      const ix = await instructionFactory.buildInitRecurringPreAuthorizationIx(
-        params,
-      );
+      const ix =
+        await instructionFactory.buildInitRecurringPreAuthorizationIx(params);
 
       const ixData =
         // eslint-disable-next-line  @typescript-eslint/no-explicit-any
@@ -422,9 +420,8 @@ describe("InstructionFactory Unit Tests", () => {
         .stub(readClient, "fetchCurrentOwnerOfPreAuthTokenAccount")
         .resolves(mockTokenAccountOwner);
 
-      const ix = await instructionFactory.buildUnpausePreAuthorizationIx(
-        params,
-      );
+      const ix =
+        await instructionFactory.buildUnpausePreAuthorizationIx(params);
 
       const ixData =
         // eslint-disable-next-line  @typescript-eslint/no-explicit-any

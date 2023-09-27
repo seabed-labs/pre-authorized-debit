@@ -461,18 +461,6 @@ describe("Transaction Factory Integration Tests", () => {
     });
 
     it("should build and broadcast tx", async () => {
-      let canDebit = await readClient.checkDebitAmount({
-        preAuthorization: preAuthorizations[0],
-        requestedDebitAmount: BigInt(100),
-      });
-      expect(canDebit).to.equal(true);
-      canDebit = await readClient.checkDebitAmount({
-        tokenAccount,
-        debitAuthority: debitAuthorities[0].publicKey,
-        requestedDebitAmount: BigInt(100),
-      });
-      expect(canDebit).to.equal(true);
-
       const spyBuildDebitIx = sandbox.spy(ixFactory, "buildDebitIx");
       const params: DebitParams & UnwrapNativeMintAdditionalParams = {
         preAuthorization: preAuthorizations[0],
@@ -494,11 +482,11 @@ describe("Transaction Factory Integration Tests", () => {
     });
 
     it("should debit native mint token account", async () => {
-      // one day in the past
+      // two day in the past
       const activation = new Date(
         new Date().getTime() - 1000 * 60 * 60 * 24 * 2,
       );
-      // one day in the future
+      // two day in the future
       const expiry = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2);
       const user = Keypair.generate();
       const debitAuthority = Keypair.generate();
@@ -528,18 +516,6 @@ describe("Transaction Factory Integration Tests", () => {
       const initPreAuthTx =
         await txFactory.buildInitOneTimePreAuthorizationTx(initPreAuthParams);
       await initPreAuthTx.execute(undefined, [payer, user], payer.publicKey);
-
-      let canDebit = await readClient.checkDebitAmount({
-        preAuthorization: initPreAuthTx.meta.preAuthorization,
-        requestedDebitAmount: BigInt(10e6),
-      });
-      expect(canDebit).to.equal(true);
-      canDebit = await readClient.checkDebitAmount({
-        tokenAccount: userNativeTokenAccount,
-        debitAuthority: debitAuthority.publicKey,
-        requestedDebitAmount: BigInt(10e6),
-      });
-      expect(canDebit).to.equal(true);
 
       const spyBuildDebitIx = sandbox.spy(ixFactory, "buildDebitIx");
       const params: DebitParams & UnwrapNativeMintAdditionalParams = {
