@@ -239,15 +239,6 @@ export class PreAuthorizedDebitReadClientImpl
       debitAuthority?: PublicKey;
     },
   ): Promise<ProgramAccount<PreAuthorizationAccount>[]> {
-    if (
-      filterBy.debitAuthority &&
-      !(type === "oneTime" || type === "recurring")
-    ) {
-      throw new Error(
-        'Must provide a type filter that is not "all" when also filtering by debitAuthority',
-      );
-    }
-
     const filters: GetProgramAccountsFilter[] = [];
 
     if (filterBy.tokenAccount) {

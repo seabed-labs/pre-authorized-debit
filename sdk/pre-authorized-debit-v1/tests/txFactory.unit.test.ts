@@ -2,6 +2,7 @@ import "./setup";
 import { Connection } from "@solana/web3.js";
 import { MAINNET_PAD_PROGRAM_ID, TransactionFactoryImpl } from "../src";
 import { createSandbox } from "sinon";
+import { expect } from "chai";
 describe("Transaction Factory Integration Tests", () => {
   const sandbox = createSandbox();
   const connection: Connection = new Connection(
@@ -16,15 +17,17 @@ describe("Transaction Factory Integration Tests", () => {
 
   context("constructor", () => {
     it("custom", () => {
-      TransactionFactoryImpl.custom(connection, MAINNET_PAD_PROGRAM_ID);
+      expect(
+        TransactionFactoryImpl.custom(connection, MAINNET_PAD_PROGRAM_ID),
+      ).to.not.equal(null);
     });
 
     it("mainnet", () => {
-      TransactionFactoryImpl.mainnet(connection);
+      expect(TransactionFactoryImpl.mainnet(connection)).to.not.equal(null);
     });
 
     it("devnet", () => {
-      TransactionFactoryImpl.devnet(connection);
+      expect(TransactionFactoryImpl.devnet(connection)).to.not.equal(null);
     });
   });
 });

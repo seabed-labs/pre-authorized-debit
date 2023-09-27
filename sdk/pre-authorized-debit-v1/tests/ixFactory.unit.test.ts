@@ -1,10 +1,11 @@
-import { InstructionFactoryImpl } from "../src/write/implementation";
 import { Connection, Keypair, SystemProgram } from "@solana/web3.js";
 import {
   InitOneTimePreAuthorizationParams,
   InitRecurringPreAuthorizationParams,
+  MAINNET_PAD_PROGRAM_ID,
   PausePreAuthorizationParams,
   PreAuthorizedDebitReadClientImpl,
+  InstructionFactoryImpl,
 } from "../src";
 import * as sdkConstants from "../src/constants";
 import { expect } from "chai";
@@ -32,6 +33,29 @@ describe("InstructionFactory Unit Tests", () => {
   afterEach(() => {
     sandbox.reset();
     sandbox.restore();
+  });
+
+  context("constructor", () => {
+    it("custom", () => {
+      expect(
+        InstructionFactoryImpl.custom(connection, MAINNET_PAD_PROGRAM_ID),
+      ).to.not.equal(null);
+      expect(
+        InstructionFactoryImpl.custom(
+          connection,
+          MAINNET_PAD_PROGRAM_ID,
+          readClient,
+        ),
+      ).to.not.equal(null);
+    });
+
+    it("mainnet", () => {
+      expect(InstructionFactoryImpl.mainnet(connection)).to.not.equal(null);
+    });
+
+    it("devnet", () => {
+      expect(InstructionFactoryImpl.devnet(connection)).to.not.equal(null);
+    });
   });
 
   context("buildInitSmartDelegateIx", () => {

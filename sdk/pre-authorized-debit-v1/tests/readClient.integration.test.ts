@@ -47,11 +47,11 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
   let mint: PublicKey, tokenAccount: PublicKey, smartDelegate: PublicKey;
   const debitAuthorities: Keypair[] = [];
   const preAuthorizations: PublicKey[] = [];
+  const payerKeypair = new Keypair();
 
   before(async () => {
     smartDelegate = await initSmartDelegateIdempotent(program, provider);
     const mintAuthority = new Keypair();
-    const payerKeypair = new Keypair();
     for (let i = 0; i < 3; i++) {
       debitAuthorities.push(Keypair.generate());
     }
@@ -483,6 +483,18 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
         (BigInt(2) ** BigInt(64) - BigInt(1)).toString(),
       );
     });
+
+    it("should return null", async () => {
+      const newTokenAccount = await createAccount(
+        connection,
+        payerKeypair,
+        mint,
+        Keypair.generate().publicKey,
+      );
+      const delegateData =
+        await readClient.fetchCurrentDelegationOfTokenAccount(newTokenAccount);
+      expect(delegateData).to.equal(null);
+    });
   });
 
   context("fetchCurrentDelegationOfPreAuthTokenAccount", () => {
@@ -627,31 +639,59 @@ describe("PreAuthorizedDebitReadClientImpl integration", () => {
         .rpc();
     });
 
-    it("should return true for oneTime pad", async () => {
+    it("should return false if pad does not exist", async () => {
       const res = await readClient.checkDebitAmount({
-        preAuthorization: oneTimePad,
+        preAuthorization: Keypair.generate().publicKey,
         requestedDebitAmount: BigInt(100e6),
-        txFeePayer: payer.publicKey,
-      });
-      expect(res).to.equal(true);
-    });
-
-    it("should return false for oneTime pad", async () => {
-      const res = await readClient.checkDebitAmount({
-        preAuthorization: oneTimePad,
-        requestedDebitAmount: BigInt(101e6),
         txFeePayer: payer.publicKey,
       });
       expect(res).to.equal(false);
     });
 
+    it("should return true for oneTime pad", async () => {
+      await expect(
+        readClient.checkDebitAmount({
+          preAuthorization: oneTimePad,
+          requestedDebitAmount: BigInt(100e6),
+          txFeePayer: payer.publicKey,
+        }),
+      ).to.eventually.equal(true);
+      await expect(
+        readClient.checkDebitAmount({
+          tokenAccount: userTokenAcount,
+          debitAuthority: oneTimeDebitAuthority.publicKey,
+          requestedDebitAmount: BigInt(100e6),
+          txFeePayer: payer.publicKey,
+        }),
+      ).to.eventually.equal(true);
+    });
+
+    it("should return false for oneTime pad", async () => {
+      await expect(
+        readClient.checkDebitAmount({
+          preAuthorization: oneTimePad,
+          requestedDebitAmount: BigInt(101e6),
+          txFeePayer: payer.publicKey,
+        }),
+      ).to.eventually.equal(false);
+    });
+
     it("should return true for recurring pad", async () => {
-      const res = await readClient.checkDebitAmount({
-        preAuthorization: recurringPad,
-        requestedDebitAmount: BigInt(100),
-        txFeePayer: payer.publicKey,
-      });
-      expect(res).to.equal(true);
+      await expect(
+        readClient.checkDebitAmount({
+          preAuthorization: recurringPad,
+          requestedDebitAmount: BigInt(100),
+          txFeePayer: payer.publicKey,
+        }),
+      ).to.eventually.equal(true);
+      await expect(
+        readClient.checkDebitAmount({
+          tokenAccount: userTokenAcount,
+          debitAuthority: recurringDebitAuthority.publicKey,
+          requestedDebitAmount: BigInt(100),
+          txFeePayer: payer.publicKey,
+        }),
+      ).to.eventually.equal(true);
     });
 
     it("should return false for recurring pad", async () => {
