@@ -4,6 +4,7 @@ import {
   PublicKey,
   SendOptions,
   Signer,
+  SimulateTransactionConfig,
   SystemProgram,
   TransactionInstruction,
   VersionedTransaction,
@@ -110,14 +111,21 @@ export class TransactionFactoryImpl implements TransactionFactory {
     txInstructions: TransactionInstruction[],
     meta: T,
   ) {
-    return async (signers?: Signer[], txFeesPayer?: PublicKey) => {
+    return async (
+      signers?: Signer[],
+      txFeesPayer?: PublicKey,
+      simulateConfig?: SimulateTransactionConfig,
+    ) => {
       const tx = await this.buildAndSignTx(
         txInstructions,
         signers,
         txFeesPayer,
       );
 
-      const result = await this.connection.simulateTransaction(tx);
+      const result = await this.connection.simulateTransaction(
+        tx,
+        simulateConfig,
+      );
 
       return {
         result,
