@@ -20,6 +20,26 @@ export type InstructionWithMetadata<T> = {
   meta: T;
 };
 
+export type SignerAndTxFeePayerParams =
+  | {
+      signers: Signer[];
+      /**
+       * If this is undefined, signers[0] is used
+       */
+      txFeesPayer?: PublicKey;
+    }
+  | { txFeesPayer: PublicKey };
+
+export type BuildVersionedTransactionParams = SignerAndTxFeePayerParams;
+
+export type SimulateParams = SignerAndTxFeePayerParams & {
+  simulateConfig?: SimulateTransactionConfig;
+};
+
+export type ExecuteParams = SignerAndTxFeePayerParams & {
+  sendOptions?: SendOptions;
+};
+
 // Transaction Factory Return Type Wrapper
 export type TransactionWithMetadata<T> = {
   setupInstructions: TransactionInstruction[];
@@ -28,19 +48,12 @@ export type TransactionWithMetadata<T> = {
   expectedSigners: ExpectedSigner[];
   meta: T;
   buildVersionedTransaction(
-    signers?: Signer[],
-    txFeesPayer?: PublicKey,
+    params: BuildVersionedTransactionParams,
   ): Promise<VersionedTransaction>;
   simulate(
-    signers?: Signer[],
-    txFeesPayer?: PublicKey,
-    simulateConfig?: SimulateTransactionConfig,
+    params: SimulateParams,
   ): Promise<TransactionSimulationResultWithMeta<T>>;
-  execute(
-    options?: SendOptions,
-    signers?: Signer[],
-    txFeesPayer?: PublicKey,
-  ): Promise<TransactionResultWithMeta<T>>;
+  execute(params: ExecuteParams): Promise<TransactionResultWithMeta<T>>;
 };
 
 export type TransactionSimulationResultWithMeta<T> = {

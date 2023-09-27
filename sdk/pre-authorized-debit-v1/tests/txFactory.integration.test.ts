@@ -190,7 +190,10 @@ describe("Transaction Factory Integration Tests", () => {
         spyBuildInitRecurringPreAuthorizationIx.calledWith(params),
       ).to.equal(true);
 
-      await tx.execute(undefined, [payer, user], payer.publicKey);
+      await tx.execute({
+        signers: [payer, user],
+        txFeesPayer: payer.publicKey,
+      });
     });
   });
 
@@ -209,10 +212,10 @@ describe("Transaction Factory Integration Tests", () => {
       expect(tx.cleanupInstructions.length).to.equal(0);
       expect(spyBuildApproveSmartDelegateTx.calledWith(params)).to.equal(true);
 
-      const versionedTx = await tx.buildVersionedTransaction(
-        [payer],
-        payer.publicKey,
-      );
+      const versionedTx = await tx.buildVersionedTransaction({
+        txFeesPayer: payer.publicKey,
+        signers: [payer],
+      });
       await provider.sendAndConfirm(versionedTx);
     });
   });
@@ -232,10 +235,10 @@ describe("Transaction Factory Integration Tests", () => {
       expect(tx.cleanupInstructions.length).to.equal(0);
       expect(spyBuildPausePreAuthorizationIx.calledWith(params)).to.equal(true);
 
-      const versionedTx = await tx.buildVersionedTransaction(
-        [payer],
-        payer.publicKey,
-      );
+      const versionedTx = await tx.buildVersionedTransaction({
+        signers: [payer],
+        txFeesPayer: payer.publicKey,
+      });
       await provider.sendAndConfirm(versionedTx);
     });
   });
@@ -257,10 +260,10 @@ describe("Transaction Factory Integration Tests", () => {
         true,
       );
 
-      const versionedTx = await tx.buildVersionedTransaction(
-        [payer],
-        payer.publicKey,
-      );
+      const versionedTx = await tx.buildVersionedTransaction({
+        signers: [payer],
+        txFeesPayer: payer.publicKey,
+      });
       await provider.sendAndConfirm(versionedTx);
     });
   });
@@ -315,10 +318,10 @@ describe("Transaction Factory Integration Tests", () => {
           spyBuildClosePreAuthorizationAsOwnerIx.calledWith(params),
         ).to.equal(true);
 
-        const versionedTx = await tx.buildVersionedTransaction(
-          [payer],
-          payer.publicKey,
-        );
+        const versionedTx = await tx.buildVersionedTransaction({
+          signers: [payer],
+          txFeesPayer: payer.publicKey,
+        });
         await provider.sendAndConfirm(versionedTx);
       });
     });
@@ -332,20 +335,23 @@ describe("Transaction Factory Integration Tests", () => {
         const params = {
           preAuthorization: pad,
         };
-        const tx =
-          await txFactory.buildClosePreAuthorizationAsDebitAuthorityTx(params);
+        const tx = await txFactory.buildClosePreAuthorizationAsDebitAuthorityTx(
+          params,
+        );
         expect(tx.setupInstructions.length).to.equal(0);
         expect(tx.coreInstructions.length).to.equal(1);
         expect(tx.cleanupInstructions.length).to.equal(0);
         expect(
           spyBuildClosePreAuthorizationAsDebitAuthorityIx.calledWith(params),
         ).to.equal(true);
-        await tx.simulate([newDebitAuthority, payer], payer.publicKey);
-        await tx.execute(
-          undefined,
-          [newDebitAuthority, payer],
-          payer.publicKey,
-        );
+        await tx.simulate({
+          signers: [newDebitAuthority, payer],
+          txFeesPayer: payer.publicKey,
+        });
+        await tx.execute({
+          signers: [newDebitAuthority, payer],
+          txFeesPayer: payer.publicKey,
+        });
 
         const accountInfo = await connection.getAccountInfo(pad);
         expect(accountInfo).to.equal(null);
@@ -374,10 +380,10 @@ describe("Transaction Factory Integration Tests", () => {
         true,
       );
 
-      const versionedTx = await tx.buildVersionedTransaction(
-        [payer],
-        payer.publicKey,
-      );
+      const versionedTx = await tx.buildVersionedTransaction({
+        signers: [payer],
+        txFeesPayer: payer.publicKey,
+      });
       await provider.sendAndConfirm(versionedTx);
     });
 
@@ -411,10 +417,10 @@ describe("Transaction Factory Integration Tests", () => {
         true,
       );
 
-      const versionedTx = await tx.buildVersionedTransaction(
-        [payer],
-        payer.publicKey,
-      );
+      const versionedTx = await tx.buildVersionedTransaction({
+        signers: [payer],
+        txFeesPayer: payer.publicKey,
+      });
       await provider.sendAndConfirm(versionedTx);
     });
   });
@@ -474,11 +480,10 @@ describe("Transaction Factory Integration Tests", () => {
       expect(tx.cleanupInstructions.length).to.equal(0);
       expect(spyBuildDebitIx.calledWith(params)).to.equal(true);
 
-      await tx.execute(
-        undefined,
-        [payer, debitAuthorities[0]],
-        payer.publicKey,
-      );
+      await tx.execute({
+        signers: [payer, debitAuthorities[0]],
+        txFeesPayer: payer.publicKey,
+      });
     });
 
     it("should debit native mint token account", async () => {
@@ -513,9 +518,13 @@ describe("Transaction Factory Integration Tests", () => {
           wrapLamportsAmount: BigInt(100),
         },
       };
-      const initPreAuthTx =
-        await txFactory.buildInitOneTimePreAuthorizationTx(initPreAuthParams);
-      await initPreAuthTx.execute(undefined, [payer, user], payer.publicKey);
+      const initPreAuthTx = await txFactory.buildInitOneTimePreAuthorizationTx(
+        initPreAuthParams,
+      );
+      await initPreAuthTx.execute({
+        signers: [payer, user],
+        txFeesPayer: payer.publicKey,
+      });
 
       const spyBuildDebitIx = sandbox.spy(ixFactory, "buildDebitIx");
       const params: DebitParams & UnwrapNativeMintAdditionalParams = {
@@ -532,7 +541,10 @@ describe("Transaction Factory Integration Tests", () => {
       expect(tx.coreInstructions.length).to.equal(1);
       expect(tx.cleanupInstructions.length).to.equal(1);
       expect(spyBuildDebitIx.calledWith(params)).to.equal(true);
-      await tx.execute(undefined, [payer, debitAuthority], payer.publicKey);
+      await tx.execute({
+        signers: [payer, debitAuthority],
+        txFeesPayer: payer.publicKey,
+      });
     });
   });
 });
