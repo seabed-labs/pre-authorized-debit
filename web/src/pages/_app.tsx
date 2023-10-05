@@ -9,6 +9,7 @@ import React, { useMemo } from 'react';
 import { ChakraProvider } from '@chakra-ui/react';
 import Layout from '../components/Layout';
 import theme from '../styles/theme';
+import HeartbeatContextProvider from '../contexts/Heartbeat';
 
 // Use require instead of import since order matters
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -42,17 +43,19 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
     );
 
     return (
-        <ChakraProvider theme={theme}>
-            <ConnectionProvider endpoint={endpoint}>
-                <WalletProvider wallets={wallets} autoConnect>
-                    <WalletModalProvider>
-                        <Layout>
-                            <Component {...pageProps} />
-                        </Layout>
-                    </WalletModalProvider>
-                </WalletProvider>
-            </ConnectionProvider>
-        </ChakraProvider>
+        <HeartbeatContextProvider>
+            <ChakraProvider theme={theme}>
+                <ConnectionProvider endpoint={endpoint}>
+                    <WalletProvider wallets={wallets} autoConnect>
+                        <WalletModalProvider>
+                            <Layout>
+                                <Component {...pageProps} />
+                            </Layout>
+                        </WalletModalProvider>
+                    </WalletProvider>
+                </ConnectionProvider>
+            </ChakraProvider>
+        </HeartbeatContextProvider>
     );
 };
 
