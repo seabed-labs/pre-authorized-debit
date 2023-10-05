@@ -10,6 +10,7 @@ import { ChakraProvider } from '@chakra-ui/react';
 import Layout from '../components/Layout';
 import theme from '../styles/theme';
 import HeartbeatContextProvider from '../contexts/Heartbeat';
+import { Chakra } from '../components/Chakra';
 
 // Use require instead of import since order matters
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -44,7 +45,7 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
 
     return (
         <HeartbeatContextProvider>
-            <ChakraProvider theme={theme}>
+            <Chakra cookies={pageProps.cookies}>
                 <ConnectionProvider endpoint={endpoint}>
                     <WalletProvider wallets={wallets} autoConnect>
                         <WalletModalProvider>
@@ -54,9 +55,11 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
                         </WalletModalProvider>
                     </WalletProvider>
                 </ConnectionProvider>
-            </ChakraProvider>
+            </Chakra>
         </HeartbeatContextProvider>
     );
 };
+
+export { getServerSideProps } from '../components/Chakra';
 
 export default App;

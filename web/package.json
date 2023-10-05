@@ -42,6 +42,7 @@
         "@solana/wallet-adapter-react-ui": "0.9.34",
         "@solana/wallet-adapter-wallets": "0.19.22",
         "@solana/web3.js": "^1.78.7",
+        "@tabler/icons-react": "^2.38.0",
         "framer-motion": "^10.16.4",
         "next": "^13.5.3",
         "react": "^18.2.0",

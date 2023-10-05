@@ -3550,6 +3550,7 @@ __metadata:
     "@solana/wallet-adapter-react-ui": 0.9.34
     "@solana/wallet-adapter-wallets": 0.19.22
     "@solana/web3.js": ^1.78.7
+    "@tabler/icons-react": ^2.38.0
     "@types/node-fetch": ^2.6.4
     "@types/react": ^18.2.13
     "@types/react-dom": ^18.2.6
@@ -3567,7 +3568,7 @@ __metadata:
 
 "@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1::locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts":
   version: 1.1.0
-  resolution: "@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=29c9a7&locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts"
+  resolution: "@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=868266&locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts"
   dependencies:
     "@coral-xyz/anchor": ^0.28.0
     "@coral-xyz/borsh": ^0.28.0
@@ -3576,7 +3577,7 @@ __metadata:
     axios: ^1.5.0
     bn.js: ^5.2.1
     node-fetch: ^3.3.2
-  checksum: 6a0cc5925e7e6f3ba52cc4fe90267dd450e5a5ec57328572918bde9e817df6287ebc22860f301dc2184a8f22fdd9727d9d26d7797351486818eac27390f0b0fd
+  checksum: c9c9d81eb578e3c1d0055129886ae27ca74c46e2e1364f37088a39ee50ed55ff42a06b6bb2799a6e25aa7907c44aa68e46f7365298c18bfe871d47aa106ef843
   languageName: node
   linkType: hard
 
@@ -4571,6 +4572,25 @@ __metadata:
   dependencies:
     tslib: ^2.4.0
   checksum: 51d7e3d8bd56818c49d6bfbd715f0dbeedc13cf723af41166e45c03e37f109336bbcb57a1f2020f4015957721aeb21e1a7fff281233d797ff7d3dd1f447fa258
+  languageName: node
+  linkType: hard
+
+"@tabler/icons-react@npm:^2.38.0":
+  version: 2.38.0
+  resolution: "@tabler/icons-react@npm:2.38.0"
+  dependencies:
+    "@tabler/icons": 2.38.0
+    prop-types: ^15.7.2
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0
+  checksum: 82ff7c59c365b4b7cb74e511cdc5cb1630915d7aa7e9522483aed307d9688a6b8b8510a3765aef3e8694483ea44ef32232285b9e5b0ebe1c2beddbd7f619167a
+  languageName: node
+  linkType: hard
+
+"@tabler/icons@npm:2.38.0":
+  version: 2.38.0
+  resolution: "@tabler/icons@npm:2.38.0"
+  checksum: 030af0ed999103334a9d823aae7069a308b2fffb79b89ac6b7a46ba27eed4f9527b07c77c961c688234808ba93bc1e7b7c401dfff3e386cf342e426754ceb096
   languageName: node
   linkType: hard
 
