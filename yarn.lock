@@ -2173,7 +2173,7 @@ __metadata:
 
 "@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1::locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts":
   version: 1.1.0
-  resolution: "@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=2be868&locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts"
+  resolution: "@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=29c9a7&locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts"
   dependencies:
     "@coral-xyz/anchor": ^0.28.0
     "@coral-xyz/borsh": ^0.28.0
@@ -2182,7 +2182,7 @@ __metadata:
     axios: ^1.5.0
     bn.js: ^5.2.1
     node-fetch: ^3.3.2
-  checksum: 3f5cd7634b6bde2b52353875b4dec4b32806aadf2f87dff40dd90891f07066df218b7eb4a4a5aa5577e8697e3d2e036633d9e68e3c85233f2a4693f0293eb496
+  checksum: 6a0cc5925e7e6f3ba52cc4fe90267dd450e5a5ec57328572918bde9e817df6287ebc22860f301dc2184a8f22fdd9727d9d26d7797351486818eac27390f0b0fd
   languageName: node
   linkType: hard
 
