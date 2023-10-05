@@ -1,5 +1,4 @@
-import { MoonIcon, SunIcon } from '@chakra-ui/icons';
-import { Box, Flex, HStack, Switch, useColorMode, useColorModeValue } from '@chakra-ui/react';
+import { Flex, Text, useColorModeValue } from '@chakra-ui/react';
 import ColorModeToggle from './ColorModeToggle';
 
 const SideNav: React.FC = () => {
@@ -16,7 +15,9 @@ const SideNav: React.FC = () => {
             p="20px"
         >
             <Flex direction="column" justifyContent="flex-start" alignItems="center" h="50%">
-                <div>asd</div>
+                <Text fontSize="xl" fontWeight="bold">
+                    Pre-Authorized Debit
+                </Text>
             </Flex>
             <Flex direction="column" justifyContent="flex-end" alignItems="center" h="50%">
                 <ColorModeToggle />
