@@ -3545,6 +3545,7 @@ __metadata:
     "@chakra-ui/react": ^2.8.1
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0
+    "@seabed-labs/pre-authorized-debit": "workspace:^"
     "@solana/wallet-adapter-base": 0.9.23
     "@solana/wallet-adapter-react": 0.15.35
     "@solana/wallet-adapter-react-ui": 0.9.34
@@ -3581,7 +3582,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@seabed-labs/pre-authorized-debit@workspace:sdk/pre-authorized-debit-v1":
+"@seabed-labs/pre-authorized-debit@workspace:^, @seabed-labs/pre-authorized-debit@workspace:sdk/pre-authorized-debit-v1":
   version: 0.0.0-use.local
   resolution: "@seabed-labs/pre-authorized-debit@workspace:sdk/pre-authorized-debit-v1"
   dependencies:

@@ -37,6 +37,7 @@
         "@chakra-ui/react": "^2.8.1",
         "@emotion/react": "^11.11.1",
         "@emotion/styled": "^11.11.0",
+        "@seabed-labs/pre-authorized-debit": "workspace:^",
         "@solana/wallet-adapter-base": "0.9.23",
         "@solana/wallet-adapter-react": "0.15.35",
         "@solana/wallet-adapter-react-ui": "0.9.34",
