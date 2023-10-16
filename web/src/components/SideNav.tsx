@@ -1,4 +1,4 @@
-import { Box, Flex, HStack, Text, VStack, useColorModeValue } from '@chakra-ui/react';
+import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import ColorModeToggle from './ColorModeToggle';
 import { IconCoins, IconCreditCard } from '@tabler/icons-react';
 
@@ -18,11 +18,11 @@ const SideNav: React.FC = () => {
                     Pre-Authorized Debits
                 </Text>
                 <VStack mt="40px" spacing="20px" alignItems="start">
-                    <HStack>
+                    <HStack cursor="pointer" fontWeight="semibold">
                         <IconCoins />
                         <Text>Token Accounts</Text>
                     </HStack>
-                    <HStack>
+                    <HStack cursor="pointer" fontWeight="semibold">
                         <IconCreditCard />
                         <Text>All Pre-Authorizations</Text>
                     </HStack>

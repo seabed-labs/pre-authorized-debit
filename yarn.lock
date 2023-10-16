@@ -3545,7 +3545,7 @@ __metadata:
     "@chakra-ui/react": ^2.8.1
     "@emotion/react": ^11.11.1
     "@emotion/styled": ^11.11.0
-    "@seabed-labs/pre-authorized-debit": "workspace:^"
+    "@seabed-labs/pre-authorized-debit": 1.1.0
     "@solana/wallet-adapter-base": 0.9.23
     "@solana/wallet-adapter-react": 0.15.35
     "@solana/wallet-adapter-react-ui": 0.9.34
@@ -3567,22 +3567,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1::locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts":
-  version: 1.1.0
-  resolution: "@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=868266&locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts"
-  dependencies:
-    "@coral-xyz/anchor": ^0.28.0
-    "@coral-xyz/borsh": ^0.28.0
-    "@solana/spl-token": ^0.3.8
-    "@solana/web3.js": ^1.78.4
-    axios: ^1.5.0
-    bn.js: ^5.2.1
-    node-fetch: ^3.3.2
-  checksum: c9c9d81eb578e3c1d0055129886ae27ca74c46e2e1364f37088a39ee50ed55ff42a06b6bb2799a6e25aa7907c44aa68e46f7365298c18bfe871d47aa106ef843
-  languageName: node
-  linkType: hard
-
-"@seabed-labs/pre-authorized-debit@workspace:^, @seabed-labs/pre-authorized-debit@workspace:sdk/pre-authorized-debit-v1":
+"@seabed-labs/pre-authorized-debit@1.1.0, @seabed-labs/pre-authorized-debit@workspace:sdk/pre-authorized-debit-v1":
   version: 0.0.0-use.local
   resolution: "@seabed-labs/pre-authorized-debit@workspace:sdk/pre-authorized-debit-v1"
   dependencies:
@@ -3617,6 +3602,21 @@ __metadata:
     typescript: ^5.2.2
   languageName: unknown
   linkType: soft
+
+"@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1::locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts":
+  version: 1.1.0
+  resolution: "@seabed-labs/pre-authorized-debit@file:../sdk/pre-authorized-debit-v1#../sdk/pre-authorized-debit-v1::hash=868266&locator=%40seabed-labs%2Fpad-library-scripts%40workspace%3Ascripts"
+  dependencies:
+    "@coral-xyz/anchor": ^0.28.0
+    "@coral-xyz/borsh": ^0.28.0
+    "@solana/spl-token": ^0.3.8
+    "@solana/web3.js": ^1.78.4
+    axios: ^1.5.0
+    bn.js: ^5.2.1
+    node-fetch: ^3.3.2
+  checksum: c9c9d81eb578e3c1d0055129886ae27ca74c46e2e1364f37088a39ee50ed55ff42a06b6bb2799a6e25aa7907c44aa68e46f7365298c18bfe871d47aa106ef843
+  languageName: node
+  linkType: hard
 
 "@sinonjs/commons@npm:^2.0.0":
   version: 2.0.0

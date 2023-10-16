@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // e.g. src/Chakra.js
 // a) import `ChakraProvider` component as well as the storageManagers
 import { ChakraProvider, cookieStorageManagerSSR, localStorageManager } from '@chakra-ui/react';

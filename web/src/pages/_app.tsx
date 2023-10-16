@@ -6,9 +6,7 @@ import { clusterApiUrl } from '@solana/web3.js';
 import type { AppProps } from 'next/app';
 import type { FC } from 'react';
 import React, { useMemo } from 'react';
-import { ChakraProvider } from '@chakra-ui/react';
 import Layout from '../components/Layout';
-import theme from '../styles/theme';
 import HeartbeatContextProvider from '../contexts/Heartbeat';
 import { Chakra } from '../components/Chakra';
 
