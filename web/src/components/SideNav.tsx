@@ -1,6 +1,7 @@
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import ColorModeToggle from './ColorModeToggle';
 import { IconCoins, IconCreditCard } from '@tabler/icons-react';
+import Link from 'next/link';
 
 const SideNav: React.FC = () => {
     return (
@@ -18,14 +19,18 @@ const SideNav: React.FC = () => {
                     Pre-Authorized Debits
                 </Text>
                 <VStack mt="40px" spacing="20px" alignItems="start">
-                    <HStack cursor="pointer" fontWeight="semibold">
-                        <IconCoins />
-                        <Text>Token Accounts</Text>
-                    </HStack>
-                    <HStack cursor="pointer" fontWeight="semibold">
-                        <IconCreditCard />
-                        <Text>All Pre-Authorizations</Text>
-                    </HStack>
+                    <Link href="/">
+                        <HStack cursor="pointer" fontWeight="semibold">
+                            <IconCoins />
+                            <Text>Token Accounts</Text>
+                        </HStack>
+                    </Link>
+                    <Link href="/pads">
+                        <HStack cursor="pointer" fontWeight="semibold">
+                            <IconCreditCard />
+                            <Text>All Pre-Authorizations</Text>
+                        </HStack>
+                    </Link>
                 </VStack>
             </Flex>
             <Flex direction="column" justifyContent="flex-end" alignItems="start" h="50%">
