@@ -3,10 +3,12 @@ import type { NextPage } from 'next';
 import React, { useCallback, useEffect } from 'react';
 import { useSDK } from '../contexts/SDK';
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { useTokenList } from '../contexts/TokenList';
 
 const Home: NextPage = () => {
     const wallet = useWallet();
     const sdk = useSDK();
+    const tokenList = useTokenList();
 
     const fetchAndLogSmartDelegate = useCallback(async () => {
         const smartDelegate = await sdk.readClient.fetchSmartDelegate();
@@ -39,6 +41,10 @@ const Home: NextPage = () => {
     }, [wallet, sdk]);
 
     useEffect(() => {
+        console.log('Token List:', tokenList);
+    }, [tokenList]);
+
+    useEffect(() => {
         console.log(wallet.publicKey?.toBase58());
         fetchAndLogSmartDelegate();
         fetchAndLogTokenAccounts();
@@ -46,5 +52,7 @@ const Home: NextPage = () => {
 
     return <></>;
 };
+
+export { getServerSideProps } from '../shared/getServerSideProps';
 
 export default Home;

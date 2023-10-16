@@ -9,12 +9,15 @@ import React, { useMemo } from 'react';
 import Layout from '../components/Layout';
 import HeartbeatContextProvider from '../contexts/Heartbeat';
 import { Chakra } from '../components/Chakra';
+import SDKContextProvider from '../contexts/SDK';
+import TokenListContextProvider from '../contexts/TokenList';
+import { getServerSideProps } from './_app';
 
 // Use require instead of import since order matters
 require('@solana/wallet-adapter-react-ui/styles.css');
 require('../styles/globals.css');
 
-const App: FC<AppProps> = ({ Component, pageProps }) => {
+const App: FC<AppProps<Awaited<ReturnType<typeof getServerSideProps>>['props']>> = ({ Component, pageProps }) => {
     // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
     const network = WalletAdapterNetwork.Devnet;
 
@@ -42,22 +45,26 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
     );
 
     return (
-        <HeartbeatContextProvider>
-            <Chakra cookies={pageProps.cookies}>
-                <ConnectionProvider endpoint={endpoint}>
-                    <WalletProvider wallets={wallets} autoConnect>
-                        <WalletModalProvider>
-                            <Layout>
-                                <Component {...pageProps} />
-                            </Layout>
-                        </WalletModalProvider>
-                    </WalletProvider>
-                </ConnectionProvider>
-            </Chakra>
-        </HeartbeatContextProvider>
+        <TokenListContextProvider {...pageProps}>
+            <SDKContextProvider>
+                <HeartbeatContextProvider>
+                    <Chakra cookies={pageProps.cookies}>
+                        <ConnectionProvider endpoint={endpoint}>
+                            <WalletProvider wallets={wallets} autoConnect>
+                                <WalletModalProvider>
+                                    <Layout>
+                                        <Component {...pageProps} />
+                                    </Layout>
+                                </WalletModalProvider>
+                            </WalletProvider>
+                        </ConnectionProvider>
+                    </Chakra>
+                </HeartbeatContextProvider>
+            </SDKContextProvider>
+        </TokenListContextProvider>
     );
 };
 
-export { getServerSideProps } from '../components/Chakra';
+export { getServerSideProps } from '../shared/getServerSideProps';
 
 export default App;
