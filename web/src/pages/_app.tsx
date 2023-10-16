@@ -6,6 +6,11 @@ import { clusterApiUrl } from '@solana/web3.js';
 import type { AppProps } from 'next/app';
 import type { FC } from 'react';
 import React, { useMemo } from 'react';
+import { ChakraProvider } from '@chakra-ui/react';
+import Layout from '../components/Layout';
+import theme from '../styles/theme';
+import HeartbeatContextProvider from '../contexts/Heartbeat';
+import { Chakra } from '../components/Chakra';
 
 // Use require instead of import since order matters
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -39,14 +44,22 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
     );
 
     return (
-        <ConnectionProvider endpoint={endpoint}>
-            <WalletProvider wallets={wallets} autoConnect>
-                <WalletModalProvider>
-                    <Component {...pageProps} />
-                </WalletModalProvider>
-            </WalletProvider>
-        </ConnectionProvider>
+        <HeartbeatContextProvider>
+            <Chakra cookies={pageProps.cookies}>
+                <ConnectionProvider endpoint={endpoint}>
+                    <WalletProvider wallets={wallets} autoConnect>
+                        <WalletModalProvider>
+                            <Layout>
+                                <Component {...pageProps} />
+                            </Layout>
+                        </WalletModalProvider>
+                    </WalletProvider>
+                </ConnectionProvider>
+            </Chakra>
+        </HeartbeatContextProvider>
     );
 };
+
+export { getServerSideProps } from '../components/Chakra';
 
 export default App;
