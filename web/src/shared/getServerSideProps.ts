@@ -1,9 +1,27 @@
-export async function getServerSideProps({ req }: any) {
-    const strictJupTokenListRes = await fetch('https://token.jup.ag/strict');
-    const strictJupTokenListData = await strictJupTokenListRes.json();
+import { Token, TokenList } from '../contexts/TokenList';
 
-    const allJupTokenListRes = await fetch('https://token.jup.ag/all');
-    const allJupTokenListData = await allJupTokenListRes.json();
+export async function getServerSideProps({ req }: any) {
+    const [strictJupTokenListRes, allJupTokenListRes] = await Promise.all([
+        fetch('https://token.jup.ag/strict'),
+        fetch('https://token.jup.ag/all'),
+    ]);
+
+    const [strictJupTokenListData, allJupTokenListData] = (await Promise.all([
+        strictJupTokenListRes.json(),
+        allJupTokenListRes.json(),
+    ])) as [Token[], Token[]];
+
+    const strictJupTokenListMap = strictJupTokenListData.reduce((map, token) => {
+        map[token.address] = token;
+
+        return map;
+    }, {} as TokenList['strictMap']);
+
+    const allJupTokenListMap = allJupTokenListData.reduce((map, token) => {
+        map[token.address] = token;
+
+        return map;
+    }, {} as TokenList['allMap']);
 
     return {
         props: {
@@ -12,6 +30,8 @@ export async function getServerSideProps({ req }: any) {
             cookies: req.headers.cookie ?? '',
             strict: strictJupTokenListData,
             all: allJupTokenListData,
+            strictMap: strictJupTokenListMap,
+            allMap: allJupTokenListMap,
         },
     };
 }

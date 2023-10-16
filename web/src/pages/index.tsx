@@ -36,7 +36,13 @@ const Home: NextPage = () => {
 
         console.log(
             'All Token Accounts:',
-            allTokenAcounts.map((t) => t.pubkey.toBase58())
+            allTokenAcounts.map((t) => {
+                const mint = t.account.data.parsed.info.mint;
+                console.log('account', mint);
+                const token = tokenList.allMap[mint];
+                if (!token) return mint;
+                return token.symbol;
+            })
         );
     }, [wallet, sdk]);
 
@@ -50,7 +56,7 @@ const Home: NextPage = () => {
         fetchAndLogTokenAccounts();
     }, [wallet, fetchAndLogSmartDelegate, fetchAndLogTokenAccounts]);
 
-    return <></>;
+    return <>Home</>;
 };
 
 export { getServerSideProps } from '../shared/getServerSideProps';
