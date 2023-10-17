@@ -9,6 +9,7 @@ import Decimal from 'decimal.js';
 import { useSDK } from '../../../contexts/SDK';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { delay } from '../../../utils/delay';
+import CreatePreAuthorizationModal from '../../../components/CreatePreAuthorizationModal';
 
 const Pads: NextPage = () => {
     const router = useRouter();
@@ -178,7 +179,7 @@ const Pads: NextPage = () => {
                 {refreshingSmartDelegate && <Spinner ml="8px" />}
             </Button>
             <HStack>
-                <Button>Create Pre-Authorization</Button>
+                <CreatePreAuthorizationModal />
             </HStack>
         </VStack>
     );
