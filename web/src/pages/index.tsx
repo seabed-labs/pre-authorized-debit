@@ -98,7 +98,7 @@ const Home: NextPage = () => {
             </Center>
             <VStack w="100%" spacing="16px" justifyContent="flex-start" alignItems="center">
                 {tokenAccounts.tokenAccounts.map((tokenAccount) => (
-                    <TokenAccount tokenAccount={tokenAccount} />
+                    <TokenAccount key={tokenAccount.address.toBase58()} tokenAccount={tokenAccount} />
                 ))}
             </VStack>
         </Box>
