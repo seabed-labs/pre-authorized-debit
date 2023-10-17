@@ -9,10 +9,10 @@ import React, { useMemo } from 'react';
 import Layout from '../components/Layout';
 import HeartbeatContextProvider from '../contexts/Heartbeat';
 import { Chakra } from '../components/Chakra';
-import SDKContextProvider from '../contexts/SDK';
 import TokenListContextProvider from '../contexts/TokenList';
 import { getServerSideProps } from './_app';
 import TokenAccountsContextProvider from '../contexts/TokenAccounts';
+import PreAuthorizationsContextProvider from '../contexts/PreAuthorizations';
 
 // Use require instead of import since order matters
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -46,23 +46,23 @@ const App: FC<AppProps<Awaited<ReturnType<typeof getServerSideProps>>['props']>>
 
     return (
         <TokenListContextProvider {...pageProps}>
-            <SDKContextProvider>
-                <HeartbeatContextProvider>
-                    <Chakra cookies={pageProps.cookies}>
-                        <ConnectionProvider endpoint={endpoint}>
-                            <WalletProvider wallets={wallets} autoConnect>
-                                <TokenAccountsContextProvider>
+            <HeartbeatContextProvider>
+                <Chakra cookies={pageProps.cookies}>
+                    <ConnectionProvider endpoint={endpoint}>
+                        <WalletProvider wallets={wallets} autoConnect>
+                            <TokenAccountsContextProvider>
+                                <PreAuthorizationsContextProvider>
                                     <WalletModalProvider>
                                         <Layout>
                                             <Component {...pageProps} />
                                         </Layout>
                                     </WalletModalProvider>
-                                </TokenAccountsContextProvider>
-                            </WalletProvider>
-                        </ConnectionProvider>
-                    </Chakra>
-                </HeartbeatContextProvider>
-            </SDKContextProvider>
+                                </PreAuthorizationsContextProvider>
+                            </TokenAccountsContextProvider>
+                        </WalletProvider>
+                    </ConnectionProvider>
+                </Chakra>
+            </HeartbeatContextProvider>
         </TokenListContextProvider>
     );
 };

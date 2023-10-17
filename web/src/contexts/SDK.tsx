@@ -30,12 +30,6 @@ const SDK_CONTEXT_VALUE = {
 
 export const SDKContext = createContext<SDKContextValue>(SDK_CONTEXT_VALUE);
 
-export default function SDKContextProvider({ children }: PropsWithChildren): JSX.Element {
-    const value = useRef(SDK_CONTEXT_VALUE);
-
-    return <SDKContext.Provider value={value.current}>{children}</SDKContext.Provider>;
-}
-
 export function useSDK(): SDKContextValue {
     return useContext(SDKContext);
 }

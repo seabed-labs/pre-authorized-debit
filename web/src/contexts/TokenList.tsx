@@ -1,4 +1,4 @@
-import { PropsWithChildren, createContext, useContext, useMemo } from 'react';
+import { PropsWithChildren, createContext, useContext, useMemo, useRef } from 'react';
 import { InferGetServerSidePropsType } from 'next';
 import { getServerSideProps } from '../shared/getServerSideProps';
 
@@ -33,9 +33,9 @@ export default function TokenListContextProvider({
     strictMap,
     allMap,
 }: PropsWithChildren<InferGetServerSidePropsType<typeof getServerSideProps>>): JSX.Element {
-    const tokenList = useMemo(() => ({ strict, all, strictMap, allMap }), [strict, all, allMap, strictMap]);
+    const tokenList = useRef({ strict, all, strictMap, allMap });
 
-    return <TokenListContext.Provider value={tokenList}>{children}</TokenListContext.Provider>;
+    return <TokenListContext.Provider value={tokenList.current}>{children}</TokenListContext.Provider>;
 }
 
 export function useTokenList(): TokenListContextValue {
