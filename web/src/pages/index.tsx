@@ -98,7 +98,7 @@ const Home: NextPage = () => {
                     Token Accounts
                 </Text>
             </Center>
-            {tokenAccounts.tokenAccounts.length === 0 && <Text>You don't have any token accounts</Text>}
+            {tokenAccounts.tokenAccounts.length === 0 && <Text>{"You don't have any token accounts"}</Text>}
             <VStack w="100%" spacing="16px" justifyContent="flex-start" alignItems="center">
                 {tokenAccounts.tokenAccounts.map((tokenAccount) => (
                     <TokenAccount key={tokenAccount.address.toBase58()} tokenAccount={tokenAccount} />

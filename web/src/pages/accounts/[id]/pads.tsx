@@ -19,29 +19,16 @@ const Pads: NextPage = () => {
     const tokenAccounts = useTokenAccounts();
     const tokenAccountPubkey = router.query.id;
 
-    if (tokenAccounts?.loading) {
-        return (
-            <Center h="100vh" w="calc(100vw - 264px)">
-                <VStack>
-                    <Spinner size="xl" />
-                    <Text mt="10px" size="lg">
-                        Loading Token Accounts
-                    </Text>
-                </VStack>
-            </Center>
-        );
-    }
-
     const tokenAccount = useMemo(() => {
         if (!tokenAccounts || tokenAccounts.loading) {
             return null;
         }
 
         return tokenAccounts.tokenAccounts.find((a) => a.address.toBase58() === tokenAccountPubkey) ?? null;
-    }, [tokenAccounts]);
+    }, [tokenAccounts, tokenAccountPubkey]);
 
     const refreshSmartDelegate = useCallback(async () => {
-        if (!tokenAccount?.address) return;
+        if (!tokenAccount?.address || tokenAccounts?.loading) return;
 
         setRefreshingSmartDelegate(true);
 
@@ -65,7 +52,20 @@ const Pads: NextPage = () => {
         }
 
         setRefreshingSmartDelegate(false);
-    }, [sdk, tokenAccount, tokenAccounts]);
+    }, [sdk, tokenAccount, tokenAccounts, wallet]);
+
+    if (tokenAccounts?.loading) {
+        return (
+            <Center h="100vh" w="calc(100vw - 264px)">
+                <VStack>
+                    <Spinner size="xl" />
+                    <Text mt="10px" size="lg">
+                        Loading Token Accounts
+                    </Text>
+                </VStack>
+            </Center>
+        );
+    }
 
     if (!tokenAccount) {
         return (
@@ -101,7 +101,7 @@ const Pads: NextPage = () => {
             <HStack align="center">
                 {token ? (
                     <HStack>
-                        <Image height="12" src={token.logoURI} />
+                        <Image height="12" src={token.logoURI} alt="Token Icon" />
                         <Text fontSize="4xl" fontWeight="semibold">
                             {token.symbol}
                         </Text>
