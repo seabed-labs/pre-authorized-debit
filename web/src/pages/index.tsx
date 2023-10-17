@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import React from 'react';
 import { TokenAccount, useTokenAccounts } from '../contexts/TokenAccounts';
-import { Box, Center, Code, Flex, HStack, Image, Spinner, Text, VStack } from '@chakra-ui/react';
+import { Box, Center, Code, Flex, HStack, Image, Spinner, Text, VStack, useColorModeValue } from '@chakra-ui/react';
 import Decimal from 'decimal.js';
 import { IconArrowRight } from '@tabler/icons-react';
 import Link from 'next/link';
@@ -16,9 +16,11 @@ function TokenAccount({ tokenAccount }: TokenAccountProps) {
         ? new Decimal(tokenAccount.amount.toString()).div(new Decimal(10).pow(token.decimals))
         : null;
 
+    const bgColor = useColorModeValue('blackAlpha.100', 'whiteAlpha.100');
+
     return (
         <Flex
-            bgColor="whiteAlpha.100"
+            bgColor={bgColor}
             my="10px"
             py="10px"
             px="10px"
@@ -90,18 +92,19 @@ const Home: NextPage = () => {
     }
 
     return (
-        <Box maxH="100vh" overflow="scroll" w="calc(100vw - 264px)">
+        <VStack h="100vh" justifyContent="flex-start" overflow="scroll" w="calc(100vw - 264px)">
             <Center mb="16px" mt="20px">
                 <Text fontSize="4xl" fontWeight="semibold">
                     Token Accounts
                 </Text>
             </Center>
+            {tokenAccounts.tokenAccounts.length === 0 && <Text>You don't have any token accounts</Text>}
             <VStack w="100%" spacing="16px" justifyContent="flex-start" alignItems="center">
                 {tokenAccounts.tokenAccounts.map((tokenAccount) => (
                     <TokenAccount key={tokenAccount.address.toBase58()} tokenAccount={tokenAccount} />
                 ))}
             </VStack>
-        </Box>
+        </VStack>
     );
 };
 
