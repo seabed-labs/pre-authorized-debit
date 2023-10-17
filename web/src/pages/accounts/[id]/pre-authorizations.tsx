@@ -182,8 +182,6 @@ const Pads: NextPage = () => {
             </HStack>
         </VStack>
     );
-
-    return <>Inner Pads for Token Account {router.query.id}</>;
 };
 
 export { getServerSideProps } from '../../../shared/getServerSideProps';

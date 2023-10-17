@@ -57,7 +57,7 @@ function TokenAccount({ tokenAccount }: TokenAccountProps) {
                         <Text>Address</Text>
                         <Code>{tokenAccount.address.toBase58()}</Code>
                     </HStack>
-                    <Link href={`/accounts/${tokenAccount.address.toBase58()}/pads`}>
+                    <Link href={`/accounts/${tokenAccount.address.toBase58()}/pre-authorizations`}>
                         <HStack fontWeight="bold" cursor="pointer" _hover={{ opacity: 0.5 }}>
                             <Text>Manage Account</Text>
                             <IconArrowRight />

@@ -28,11 +28,11 @@ const SideNav: React.FC = () => {
                             <Text>All Token Accounts</Text>
                         </HStack>
                     </Link>
-                    <Link href="/pads">
+                    <Link href="/pre-authorizations">
                         <HStack
                             cursor="pointer"
                             fontWeight="semibold"
-                            opacity={router.pathname === '/pads' ? '1' : '0.5'}
+                            opacity={router.pathname === '/pre-authorizations' ? '1' : '0.5'}
                         >
                             <IconCreditCard />
                             <Text>All Pre-Authorizations</Text>
