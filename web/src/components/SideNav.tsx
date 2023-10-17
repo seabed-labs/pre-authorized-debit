@@ -19,7 +19,10 @@ const SideNav: React.FC = () => {
         >
             <Flex direction="column" justifyContent="flex-start" alignItems="start" h="50%">
                 <Text fontSize="xl" fontWeight="bold">
-                    Pre-Authorized Debits
+                    Pre-Authorized Debit
+                </Text>
+                <Text fontSize="sm" fontWeight="bold">
+                    Manager
                 </Text>
                 <VStack mt="40px" spacing="20px" alignItems="start">
                     <Link href="/">
