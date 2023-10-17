@@ -10,7 +10,10 @@ export interface TokenAccount extends Account {
     program: 'spl-token' | 'spl-token-2022';
 }
 
-export type TokenAccountsContextValue = { loading: true } | { loading: false; tokenAccounts: TokenAccount[] } | null;
+export type TokenAccountsContextValue =
+    | { loading: true }
+    | { loading: false; tokenAccounts: TokenAccount[]; triggerRefresh(): void }
+    | null;
 
 export const TokenAccountsContext = createContext<TokenAccountsContextValue>(null);
 
@@ -22,6 +25,7 @@ function compareTokenAccounts(a: TokenAccount, b: TokenAccount): number {
 }
 
 export default function TokenAccountsContextProvider({ children }: PropsWithChildren): JSX.Element {
+    const [refreshCounter, setRefreshCounter] = useState(BigInt(0));
     const loadedOnce = useRef(false);
     const [tokenAccounts, setTokenAccounts] = useState<TokenAccountsContextValue>(null);
     const sdk = useSDK();
@@ -103,6 +107,11 @@ export default function TokenAccountsContextProvider({ children }: PropsWithChil
             setTokenAccounts({
                 loading: false,
                 tokenAccounts: allTokenAccountsWithMetadata.concat(allTokenAccountsWithoutMetadata),
+                triggerRefresh: () => {
+                    if (!abortSignal.aborted) {
+                        setRefreshCounter((c) => c + BigInt(1));
+                    }
+                },
             });
             loadedOnce.current = true;
         },
@@ -116,7 +125,7 @@ export default function TokenAccountsContextProvider({ children }: PropsWithChil
         return () => {
             abortController.abort();
         };
-    }, [fetchAndLoadTokenAccounts]);
+    }, [fetchAndLoadTokenAccounts, refreshCounter]);
 
     return <TokenAccountsContext.Provider value={tokenAccounts}>{children}</TokenAccountsContext.Provider>;
 }
