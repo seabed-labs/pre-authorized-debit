@@ -25,7 +25,7 @@ const SideNav: React.FC = () => {
                     <Link href="/">
                         <HStack cursor="pointer" fontWeight="semibold" opacity={router.pathname === '/' ? '1' : '0.5'}>
                             <IconCoins />
-                            <Text>Token Accounts</Text>
+                            <Text>All Token Accounts</Text>
                         </HStack>
                     </Link>
                     <Link href="/pads">
