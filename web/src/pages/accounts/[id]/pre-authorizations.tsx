@@ -179,7 +179,7 @@ const Pads: NextPage = () => {
                 {refreshingSmartDelegate && <Spinner ml="8px" />}
             </Button>
             <HStack>
-                <CreatePreAuthorizationModal />
+                <CreatePreAuthorizationModal tokenAccount={tokenAccount} />
             </HStack>
         </VStack>
     );
