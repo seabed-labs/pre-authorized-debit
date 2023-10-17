@@ -2,8 +2,11 @@ import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import ColorModeToggle from './ColorModeToggle';
 import { IconCoins, IconCreditCard } from '@tabler/icons-react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 const SideNav: React.FC = () => {
+    const router = useRouter();
+
     return (
         <Flex
             direction="column"
@@ -20,13 +23,17 @@ const SideNav: React.FC = () => {
                 </Text>
                 <VStack mt="40px" spacing="20px" alignItems="start">
                     <Link href="/">
-                        <HStack cursor="pointer" fontWeight="semibold">
+                        <HStack cursor="pointer" fontWeight="semibold" opacity={router.pathname === '/' ? '1' : '0.5'}>
                             <IconCoins />
                             <Text>Token Accounts</Text>
                         </HStack>
                     </Link>
                     <Link href="/pads">
-                        <HStack cursor="pointer" fontWeight="semibold">
+                        <HStack
+                            cursor="pointer"
+                            fontWeight="semibold"
+                            opacity={router.pathname === '/pads' ? '1' : '0.5'}
+                        >
                             <IconCreditCard />
                             <Text>All Pre-Authorizations</Text>
                         </HStack>

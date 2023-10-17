@@ -12,6 +12,7 @@ import { Chakra } from '../components/Chakra';
 import SDKContextProvider from '../contexts/SDK';
 import TokenListContextProvider from '../contexts/TokenList';
 import { getServerSideProps } from './_app';
+import TokenAccountsContextProvider from '../contexts/TokenAccounts';
 
 // Use require instead of import since order matters
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -51,11 +52,13 @@ const App: FC<AppProps<Awaited<ReturnType<typeof getServerSideProps>>['props']>>
                     <Chakra cookies={pageProps.cookies}>
                         <ConnectionProvider endpoint={endpoint}>
                             <WalletProvider wallets={wallets} autoConnect>
-                                <WalletModalProvider>
-                                    <Layout>
-                                        <Component {...pageProps} />
-                                    </Layout>
-                                </WalletModalProvider>
+                                <TokenAccountsContextProvider>
+                                    <WalletModalProvider>
+                                        <Layout>
+                                            <Component {...pageProps} />
+                                        </Layout>
+                                    </WalletModalProvider>
+                                </TokenAccountsContextProvider>
                             </WalletProvider>
                         </ConnectionProvider>
                     </Chakra>
