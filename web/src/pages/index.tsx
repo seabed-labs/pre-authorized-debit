@@ -6,6 +6,8 @@ import Decimal from 'decimal.js';
 import { IconArrowRight } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePreAuthorizations } from '../contexts/PreAuthorizations';
+import { useSDK } from '../contexts/SDK';
+import { CheckCircleIcon, CloseIcon } from '@chakra-ui/icons';
 
 interface TokenAccountProps {
     tokenAccount: TokenAccount;
@@ -16,11 +18,12 @@ interface TokenAccountProps {
 
 function TokenAccount({ tokenAccount }: TokenAccountProps) {
     const token = tokenAccount.tokenOrMint.type === 'token' ? tokenAccount.tokenOrMint.token : null;
-    const tokenAmount = token
-        ? new Decimal(tokenAccount.amount.toString()).div(new Decimal(10).pow(token.decimals))
-        : null;
+    const tokenOrMint = tokenAccount.tokenOrMint;
+    const tokenDecimals = tokenOrMint.type === 'token' ? tokenOrMint.token.decimals : tokenOrMint.mint.decimals;
+    const tokenAmount = new Decimal(tokenAccount.amount.toString()).div(new Decimal(10).pow(tokenDecimals));
 
     const bgColor = useColorModeValue('blackAlpha.100', 'whiteAlpha.100');
+    const sdk = useSDK();
 
     const preAuthorizations = usePreAuthorizations();
 
@@ -28,6 +31,11 @@ function TokenAccount({ tokenAccount }: TokenAccountProps) {
         preAuthorizations && !preAuthorizations.loading
             ? preAuthorizations.listByTokenAccount[tokenAccount.address.toBase58()]?.length
             : null;
+
+    const isSmartDelegateConnected =
+        tokenAccount.delegate && tokenAccount.delegate.equals(sdk.readClient.getSmartDelegatePDA().publicKey);
+
+    const checkColor = useColorModeValue('green', 'aqua');
 
     return (
         <Flex
@@ -47,21 +55,39 @@ function TokenAccount({ tokenAccount }: TokenAccountProps) {
                         <HStack m="0" justifyContent="flex-start">
                             {token.logoURI && <Image height="8" width="8" src={token.logoURI} alt="Token Icon" />}
                             <Text>{token.symbol}</Text>
-                            {preAuthorizationsCount != null && (
-                                <Text>{`(${preAuthorizationsCount} pre-authorizations found)`}</Text>
-                            )}
                         </HStack>
                         <HStack>
                             <Text>{`Balance: ${tokenAmount.toString()}`}</Text>
                         </HStack>
                     </HStack>
                 ) : (
-                    <VStack w="100%" alignItems="start">
-                        {preAuthorizationsCount != null && (
-                            <Text>{`(${preAuthorizationsCount} pre-authorizations found)`}</Text>
-                        )}
-                    </VStack>
+                    <HStack w="100%" justifyContent="space-between">
+                        <HStack m="0" justifyContent="flex-start">
+                            <Text>Unknown Token</Text>
+                        </HStack>
+                        <HStack>
+                            <Text>{`Balance: ${tokenAmount.toString()}`}</Text>
+                        </HStack>
+                    </HStack>
                 )}
+                <HStack w="100%" justifyContent="space-between">
+                    {preAuthorizationsCount != null ? (
+                        <Text>{`Pre-Authorizations: ${preAuthorizationsCount}`}</Text>
+                    ) : (
+                        <Text>Pre-Authorizations: Loading</Text>
+                    )}
+                    {isSmartDelegateConnected ? (
+                        <HStack>
+                            <Text>Smart Delegate Connected</Text>
+                            <CheckCircleIcon color={checkColor} />
+                        </HStack>
+                    ) : (
+                        <HStack>
+                            <Text>Smart Delegate Disconnected</Text>
+                            <CloseIcon color="red" />
+                        </HStack>
+                    )}
+                </HStack>
                 <HStack w="100%" justifyContent="space-between">
                     <HStack>
                         <Text>Mint</Text>

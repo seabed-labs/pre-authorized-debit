@@ -87,6 +87,7 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
 
     const tokenOrMint = tokenAccount.tokenOrMint;
     const token = tokenOrMint.type === 'token' ? tokenOrMint.token : null;
+    const mint = tokenOrMint.type === 'mint' ? tokenOrMint.mint : null;
 
     const toast = useToast();
 
@@ -149,7 +150,7 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
 
             try {
                 let authorizedAmount = new Decimal(authorizedAmountStr);
-                const decimals = token!.decimals;
+                const decimals = token?.decimals ?? mint?.decimals ?? 0;
                 authorizedAmount = authorizedAmount.toDecimalPlaces(decimals);
                 setAuthorizedAmount(authorizedAmount);
             } catch {}
@@ -231,6 +232,7 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
                 position: 'top-right',
                 duration: 5000,
                 title: 'Create One-Time Pre-Authorization Success',
+                isClosable: true,
                 description: (
                     <Link isExternal href={makeExplorerLink(txSig)}>
                         View Transaction
@@ -242,6 +244,7 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
             console.error('Create one-time pre-auth TX Failed:', err);
             toast({
                 position: 'top-right',
+                isClosable: true,
                 duration: 5000,
                 title: 'Create One-Time Pre-Authorization Failed',
                 description: (err as Error).message,
@@ -297,6 +300,7 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
 
             toast({
                 position: 'top-right',
+                isClosable: true,
                 duration: 5000,
                 title: 'Create Recurring Pre-Authorization Success',
                 description: (
@@ -310,6 +314,7 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
             console.error('Create recurring pre-auth TX Failed:', err);
             toast({
                 position: 'top-right',
+                isClosable: true,
                 duration: 5000,
                 title: 'Create Recurring Pre-Authorization Failed',
                 description: (err as Error).message,
@@ -404,13 +409,32 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
                                                     <Text>{token.symbol}</Text>
                                                 </HStack>
                                             </>
+                                        ) : mint ? (
+                                            <>
+                                                <Text fontWeight="semibold">Amount Authorized</Text>
+                                                <HStack w="100%">
+                                                    <NumberInput
+                                                        value={
+                                                            authorizedAmount.eq(0) ? '' : authorizedAmount.toString()
+                                                        }
+                                                        onChange={onAuthorizedAmountChange}
+                                                        w="100%"
+                                                    >
+                                                        <NumberInputField placeholder="Enter amount to authorize" />
+                                                    </NumberInput>
+                                                </HStack>
+                                            </>
                                         ) : (
                                             <>
                                                 <Text fontWeight="semibold">
                                                     {'Amount Authorized (raw, i.e. no decimals)'}
                                                 </Text>
                                                 <NumberInput
-                                                    value={rawAuthorizedAmount.toString()}
+                                                    value={
+                                                        rawAuthorizedAmount === BigInt(0)
+                                                            ? ''
+                                                            : rawAuthorizedAmount.toString()
+                                                    }
                                                     onChange={onRawAuthorizedAmountChange}
                                                     w="100%"
                                                 >
@@ -475,13 +499,32 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
                                                     <Text>{token.symbol}</Text>
                                                 </HStack>
                                             </>
+                                        ) : mint ? (
+                                            <>
+                                                <Text fontWeight="semibold">Recurring Amount Authorized</Text>
+                                                <HStack w="100%">
+                                                    <NumberInput
+                                                        value={
+                                                            authorizedAmount.eq(0) ? '' : authorizedAmount.toString()
+                                                        }
+                                                        onChange={onAuthorizedAmountChange}
+                                                        w="100%"
+                                                    >
+                                                        <NumberInputField placeholder="Enter amount to authorize" />
+                                                    </NumberInput>
+                                                </HStack>
+                                            </>
                                         ) : (
                                             <>
                                                 <Text fontWeight="semibold">
                                                     {'Recurring Amount Authorized (raw, i.e. no decimals)'}
                                                 </Text>
                                                 <NumberInput
-                                                    value={rawAuthorizedAmount.toString()}
+                                                    value={
+                                                        rawAuthorizedAmount === BigInt(0)
+                                                            ? ''
+                                                            : rawAuthorizedAmount.toString()
+                                                    }
                                                     onChange={onRawAuthorizedAmountChange}
                                                     w="100%"
                                                 >
