@@ -4,7 +4,8 @@
         "testutils",
         "sdk/**",
         "scripts",
-        "program-tests/**"
+        "program-tests/**",
+        "web"
     ],
     "packageManager": "yarn@3.6.0",
     "scripts": {

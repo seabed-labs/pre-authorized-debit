@@ -1,0 +1,66 @@
+{
+    "name": "@seabed-labs/pad-web",
+    "version": "0.1.0",
+    "author": "Seabed Labs",
+    "license": "Apache-2.0",
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": [
+        "public",
+        "src",
+        ".editorconfig",
+        ".eslintrc.json",
+        ".gitignore",
+        ".prettierignore",
+        ".prettierrc",
+        "LICENSE",
+        "next.config.js",
+        "next-env.d.ts",
+        "package.json",
+        "README.md",
+        "tsconfig.json"
+    ],
+    "engines": {
+        "node": ">=16"
+    },
+    "scripts": {
+        "build": "tsc --build --verbose && next build",
+        "clean": "shx rm -rf .next .swc lib",
+        "dev": "NODE_OPTIONS='--inspect' next dev",
+        "start": "next start",
+        "lint": "prettier --check 'src/{*,**/*}.{ts,tsx,js,jsx,json}' && eslint && next lint"
+    },
+    "dependencies": {
+        "@chakra-ui/icons": "^2.1.1",
+        "@chakra-ui/next-js": "^2.1.5",
+        "@chakra-ui/react": "^2.8.1",
+        "@emotion/react": "^11.11.1",
+        "@emotion/styled": "^11.11.0",
+        "@seabed-labs/pre-authorized-debit": "1.1.0",
+        "@solana/spl-token": "^0.3.8",
+        "@solana/wallet-adapter-base": "0.9.23",
+        "@solana/wallet-adapter-react": "0.15.35",
+        "@solana/wallet-adapter-react-ui": "0.9.34",
+        "@solana/wallet-adapter-wallets": "0.19.22",
+        "@solana/web3.js": "^1.78.7",
+        "@tabler/icons-react": "^2.38.0",
+        "decimal.js": "^10.4.3",
+        "framer-motion": "^10.16.4",
+        "next": "^13.5.3",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "@types/node-fetch": "^2.6.4",
+        "@types/react": "^18.2.13",
+        "@types/react-dom": "^18.2.6",
+        "@typescript-eslint/eslint-plugin": "^6.6.0",
+        "@typescript-eslint/parser": "^6.6.0",
+        "eslint": "8.22.0",
+        "eslint-config-next": "^12.3.4",
+        "prettier": "^2.8.8",
+        "shx": "^0.3.4",
+        "typescript": "~4.7.4"
+    }
+}

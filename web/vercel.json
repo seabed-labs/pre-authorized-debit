@@ -1,0 +1,4 @@
+{
+    "devCommand": "yarn run next dev",
+    "framework": "nextjs"
+}
