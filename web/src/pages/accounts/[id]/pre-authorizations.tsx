@@ -65,6 +65,15 @@ const Pads: NextPage = () => {
         setRefreshingSmartDelegate(false);
     }, [sdk, tokenAccount, tokenAccounts, wallet]);
 
+    if (!tokenAccount) {
+        return (
+            <VStack w="calc(100vw - 264px)" justifyContent="flex-start">
+                <Text>{'Token Account Not Found (try connecting your wallet)'}</Text>
+                <Code>{tokenAccountPubkey}</Code>
+            </VStack>
+        );
+    }
+
     if (!tokenAccounts || tokenAccounts?.loading) {
         return (
             <Center h="100vh" w="calc(100vw - 264px)">
@@ -88,15 +97,6 @@ const Pads: NextPage = () => {
                     </Text>
                 </VStack>
             </Center>
-        );
-    }
-
-    if (!tokenAccount) {
-        return (
-            <VStack w="calc(100vw - 264px)" justifyContent="flex-start">
-                <Text>Token Account Not Found</Text>
-                <Code>{tokenAccountPubkey}</Code>
-            </VStack>
         );
     }
 
@@ -206,10 +206,12 @@ const Pads: NextPage = () => {
                     </Text>
                 </HStack>
             )}
-            <Button isDisabled={refreshingSmartDelegate} onClick={refreshSmartDelegate}>
-                Refresh Smart Delegate
-                {refreshingSmartDelegate && <Spinner ml="8px" />}
-            </Button>
+            <HStack>
+                <Button isDisabled={refreshingSmartDelegate} onClick={refreshSmartDelegate}>
+                    Refresh Smart Delegate
+                    {refreshingSmartDelegate && <Spinner ml="8px" />}
+                </Button>
+            </HStack>
             <HStack>
                 <CreatePreAuthorizationModal tokenAccount={tokenAccount} />
             </HStack>
