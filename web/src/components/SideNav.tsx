@@ -31,7 +31,7 @@ const SideNav: React.FC = () => {
                             <Text>All Token Accounts</Text>
                         </HStack>
                     </Link>
-                    <Link href="/pre-authorizations">
+                    {/* <Link href="/pre-authorizations">
                         <HStack
                             cursor="pointer"
                             fontWeight="semibold"
@@ -40,7 +40,7 @@ const SideNav: React.FC = () => {
                             <IconCreditCard />
                             <Text>All Pre-Authorizations</Text>
                         </HStack>
-                    </Link>
+                    </Link> */}
                 </VStack>
             </Flex>
             <Flex direction="column" justifyContent="flex-end" alignItems="start" h="50%">

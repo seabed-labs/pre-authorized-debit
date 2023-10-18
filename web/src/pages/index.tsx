@@ -5,6 +5,7 @@ import { Box, Center, Code, Flex, HStack, Image, Spinner, Text, VStack, useColor
 import Decimal from 'decimal.js';
 import { IconArrowRight } from '@tabler/icons-react';
 import Link from 'next/link';
+import { usePreAuthorizations } from '../contexts/PreAuthorizations';
 
 interface TokenAccountProps {
     tokenAccount: TokenAccount;
@@ -17,6 +18,13 @@ function TokenAccount({ tokenAccount }: TokenAccountProps) {
         : null;
 
     const bgColor = useColorModeValue('blackAlpha.100', 'whiteAlpha.100');
+
+    const preAuthorizations = usePreAuthorizations();
+
+    const preAuthorizationsCount =
+        preAuthorizations && !preAuthorizations.loading
+            ? preAuthorizations.listByTokenAccount[tokenAccount.address.toBase58()]?.length
+            : null;
 
     return (
         <Flex
@@ -36,12 +44,21 @@ function TokenAccount({ tokenAccount }: TokenAccountProps) {
                         <HStack m="0" justifyContent="flex-start">
                             {token.logoURI && <Image height="8" width="8" src={token.logoURI} alt="Token Icon" />}
                             <Text>{token.symbol}</Text>
+                            {preAuthorizationsCount != null && (
+                                <Text>{`(${preAuthorizationsCount} pre-authorizations found)`}</Text>
+                            )}
                         </HStack>
                         <HStack>
                             <Text>{`Balance: ${tokenAmount.toString()}`}</Text>
                         </HStack>
                     </HStack>
-                ) : null}
+                ) : (
+                    <VStack w="100%" alignItems="start">
+                        {preAuthorizationsCount != null && (
+                            <Text>{`(${preAuthorizationsCount} pre-authorizations found)`}</Text>
+                        )}
+                    </VStack>
+                )}
                 <HStack w="100%" justifyContent="space-between">
                     <HStack>
                         <Text>Mint</Text>
