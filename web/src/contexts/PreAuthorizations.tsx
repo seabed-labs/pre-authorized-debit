@@ -16,11 +16,15 @@ export type PreAuthorizations = {
     listByTokenAccount: Partial<Record<string, ProgramAccount<PreAuthorizationAccount>[]>>;
 };
 
-export type PreAuthorizationsContextValue = (PreAuthorizations & { loading: false }) | { loading: true } | null;
+export type PreAuthorizationsContextValue =
+    | (PreAuthorizations & { loading: false; triggerRefresh(): void })
+    | { loading: true }
+    | null;
 
 export const PreAuthorizationsContext = createContext<PreAuthorizationsContextValue>(null);
 
 export default function PreAuthorizationsContextProvider({ children }: PropsWithChildren): JSX.Element {
+    const [refreshCounter, setRefreshCounter] = useState(BigInt(0));
     const loadedOnce = useRef(false);
     const [value, setValue] = useState<PreAuthorizationsContextValue>(null);
     const sdk = useSDK();
@@ -77,6 +81,11 @@ export default function PreAuthorizationsContextProvider({ children }: PropsWith
                 list: preAuthorizationsList,
                 listByTokenAccount: preAuthorizationsListByTokenAccount,
                 map: preAuthorizationsMap,
+                triggerRefresh: () => {
+                    if (!abortSignal.aborted) {
+                        setRefreshCounter((c) => c + BigInt(1));
+                    }
+                },
             });
 
             loadedOnce.current = true;
@@ -91,7 +100,7 @@ export default function PreAuthorizationsContextProvider({ children }: PropsWith
         return () => {
             abortController.abort();
         };
-    }, [fetchAndLoadPreAuthorizations]);
+    }, [fetchAndLoadPreAuthorizations, refreshCounter]);
 
     return <PreAuthorizationsContext.Provider value={value}>{children}</PreAuthorizationsContext.Provider>;
 }

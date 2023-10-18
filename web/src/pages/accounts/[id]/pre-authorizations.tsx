@@ -1,7 +1,7 @@
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { usePreAuthorizations } from '../../../contexts/PreAuthorizations';
-import { Code, VStack, Text, Button, HStack, Image, Center, Spinner } from '@chakra-ui/react';
+import { Code, VStack, Text, Button, HStack, Image, Center, Spinner, useColorModeValue } from '@chakra-ui/react';
 import { CheckCircleIcon, CloseIcon } from '@chakra-ui/icons';
 import { useTokenAccounts } from '../../../contexts/TokenAccounts';
 import { useCallback, useMemo, useState } from 'react';
@@ -19,6 +19,8 @@ const Pads: NextPage = () => {
     const sdk = useSDK();
     const tokenAccounts = useTokenAccounts();
     const tokenAccountPubkey = router.query.id;
+
+    const checkColor = useColorModeValue('green', 'aquamarine');
 
     const tokenAccount = useMemo(() => {
         if (!tokenAccounts || tokenAccounts.loading) {
@@ -160,7 +162,7 @@ const Pads: NextPage = () => {
             </HStack>
             {isSmartDelegateConnected ? (
                 <HStack fontSize="lg">
-                    <CheckCircleIcon color="aquamarine" />
+                    <CheckCircleIcon color={checkColor} />
                     <Text>
                         Smart Delegate connected{' '}
                         {'(All pre-authorizations active; refresh below to reset delegated amount to maximum)'}
