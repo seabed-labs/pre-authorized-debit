@@ -16,6 +16,7 @@ import {
     HStack,
     Input,
     Spinner,
+    Switch,
 } from '@chakra-ui/react';
 import { ChangeEvent, useCallback, useState } from 'react';
 import { TokenAccount } from '../contexts/TokenAccounts';
@@ -77,6 +78,10 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
     const [authorizedAmount, setAuthorizedAmount] = useState<Decimal>(new Decimal(0));
     const [rawAuthorizedAmount, setRawAuthorizedAmount] = useState<bigint>(BigInt(0));
 
+    const [recurringRepeatFrequency, setRecurringRepeatFrequency] = useState<bigint>(BigInt(0));
+    const [numCycles, setNumCycles] = useState<bigint>(BigInt(0));
+    const [resetEveryCycle, setResetEveryCycle] = useState(false);
+
     const tokenOrMint = tokenAccount.tokenOrMint;
     const token = tokenOrMint.type === 'token' ? tokenOrMint.token : null;
 
@@ -87,6 +92,9 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
         setDebitAuthority(null);
         setAuthorizedAmount(new Decimal(0));
         setRawAuthorizedAmount(BigInt(0));
+        setRecurringRepeatFrequency(BigInt(0));
+        setNumCycles(BigInt(0));
+        setResetEveryCycle(true);
         onClose();
     }, [onClose]);
 
@@ -159,6 +167,36 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
         [token]
     );
 
+    const onRepeatFrequencyChanged = useCallback(
+        (val: string) => {
+            if (val.trim() === '') {
+                setRecurringRepeatFrequency(BigInt(0));
+                return;
+            }
+
+            try {
+                const repeatFrequency = new Decimal(val).floor();
+                setRecurringRepeatFrequency(BigInt(repeatFrequency.toString()));
+            } catch {}
+        },
+        [token]
+    );
+
+    const onNumCyclesChanged = useCallback(
+        (val: string) => {
+            if (val.trim() === '') {
+                setNumCycles(BigInt(0));
+                return;
+            }
+
+            try {
+                const numCycles = new Decimal(val).floor();
+                setNumCycles(BigInt(numCycles.toString()));
+            } catch {}
+        },
+        [token]
+    );
+
     const onCreateOneTimePreAuth = useCallback(async () => {
         if (!wallet.publicKey || !debitAuthority) return;
 
@@ -193,6 +231,7 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
         }
 
         setCreating(false);
+        onCloseWrapper();
     }, [
         sdk,
         wallet,
@@ -203,6 +242,57 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
         token,
         startDate,
         expiryDate,
+    ]);
+
+    const onCreateRecurringPreAuth = useCallback(async () => {
+        if (!wallet.publicKey || !debitAuthority) return;
+
+        setCreating(true);
+
+        const rawAmount = token
+            ? BigInt(authorizedAmount.mul(new Decimal(10).pow(token.decimals)).floor().toString())
+            : rawAuthorizedAmount;
+
+        try {
+            const tx = await (
+                await sdk.txFactory.buildInitRecurringPreAuthorizationTx({
+                    payer: wallet.publicKey,
+                    tokenAccount: tokenAccount.address,
+                    debitAuthority: debitAuthority,
+                    activation: startDate,
+                    recurringAmountAuthorized: rawAmount,
+                    repeatFrequencySeconds: recurringRepeatFrequency,
+                    numCycles: numCycles === BigInt(0) ? null : numCycles,
+                    resetEveryCycle,
+                })
+            ).buildVersionedTransaction({ txFeesPayer: wallet.publicKey });
+
+            const txSig = await wallet.sendTransaction(tx, sdk.connection);
+            const blockhash = await sdk.connection.getLatestBlockhash();
+            await sdk.connection.confirmTransaction({ signature: txSig, ...blockhash });
+            await delay(500);
+        } catch (err) {
+            console.error('Create recurring pre-auth TX Failed:', err);
+        }
+
+        if (!preAuthorizations?.loading) {
+            preAuthorizations?.triggerRefresh();
+        }
+
+        setCreating(false);
+        onCloseWrapper();
+    }, [
+        sdk,
+        wallet,
+        preAuthorizations,
+        debitAuthority,
+        authorizedAmount,
+        rawAuthorizedAmount,
+        token,
+        startDate,
+        recurringRepeatFrequency,
+        numCycles,
+        resetEveryCycle,
     ]);
 
     return (
@@ -227,17 +317,25 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
                                     <option value="recurring">Recurring</option>
                                 </Select>
                             </VStack>
+                            <VStack align="start" w="100%">
+                                <Text fontWeight="semibold">Debit Authority</Text>
+                                <Input
+                                    value={debitAuthority?.toBase58() ?? ''}
+                                    onChange={onDebitAuthorityChange}
+                                    placeholder="Enter debit authority address"
+                                />
+                            </VStack>
+                            <VStack align="start" w="100%">
+                                <Text fontWeight="semibold">Start Date</Text>
+                                <Input
+                                    placeholder="Select start date and time"
+                                    type="datetime-local"
+                                    value={toISO(startDate)}
+                                    onChange={onStartDateChange}
+                                />
+                            </VStack>
                             {preAuthType === 'one-time' ? (
                                 <>
-                                    <VStack align="start" w="100%">
-                                        <Text fontWeight="semibold">Start Date</Text>
-                                        <Input
-                                            placeholder="Select start date and time"
-                                            type="datetime-local"
-                                            value={toISO(startDate)}
-                                            onChange={onStartDateChange}
-                                        />
-                                    </VStack>
                                     <VStack align="start" w="100%">
                                         <Text fontWeight="semibold">{'End Date (optional)'}</Text>
                                         <Input
@@ -245,14 +343,6 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
                                             type="datetime-local"
                                             value={expiryDate ? toISO(expiryDate) : ''}
                                             onChange={onExpiryDateChange}
-                                        />
-                                    </VStack>
-                                    <VStack align="start" w="100%">
-                                        <Text fontWeight="semibold">Debit Authority</Text>
-                                        <Input
-                                            value={debitAuthority?.toBase58() ?? ''}
-                                            onChange={onDebitAuthorityChange}
-                                            placeholder="Enter debit authority address"
                                         />
                                     </VStack>
                                     <VStack align="start" w="100%">
@@ -288,16 +378,92 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
                                         )}
                                     </VStack>
                                 </>
-                            ) : null}
+                            ) : (
+                                <>
+                                    <VStack align="start" w="100%">
+                                        <Text fontWeight="semibold">{'Recurring Repeat Frequency (seconds)'}</Text>
+                                        <NumberInput
+                                            value={
+                                                recurringRepeatFrequency === BigInt(0)
+                                                    ? ''
+                                                    : recurringRepeatFrequency.toString()
+                                            }
+                                            onChange={onRepeatFrequencyChanged}
+                                            w="100%"
+                                        >
+                                            <NumberInputField placeholder="Enter repeat frequency in seconds" />
+                                        </NumberInput>
+                                    </VStack>
+                                    <VStack align="start" w="100%">
+                                        <Text fontWeight="semibold">{'Number of Cycles to repeat (optional)'}</Text>
+                                        <NumberInput
+                                            value={numCycles === BigInt(0) ? '' : numCycles.toString()}
+                                            onChange={onNumCyclesChanged}
+                                            w="100%"
+                                        >
+                                            <NumberInputField placeholder="Enter optional number of cycles" />
+                                        </NumberInput>
+                                    </VStack>
+                                    <VStack align="start" w="100%">
+                                        <VStack w="100%" align="start">
+                                            <Text fontWeight="semibold">{'Reset Amount Every Cycle'}</Text>
+                                            <Text fontWeight="semibold">
+                                                {'(WARNING: "false" accumulates across cycles)'}
+                                            </Text>
+                                        </VStack>
+                                        <Switch
+                                            isChecked={resetEveryCycle}
+                                            onChange={(e) => setResetEveryCycle(e.target.checked)}
+                                        />
+                                    </VStack>
+                                    <VStack align="start" w="100%">
+                                        {token ? (
+                                            <>
+                                                <Text fontWeight="semibold">Recurring Amount Authorized</Text>
+                                                <HStack w="100%">
+                                                    <NumberInput
+                                                        value={
+                                                            authorizedAmount.eq(0) ? '' : authorizedAmount.toString()
+                                                        }
+                                                        onChange={onAuthorizedAmountChange}
+                                                        w="100%"
+                                                    >
+                                                        <NumberInputField placeholder="Enter amount to authorize" />
+                                                    </NumberInput>
+                                                    <Text>{token.symbol}</Text>
+                                                </HStack>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Text fontWeight="semibold">
+                                                    {'Recurring Amount Authorized (raw, i.e. no decimals)'}
+                                                </Text>
+                                                <NumberInput
+                                                    value={rawAuthorizedAmount.toString()}
+                                                    onChange={onRawAuthorizedAmountChange}
+                                                    w="100%"
+                                                >
+                                                    <NumberInputField placeholder="Enter raw amount to authorize" />
+                                                </NumberInput>
+                                            </>
+                                        )}
+                                    </VStack>
+                                </>
+                            )}
                         </VStack>
                     </ModalBody>
                     <ModalFooter>
                         <Button
-                            onClick={onCreateOneTimePreAuth}
+                            onClick={preAuthType === 'one-time' ? onCreateOneTimePreAuth : onCreateRecurringPreAuth}
                             isDisabled={
-                                creating ||
-                                !debitAuthority ||
-                                (authorizedAmount.eq(0) && rawAuthorizedAmount === BigInt(0))
+                                preAuthType === 'one-time'
+                                    ? creating ||
+                                      !debitAuthority ||
+                                      (authorizedAmount.eq(0) && rawAuthorizedAmount === BigInt(0))
+                                    : creating ||
+                                      !debitAuthority ||
+                                      recurringRepeatFrequency === BigInt(0) ||
+                                      (authorizedAmount.eq(0) && rawAuthorizedAmount === BigInt(0))
                             }
                         >
                             Create {creating && <Spinner ml="20px" />}
