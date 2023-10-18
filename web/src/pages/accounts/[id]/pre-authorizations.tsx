@@ -13,6 +13,7 @@ import CreatePreAuthorizationModal from '../../../components/CreatePreAuthorizat
 import assert from 'assert';
 import { Token } from '../../../contexts/TokenList';
 import { I64_MAX } from '@seabed-labs/pre-authorized-debit';
+import { PublicKey } from '@solana/web3.js';
 
 function formatTokenAmount(token: Token, amount: bigint): string {
     return new Decimal(amount.toString()).div(new Decimal(10).pow(token.decimals)).toString();
@@ -21,6 +22,9 @@ function formatTokenAmount(token: Token, amount: bigint): string {
 const Pads: NextPage = () => {
     const router = useRouter();
     const [refreshingSmartDelegate, setRefreshingSmartDelegate] = useState(false);
+    const [closingPreAuth, setClosingPreAuth] = useState<PublicKey | null>(null);
+    const [pausingPreAuth, setPausingPreAuth] = useState<PublicKey | null>(null);
+    const [unpausingPreAuth, setUnpausingPreAuth] = useState<PublicKey | null>(null);
     const preAuthorizations = usePreAuthorizations();
     const wallet = useWallet();
     const sdk = useSDK();
@@ -66,7 +70,95 @@ const Pads: NextPage = () => {
     }, [sdk, tokenAccount, tokenAccounts, wallet]);
 
     const bgColor = useColorModeValue('blackAlpha.100', 'whiteAlpha.100');
-    const closePreAuth = useCallback(async () => {}, []);
+    const closePreAuth = useCallback(
+        async (preAuth: PublicKey) => {
+            if (!tokenAccount?.address || preAuthorizations?.loading) return;
+
+            setClosingPreAuth(preAuth);
+
+            const tx = await (
+                await sdk.txFactory.buildClosePreAuthorizationAsOwnerTx({
+                    preAuthorization: preAuth,
+                })
+            ).buildVersionedTransaction({
+                txFeesPayer: wallet.publicKey!,
+            });
+
+            try {
+                const txSig = await wallet.sendTransaction(tx, sdk.connection);
+                const blockhash = await sdk.connection.getLatestBlockhash();
+                await sdk.connection.confirmTransaction({ signature: txSig, ...blockhash });
+                await delay(500);
+
+                preAuthorizations?.triggerRefresh();
+            } catch (err) {
+                console.error('Closing Pre-Auth TX Failed:', err);
+            }
+
+            setClosingPreAuth(null);
+        },
+        [tokenAccount, preAuthorizations, sdk, wallet]
+    );
+
+    const pausePreAuth = useCallback(
+        async (preAuth: PublicKey) => {
+            if (!tokenAccount?.address || preAuthorizations?.loading) return;
+
+            setPausingPreAuth(preAuth);
+
+            const tx = await (
+                await sdk.txFactory.buildPausePreAuthorizationTx({
+                    preAuthorization: preAuth,
+                })
+            ).buildVersionedTransaction({
+                txFeesPayer: wallet.publicKey!,
+            });
+
+            try {
+                const txSig = await wallet.sendTransaction(tx, sdk.connection);
+                const blockhash = await sdk.connection.getLatestBlockhash();
+                await sdk.connection.confirmTransaction({ signature: txSig, ...blockhash });
+                await delay(500);
+
+                preAuthorizations?.triggerRefresh();
+            } catch (err) {
+                console.error('Pausing Pre-Auth TX Failed:', err);
+            }
+
+            setPausingPreAuth(null);
+        },
+        [tokenAccount, preAuthorizations, sdk, wallet]
+    );
+
+    const unpausePreAuth = useCallback(
+        async (preAuth: PublicKey) => {
+            if (!tokenAccount?.address || preAuthorizations?.loading) return;
+
+            setUnpausingPreAuth(preAuth);
+
+            const tx = await (
+                await sdk.txFactory.buildUnpausePreAuthorizationTx({
+                    preAuthorization: preAuth,
+                })
+            ).buildVersionedTransaction({
+                txFeesPayer: wallet.publicKey!,
+            });
+
+            try {
+                const txSig = await wallet.sendTransaction(tx, sdk.connection);
+                const blockhash = await sdk.connection.getLatestBlockhash();
+                await sdk.connection.confirmTransaction({ signature: txSig, ...blockhash });
+                await delay(500);
+
+                preAuthorizations?.triggerRefresh();
+            } catch (err) {
+                console.error('Pausing Pre-Auth TX Failed:', err);
+            }
+
+            setUnpausingPreAuth(null);
+        },
+        [tokenAccount, preAuthorizations, sdk, wallet]
+    );
 
     if (!tokenAccount) {
         return (
@@ -218,36 +310,30 @@ const Pads: NextPage = () => {
             </HStack>
             <VStack mt="20px" align="left">
                 <Text fontSize="3xl">Pre-Authorizations</Text>
-                {preAuths?.map((preAuth) => (
-                    <VStack key={preAuth.publicKey.toBase58()} py="20px" px="10px" bgColor={bgColor} align="start">
-                        <HStack>
-                            <Text>Address:</Text>
-                            <Code>{preAuth.publicKey.toBase58()}</Code>
-                        </HStack>
-                        <HStack>
-                            <Text>Debit Authority:</Text>
-                            <Code>{preAuth.account.debitAuthority.toBase58()}</Code>
-                        </HStack>
-                        {preAuth.account.variant.type === 'oneTime' ? (
-                            token ? (
+                {preAuths && preAuths.length > 0 ? (
+                    preAuths.map((preAuth) => (
+                        <VStack key={preAuth.publicKey.toBase58()} py="20px" px="10px" bgColor={bgColor} align="start">
+                            <HStack>
+                                <Text>Address:</Text>
+                                <Code>{preAuth.publicKey.toBase58()}</Code>
+                            </HStack>
+                            <HStack>
+                                <Text>Debit Authority:</Text>
+                                <Code>{preAuth.account.debitAuthority.toBase58()}</Code>
+                            </HStack>
+                            <HStack>
+                                <Text>Start Date:</Text>
+                                <Text>
+                                    {new Date(
+                                        Number(preAuth.account.activationUnixTimestamp * BigInt(1e3))
+                                    ).toLocaleString()}
+                                </Text>
+                            </HStack>
+                            {preAuth.account.variant.type === 'oneTime' ? (
                                 <>
                                     <HStack>
                                         <Text>Type:</Text>
                                         <Text>One-Time</Text>
-                                    </HStack>
-                                    <HStack>
-                                        <Text>Authorized Amount:</Text>
-                                        <Text>
-                                            {formatTokenAmount(token, preAuth.account.variant.amountAuthorized)}
-                                        </Text>
-                                    </HStack>
-                                    <HStack>
-                                        <Text>Start Date:</Text>
-                                        <Text>
-                                            {new Date(
-                                                Number(preAuth.account.activationUnixTimestamp * BigInt(1e3))
-                                            ).toLocaleString()}
-                                        </Text>
                                     </HStack>
                                     <HStack>
                                         <Text>Expiry Date:</Text>
@@ -259,19 +345,58 @@ const Pads: NextPage = () => {
                                                   ).toLocaleString()}
                                         </Text>
                                     </HStack>
-                                    <HStack>
-                                        <Text>Amount Debited:</Text>
-                                        <Text>{formatTokenAmount(token, preAuth.account.variant.amountDebited)}</Text>
-                                    </HStack>
-                                    <HStack>
-                                        <Text>Paused:</Text>
-                                        <Text>{preAuth.account.paused ? 'Yes' : 'No'}</Text>
-                                    </HStack>
+                                    {token ? (
+                                        <>
+                                            <HStack>
+                                                <Text>Authorized Amount:</Text>
+                                                <Text>
+                                                    {formatTokenAmount(token, preAuth.account.variant.amountAuthorized)}
+                                                </Text>
+                                            </HStack>
+                                            <HStack>
+                                                <Text>Amount Debited:</Text>
+                                                <Text>
+                                                    {formatTokenAmount(token, preAuth.account.variant.amountDebited)}
+                                                </Text>
+                                            </HStack>
+                                        </>
+                                    ) : null}
                                 </>
-                            ) : null
-                        ) : null}
-                    </VStack>
-                ))}
+                            ) : null}
+                            <HStack>
+                                <Text>Paused:</Text>
+                                <Text>{preAuth.account.paused ? 'Yes' : 'No'}</Text>
+                            </HStack>
+                            <HStack>
+                                <Button
+                                    onClick={() => closePreAuth(preAuth.publicKey)}
+                                    isDisabled={!!closingPreAuth || !!pausingPreAuth || !!unpausingPreAuth}
+                                >
+                                    Close {closingPreAuth?.equals(preAuth.publicKey) && <Spinner ml="10px" />}
+                                </Button>
+                                {preAuth.account.paused ? (
+                                    <Button
+                                        onClick={() => unpausePreAuth(preAuth.publicKey)}
+                                        isDisabled={!!closingPreAuth || !!pausingPreAuth || !!unpausingPreAuth}
+                                    >
+                                        Unpause {unpausingPreAuth?.equals(preAuth.publicKey) && <Spinner ml="10px" />}
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        onClick={() => pausePreAuth(preAuth.publicKey)}
+                                        isDisabled={!!closingPreAuth || !!pausingPreAuth || !!unpausingPreAuth}
+                                    >
+                                        Pause {pausingPreAuth?.equals(preAuth.publicKey) && <Spinner ml="10px" />}
+                                    </Button>
+                                )}
+                            </HStack>
+                        </VStack>
+                    ))
+                ) : (
+                    <HStack w="100%">
+                        <Text>No pre-authorizations</Text>
+                    </HStack>
+                )}
             </VStack>
         </VStack>
     );
