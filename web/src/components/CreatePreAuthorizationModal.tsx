@@ -83,7 +83,7 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
 
     const [recurringRepeatFrequency, setRecurringRepeatFrequency] = useState<bigint>(BigInt(0));
     const [numCycles, setNumCycles] = useState<bigint>(BigInt(0));
-    const [resetEveryCycle, setResetEveryCycle] = useState(false);
+    const [resetEveryCycle, setResetEveryCycle] = useState(true);
 
     const tokenOrMint = tokenAccount.tokenOrMint;
     const token = tokenOrMint.type === 'token' ? tokenOrMint.token : null;
