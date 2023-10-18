@@ -41,9 +41,11 @@ export default function PreAuthorizationsContextProvider({ children }: PropsWith
             if (tokenAccountsData.loading) {
                 setValue({ loading: true });
                 return;
-            } else if (!loadedOnce.current) {
-                setValue({ loading: true });
             }
+            // } else if (!loadedOnce.current) {
+            //     setValue({ loading: true });
+            // }
+            setValue({ loading: true });
 
             const { tokenAccounts } = tokenAccountsData;
 

@@ -10,6 +10,13 @@ import { useSDK } from '../../../contexts/SDK';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { delay } from '../../../utils/delay';
 import CreatePreAuthorizationModal from '../../../components/CreatePreAuthorizationModal';
+import assert from 'assert';
+import { Token } from '../../../contexts/TokenList';
+import { I64_MAX } from '@seabed-labs/pre-authorized-debit';
+
+function formatTokenAmount(token: Token, amount: bigint): string {
+    return new Decimal(amount.toString()).div(new Decimal(10).pow(token.decimals)).toString();
+}
 
 const Pads: NextPage = () => {
     const router = useRouter();
@@ -18,7 +25,8 @@ const Pads: NextPage = () => {
     const wallet = useWallet();
     const sdk = useSDK();
     const tokenAccounts = useTokenAccounts();
-    const tokenAccountPubkey = router.query.id;
+    const tokenAccountPubkey = router.query.id!;
+    assert(typeof tokenAccountPubkey === 'string');
 
     const checkColor = useColorModeValue('green', 'aquamarine');
 
@@ -57,13 +65,26 @@ const Pads: NextPage = () => {
         setRefreshingSmartDelegate(false);
     }, [sdk, tokenAccount, tokenAccounts, wallet]);
 
-    if (tokenAccounts?.loading) {
+    if (!tokenAccounts || tokenAccounts?.loading) {
         return (
             <Center h="100vh" w="calc(100vw - 264px)">
                 <VStack>
                     <Spinner size="xl" />
                     <Text mt="10px" size="lg">
                         Loading Token Accounts
+                    </Text>
+                </VStack>
+            </Center>
+        );
+    }
+
+    if (!preAuthorizations || preAuthorizations?.loading) {
+        return (
+            <Center h="100vh" w="calc(100vw - 264px)">
+                <VStack>
+                    <Spinner size="xl" />
+                    <Text mt="10px" size="lg">
+                        Loading Pre-Authorizations
                     </Text>
                 </VStack>
             </Center>
@@ -91,6 +112,11 @@ const Pads: NextPage = () => {
 
     const isSmartDelegateConnected =
         tokenAccount.delegate && tokenAccount.delegate.equals(sdk.readClient.getSmartDelegatePDA().publicKey);
+
+    const preAuths = preAuthorizations.listByTokenAccount[tokenAccountPubkey];
+    const preAuthCount = preAuths?.length ?? 0;
+
+    const bgColor = useColorModeValue('blackAlpha.100', 'whiteAlpha.100');
 
     return (
         <VStack
@@ -160,6 +186,10 @@ const Pads: NextPage = () => {
                     </HStack>
                 )}
             </HStack>
+            <HStack>
+                <Text fontSize="lg">Pre-authorizations found:</Text>
+                <Text fontSize="lg">{preAuthCount}</Text>
+            </HStack>
             {isSmartDelegateConnected ? (
                 <HStack fontSize="lg">
                     <CheckCircleIcon color={checkColor} />
@@ -183,6 +213,63 @@ const Pads: NextPage = () => {
             <HStack>
                 <CreatePreAuthorizationModal tokenAccount={tokenAccount} />
             </HStack>
+            <VStack mt="20px" align="left">
+                <Text fontSize="3xl">Pre-Authorizations</Text>
+                {preAuths?.map((preAuth) => (
+                    <VStack py="20px" px="10px" bgColor={bgColor} align="start">
+                        <HStack>
+                            <Text>Address:</Text>
+                            <Code>{preAuth.publicKey.toBase58()}</Code>
+                        </HStack>
+                        <HStack>
+                            <Text>Debit Authority:</Text>
+                            <Code>{preAuth.account.debitAuthority.toBase58()}</Code>
+                        </HStack>
+                        {preAuth.account.variant.type === 'oneTime' ? (
+                            token ? (
+                                <>
+                                    <HStack>
+                                        <Text>Type:</Text>
+                                        <Text>One-Time</Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>Authorized Amount:</Text>
+                                        <Text>
+                                            {formatTokenAmount(token, preAuth.account.variant.amountAuthorized)}
+                                        </Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>Start Date:</Text>
+                                        <Text>
+                                            {new Date(
+                                                Number(preAuth.account.activationUnixTimestamp * BigInt(1e3))
+                                            ).toLocaleString()}
+                                        </Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>Expiry Date:</Text>
+                                        <Text>
+                                            {preAuth.account.variant.expiryUnixTimestamp === I64_MAX
+                                                ? 'N/A'
+                                                : new Date(
+                                                      Number(preAuth.account.variant.expiryUnixTimestamp * BigInt(1e3))
+                                                  ).toLocaleString()}
+                                        </Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>Amount Debited:</Text>
+                                        <Text>{formatTokenAmount(token, preAuth.account.variant.amountDebited)}</Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>Paused:</Text>
+                                        <Text>{preAuth.account.paused ? 'Yes' : 'No'}</Text>
+                                    </HStack>
+                                </>
+                            ) : null
+                        ) : null}
+                    </VStack>
+                ))}
+            </VStack>
         </VStack>
     );
 };
