@@ -65,6 +65,9 @@ const Pads: NextPage = () => {
         setRefreshingSmartDelegate(false);
     }, [sdk, tokenAccount, tokenAccounts, wallet]);
 
+    const bgColor = useColorModeValue('blackAlpha.100', 'whiteAlpha.100');
+    const closePreAuth = useCallback(async () => {}, []);
+
     if (!tokenAccount) {
         return (
             <VStack w="calc(100vw - 264px)" justifyContent="flex-start">
@@ -115,8 +118,6 @@ const Pads: NextPage = () => {
 
     const preAuths = preAuthorizations.listByTokenAccount[tokenAccountPubkey];
     const preAuthCount = preAuths?.length ?? 0;
-
-    const bgColor = useColorModeValue('blackAlpha.100', 'whiteAlpha.100');
 
     return (
         <VStack
@@ -218,7 +219,7 @@ const Pads: NextPage = () => {
             <VStack mt="20px" align="left">
                 <Text fontSize="3xl">Pre-Authorizations</Text>
                 {preAuths?.map((preAuth) => (
-                    <VStack py="20px" px="10px" bgColor={bgColor} align="start">
+                    <VStack key={preAuth.publicKey.toBase58()} py="20px" px="10px" bgColor={bgColor} align="start">
                         <HStack>
                             <Text>Address:</Text>
                             <Code>{preAuth.publicKey.toBase58()}</Code>
