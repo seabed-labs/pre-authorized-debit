@@ -360,7 +360,18 @@ const Pads: NextPage = () => {
                                                 </Text>
                                             </HStack>
                                         </>
-                                    ) : null}
+                                    ) : (
+                                        <>
+                                            <HStack>
+                                                <Text>Raw Authorized Amount:</Text>
+                                                <Code>{preAuth.account.variant.amountAuthorized.toString()}</Code>
+                                            </HStack>
+                                            <HStack>
+                                                <Text>Raw Amount Debited:</Text>
+                                                <Code>{preAuth.account.variant.amountDebited.toString()}</Code>
+                                            </HStack>
+                                        </>
+                                    )}
                                 </>
                             ) : null}
                             <HStack>
