@@ -1,6 +1,6 @@
 {
     "name": "@seabed-labs/pad-web",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "author": "Seabed Labs",
     "license": "Apache-2.0",
     "publishConfig": {
