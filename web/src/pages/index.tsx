@@ -13,8 +13,6 @@ interface TokenAccountProps {
 
 // TODOs:
 // 1. Toast messages during TXs
-// 2. Recurring pre-auth support
-// 3. Close, pause TXs
 
 function TokenAccount({ tokenAccount }: TokenAccountProps) {
     const token = tokenAccount.tokenOrMint.type === 'token' ? tokenAccount.tokenOrMint.token : null;

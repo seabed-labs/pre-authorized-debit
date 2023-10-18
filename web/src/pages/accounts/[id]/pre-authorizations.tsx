@@ -12,11 +12,32 @@ import { delay } from '../../../utils/delay';
 import CreatePreAuthorizationModal from '../../../components/CreatePreAuthorizationModal';
 import assert from 'assert';
 import { Token } from '../../../contexts/TokenList';
-import { I64_MAX } from '@seabed-labs/pre-authorized-debit';
+import { I64_MAX, RecurringPreAuthorizationAccount } from '@seabed-labs/pre-authorized-debit';
 import { PublicKey } from '@solana/web3.js';
 
 function formatTokenAmount(token: Token, amount: bigint): string {
-    return new Decimal(amount.toString()).div(new Decimal(10).pow(token.decimals)).toString();
+    return new Decimal(amount.toString()).div(new Decimal(10).pow(token.decimals)).toString() + ' ' + token.symbol;
+}
+
+function computeCurrentCycle(preAuthorization: RecurringPreAuthorizationAccount): number {
+    const now = BigInt(Math.floor(new Date().getTime() / 1e3));
+    const start = preAuthorization.activationUnixTimestamp;
+    const frequencyInSeconds = preAuthorization.variant.repeatFrequencySeconds;
+    if (start >= now) {
+        return 1;
+    }
+
+    return 1 + Number((now - start) / frequencyInSeconds);
+}
+
+function computeExpiryDate(preAuthorization: RecurringPreAuthorizationAccount): Date | null {
+    const start = preAuthorization.activationUnixTimestamp;
+    const frequencyInSeconds = preAuthorization.variant.repeatFrequencySeconds;
+    const numCycles = preAuthorization.variant.numCycles;
+
+    if (numCycles == null) return null;
+
+    return new Date(Number(start + frequencyInSeconds * numCycles) * 1e3);
 }
 
 const Pads: NextPage = () => {
@@ -373,7 +394,92 @@ const Pads: NextPage = () => {
                                         </>
                                     )}
                                 </>
-                            ) : null}
+                            ) : (
+                                <>
+                                    <HStack>
+                                        <Text>Type:</Text>
+                                        <Text>Recurring</Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>{'Cycle Repeat Frequency (Seconds):'}</Text>
+                                        <Text>{preAuth.account.variant.repeatFrequencySeconds.toString()} seconds</Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>Cycle Limit:</Text>
+                                        <Text>{preAuth.account.variant.numCycles?.toString() ?? 'N/A'} cycles</Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>{'Expiry (computed):'}</Text>
+                                        <Text>
+                                            {computeExpiryDate(
+                                                preAuth.account as RecurringPreAuthorizationAccount
+                                            )?.toLocaleString() ?? 'N/A'}
+                                        </Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>Amount Resets Every Cycle:</Text>
+                                        <Text>{preAuth.account.variant.resetEveryCycle ? 'Yes' : 'No'}</Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>Current Cycle:</Text>
+                                        <Text>
+                                            {computeCurrentCycle(preAuth.account as RecurringPreAuthorizationAccount)}
+                                        </Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text>Last Debited Cycle:</Text>
+                                        <Text>{preAuth.account.variant.lastDebitedCycle.toString()}</Text>
+                                    </HStack>
+                                    {token ? (
+                                        <>
+                                            <HStack>
+                                                <Text>Recurring Authorized Amount:</Text>
+                                                <Text>
+                                                    {formatTokenAmount(
+                                                        token,
+                                                        preAuth.account.variant.recurringAmountAuthorized
+                                                    )}
+                                                </Text>
+                                            </HStack>
+                                            <HStack>
+                                                <Text>Amount Debited Total:</Text>
+                                                <Text>
+                                                    {formatTokenAmount(
+                                                        token,
+                                                        preAuth.account.variant.amountDebitedTotal
+                                                    )}
+                                                </Text>
+                                            </HStack>
+                                            <HStack>
+                                                <Text>Amount Debited Last Cycle:</Text>
+                                                <Text>
+                                                    {formatTokenAmount(
+                                                        token,
+                                                        preAuth.account.variant.amountDebitedLastCycle
+                                                    )}
+                                                </Text>
+                                            </HStack>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <HStack>
+                                                <Text>{'Recurring Authorized Amount (raw):'}</Text>
+                                                <Code>
+                                                    {preAuth.account.variant.recurringAmountAuthorized.toString()}
+                                                </Code>
+                                            </HStack>
+                                            <HStack>
+                                                <Text>{'Amount Debited Last Cycle (raw):'}</Text>
+                                                <Code>{preAuth.account.variant.amountDebitedLastCycle.toString()}</Code>
+                                            </HStack>
+                                            <HStack>
+                                                <Text>{'Amount Debited Total (raw):'}</Text>
+                                                <Code>{preAuth.account.variant.amountDebitedTotal.toString()}</Code>
+                                            </HStack>
+                                        </>
+                                    )}
+                                </>
+                            )}
                             <HStack>
                                 <Text>Paused:</Text>
                                 <Text>{preAuth.account.paused ? 'Yes' : 'No'}</Text>

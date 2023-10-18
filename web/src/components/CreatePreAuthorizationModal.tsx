@@ -381,7 +381,7 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
                             ) : (
                                 <>
                                     <VStack align="start" w="100%">
-                                        <Text fontWeight="semibold">{'Recurring Repeat Frequency (seconds)'}</Text>
+                                        <Text fontWeight="semibold">{'Cycle Repeat Frequency (seconds)'}</Text>
                                         <NumberInput
                                             value={
                                                 recurringRepeatFrequency === BigInt(0)
