@@ -1,12 +1,12 @@
-import { Account, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, unpackAccount } from '@solana/spl-token';
+import { Account, Mint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, unpackAccount, unpackMint } from '@solana/spl-token';
 import { Token, useTokenList } from './TokenList';
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useSDK } from './SDK';
-import { PublicKey } from '@solana/web3.js';
+import { AccountInfo, PublicKey } from '@solana/web3.js';
 
 export interface TokenAccount extends Account {
-    tokenOrMint: { type: 'token'; token: Token } | { mint: PublicKey; type: 'mint' };
+    tokenOrMint: { type: 'token'; token: Token } | { mint: Mint; type: 'mint' };
     program: 'spl-token' | 'spl-token-2022';
 }
 
@@ -54,6 +54,74 @@ export default function TokenAccountsContextProvider({ children }: PropsWithChil
                 }),
             ]);
 
+            const tokenMints = rawTokenAccounts.value.map((rawTokenAccount) => {
+                const decodedTokenAccount = unpackAccount(
+                    rawTokenAccount.pubkey,
+                    rawTokenAccount.account,
+                    TOKEN_PROGRAM_ID
+                );
+
+                return decodedTokenAccount.mint;
+            });
+
+            const token2022Mints = rawToken2022Accounts.value.map((rawTokenAccount) => {
+                const decodedTokenAccount = unpackAccount(
+                    rawTokenAccount.pubkey,
+                    rawTokenAccount.account,
+                    TOKEN_2022_PROGRAM_ID
+                );
+
+                return decodedTokenAccount.mint;
+            });
+
+            let tokenMintAccountInfos: ({ pubkey: PublicKey } & AccountInfo<Buffer>)[] = [];
+            let token2022MintAccountInfos: ({ pubkey: PublicKey } & AccountInfo<Buffer>)[] = [];
+
+            for (let i = 0; i < Math.ceil(Math.max(tokenMints.length, token2022Mints.length) / 100); i++) {
+                const tokenMintsPage = tokenMints.slice(i * 100, (i + 1) * 100);
+                const token2022MintsPage = token2022Mints.slice(i * 100, (i + 1) * 100);
+                const [tokenMintPageAccountInfos, token2022MintPageAccountInfos] = await Promise.all([
+                    sdk.connection.getMultipleAccountsInfo(tokenMintsPage),
+                    sdk.connection.getMultipleAccountsInfo(token2022MintsPage),
+                ]);
+
+                tokenMintAccountInfos.push(
+                    ...tokenMintPageAccountInfos
+                        .map((x, i) => {
+                            (x as (typeof tokenMintAccountInfos)[number]).pubkey = tokenMintsPage[i];
+                            return x as (typeof tokenMintAccountInfos)[number];
+                        })
+                        .filter((x): x is (typeof tokenMintAccountInfos)[number] => !!x)
+                );
+
+                token2022MintAccountInfos.push(
+                    ...token2022MintPageAccountInfos
+                        .map((x, i) => {
+                            (x as (typeof token2022MintAccountInfos)[number]).pubkey = token2022MintsPage[i];
+                            return x as (typeof token2022MintAccountInfos)[number];
+                        })
+                        .filter((x): x is (typeof token2022MintAccountInfos)[number] => !!x)
+                );
+            }
+
+            const tokenMintAccounts = tokenMintAccountInfos.map((accountInfo) =>
+                unpackMint(accountInfo.pubkey, accountInfo, TOKEN_PROGRAM_ID)
+            );
+
+            const token2022MintAccounts = token2022MintAccountInfos.map((accountInfo) =>
+                unpackMint(accountInfo.pubkey, accountInfo, TOKEN_2022_PROGRAM_ID)
+            );
+
+            const tokenMintMap = tokenMintAccounts.reduce((map, mint) => {
+                map[mint.address.toBase58()] = mint;
+                return map;
+            }, {} as Record<string, Mint>);
+
+            const token2022MintMap = token2022MintAccounts.reduce((map, mint) => {
+                map[mint.address.toBase58()] = mint;
+                return map;
+            }, {} as Record<string, Mint>);
+
             const tokenAccounts = rawTokenAccounts.value.map((rawTokenAccount) => {
                 const decodedTokenAccount = unpackAccount(
                     rawTokenAccount.pubkey,
@@ -64,7 +132,9 @@ export default function TokenAccountsContextProvider({ children }: PropsWithChil
                 const token = tokenList.allMap[decodedTokenAccount.mint.toBase58()];
 
                 const tokenAccount: TokenAccount = {
-                    tokenOrMint: token ? { type: 'token', token } : { mint: decodedTokenAccount.mint, type: 'mint' },
+                    tokenOrMint: token
+                        ? { type: 'token', token }
+                        : { mint: tokenMintMap[decodedTokenAccount.mint.toBase58()], type: 'mint' },
                     program: 'spl-token',
                     ...decodedTokenAccount,
                 };
@@ -84,7 +154,9 @@ export default function TokenAccountsContextProvider({ children }: PropsWithChil
                 const token = tokenList.allMap[decodedTokenAccount.mint.toBase58()];
 
                 const tokenAccount: TokenAccount = {
-                    tokenOrMint: token ? { type: 'token', token } : { mint: decodedTokenAccount.mint, type: 'mint' },
+                    tokenOrMint: token
+                        ? { type: 'token', token }
+                        : { mint: token2022MintMap[decodedTokenAccount.mint.toBase58()], type: 'mint' },
                     program: 'spl-token-2022',
                     ...decodedTokenAccount,
                 };

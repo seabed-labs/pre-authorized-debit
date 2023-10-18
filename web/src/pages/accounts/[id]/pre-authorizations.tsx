@@ -25,11 +25,16 @@ import CreatePreAuthorizationModal from '../../../components/CreatePreAuthorizat
 import assert from 'assert';
 import { Token } from '../../../contexts/TokenList';
 import { I64_MAX, RecurringPreAuthorizationAccount } from '@seabed-labs/pre-authorized-debit';
-import { PublicKey } from '@solana/web3.js';
+import { Message, PublicKey, Transaction, VersionedMessage, VersionedTransaction } from '@solana/web3.js';
 import { makeExplorerLink } from '../../../utils/explorer';
+import { Mint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, createRevokeInstruction } from '@solana/spl-token';
 
 function formatTokenAmount(token: Token, amount: bigint): string {
     return new Decimal(amount.toString()).div(new Decimal(10).pow(token.decimals)).toString() + ' ' + token.symbol;
+}
+
+function formatTokenAmountWithMint(mint: Mint, amount: bigint): string {
+    return new Decimal(amount.toString()).div(new Decimal(10).pow(mint.decimals)).toString();
 }
 
 function computeCurrentCycle(preAuthorization: RecurringPreAuthorizationAccount): number {
@@ -56,6 +61,7 @@ function computeExpiryDate(preAuthorization: RecurringPreAuthorizationAccount): 
 const Pads: NextPage = () => {
     const router = useRouter();
     const [refreshingSmartDelegate, setRefreshingSmartDelegate] = useState(false);
+    const [disconnectingSmartDelegate, setDisconnectingSmartDelegate] = useState(false);
     const [closingPreAuth, setClosingPreAuth] = useState<PublicKey | null>(null);
     const [pausingPreAuth, setPausingPreAuth] = useState<PublicKey | null>(null);
     const [unpausingPreAuth, setUnpausingPreAuth] = useState<PublicKey | null>(null);
@@ -100,6 +106,7 @@ const Pads: NextPage = () => {
 
             toast({
                 position: 'top-right',
+                isClosable: true,
                 duration: 5000,
                 title: 'Refresh Smart Delegate Success',
                 description: (
@@ -114,6 +121,7 @@ const Pads: NextPage = () => {
             toast({
                 position: 'top-right',
                 duration: 5000,
+                isClosable: true,
                 title: 'Refresh Smart Delegate Failed',
                 description: (err as Error).message,
                 status: 'error',
@@ -121,6 +129,59 @@ const Pads: NextPage = () => {
         }
 
         setRefreshingSmartDelegate(false);
+    }, [sdk, tokenAccount, tokenAccounts, wallet]);
+
+    const disconnectSmartDelegate = useCallback(async () => {
+        if (!tokenAccount?.address || tokenAccounts?.loading || !wallet.publicKey) return;
+
+        setDisconnectingSmartDelegate(true);
+
+        try {
+            const ix = createRevokeInstruction(
+                tokenAccount.address,
+                wallet.publicKey,
+                undefined,
+                tokenAccount.program === 'spl-token' ? TOKEN_PROGRAM_ID : TOKEN_2022_PROGRAM_ID
+            );
+
+            const latestBlockhash = await sdk.connection.getLatestBlockhash();
+
+            const tx = new Transaction({ ...latestBlockhash }).add(ix);
+            tx.feePayer = wallet.publicKey;
+
+            const versionedTx = new VersionedTransaction(tx.compileMessage());
+            const txSig = await wallet.sendTransaction(versionedTx, sdk.connection);
+            const blockhash = await sdk.connection.getLatestBlockhash();
+            await sdk.connection.confirmTransaction({ signature: txSig, ...blockhash });
+            await delay(500);
+
+            tokenAccounts?.triggerRefresh();
+
+            toast({
+                position: 'top-right',
+                duration: 5000,
+                title: 'Disconnect Smart Delegate Success',
+                isClosable: true,
+                description: (
+                    <Link isExternal href={makeExplorerLink(txSig)}>
+                        View Transaction
+                    </Link>
+                ),
+                status: 'success',
+            });
+        } catch (err) {
+            console.error('Refresh Smart Delegate TX Failed:', err);
+            toast({
+                position: 'top-right',
+                isClosable: true,
+                duration: 5000,
+                title: 'Disconnect Smart Delegate Failed',
+                description: (err as Error).message,
+                status: 'error',
+            });
+        }
+
+        setDisconnectingSmartDelegate(false);
     }, [sdk, tokenAccount, tokenAccounts, wallet]);
 
     const bgColor = useColorModeValue('blackAlpha.100', 'whiteAlpha.100');
@@ -148,6 +209,7 @@ const Pads: NextPage = () => {
                 toast({
                     position: 'top-right',
                     duration: 5000,
+                    isClosable: true,
                     title: 'Close Pre-Authorization Success',
                     description: (
                         <Link isExternal href={makeExplorerLink(txSig)}>
@@ -161,6 +223,7 @@ const Pads: NextPage = () => {
                 toast({
                     position: 'top-right',
                     duration: 5000,
+                    isClosable: true,
                     title: 'Close Pre-Authorization Failed',
                     description: (err as Error).message,
                     status: 'error',
@@ -196,6 +259,7 @@ const Pads: NextPage = () => {
                 toast({
                     position: 'top-right',
                     duration: 5000,
+                    isClosable: true,
                     title: 'Pause Pre-Authorization Success',
                     description: (
                         <Link isExternal href={makeExplorerLink(txSig)}>
@@ -209,6 +273,7 @@ const Pads: NextPage = () => {
                 toast({
                     position: 'top-right',
                     duration: 5000,
+                    isClosable: true,
                     title: 'Pause Pre-Authorization Failed',
                     description: (err as Error).message,
                     status: 'error',
@@ -245,6 +310,7 @@ const Pads: NextPage = () => {
                     position: 'top-right',
                     duration: 5000,
                     title: 'Unpause Pre-Authorization Success',
+                    isClosable: true,
                     description: (
                         <Link isExternal href={makeExplorerLink(txSig)}>
                             View Transaction
@@ -258,6 +324,7 @@ const Pads: NextPage = () => {
                     position: 'top-right',
                     duration: 5000,
                     title: 'Unpause Pre-Authorization Failed',
+                    isClosable: true,
                     description: (err as Error).message,
                     status: 'error',
                 });
@@ -304,14 +371,12 @@ const Pads: NextPage = () => {
     }
 
     const token = tokenAccount.tokenOrMint.type === 'token' ? tokenAccount.tokenOrMint.token : null;
+    const mint = tokenAccount.tokenOrMint.type === 'mint' ? tokenAccount.tokenOrMint.mint : null;
+    const decimals = token?.decimals ?? mint?.decimals ?? 0;
 
-    const tokenAmount = token
-        ? new Decimal(tokenAccount.amount.toString()).div(new Decimal(10).pow(token.decimals))
-        : null;
+    const tokenAmount = new Decimal(tokenAccount.amount.toString()).div(new Decimal(10).pow(decimals));
 
-    const delegatedAmount = token
-        ? new Decimal(tokenAccount.delegatedAmount.toString()).div(new Decimal(10).pow(token.decimals))
-        : null;
+    const delegatedAmount = new Decimal(tokenAccount.delegatedAmount.toString()).div(new Decimal(10).pow(decimals));
 
     const isSmartDelegateConnected =
         tokenAccount.delegate && tokenAccount.delegate.equals(sdk.readClient.getSmartDelegatePDA().publicKey);
@@ -357,7 +422,7 @@ const Pads: NextPage = () => {
                 <VStack align="start">
                     <HStack>
                         <Text fontSize="lg">Decimals:</Text>
-                        <Text fontSize="lg">{token.decimals}</Text>
+                        <Text fontSize="lg">{decimals}</Text>
                     </HStack>
                     <HStack>
                         <Text fontSize="lg">Balance:</Text>
@@ -366,25 +431,35 @@ const Pads: NextPage = () => {
                     </HStack>
                 </VStack>
             ) : (
-                <HStack>
-                    <Text fontSize="lg">Raw Balance:</Text>
-                    <Code fontSize="lg">{tokenAccount.amount.toString()}</Code>
-                </HStack>
+                <VStack align="start">
+                    <HStack>
+                        <Text fontSize="lg">Decimals:</Text>
+                        <Text fontSize="lg">{decimals}</Text>
+                    </HStack>
+                    <HStack>
+                        <Text fontSize="lg">Balance:</Text>
+                        <Text fontSize="lg">{tokenAmount.toString()}</Text>
+                    </HStack>
+                </VStack>
             )}
             <HStack>
                 <Text fontSize="lg">Delegate:</Text>
                 <Code fontSize="lg">{tokenAccount.delegate?.toBase58() ?? 'None'}</Code>
                 {token && delegatedAmount ? (
-                    <HStack>
-                        <Text fontSize="lg">with delegated amount:</Text>
-                        <Text fontSize="lg">{delegatedAmount.toString()}</Text>
-                        <Text fontSize="lg">{token.symbol}</Text>
-                    </HStack>
+                    <VStack align="start">
+                        <HStack>
+                            <Text fontSize="lg">with delegated amount:</Text>
+                            <Text fontSize="lg">{delegatedAmount.toString()}</Text>
+                            <Text fontSize="lg">{token.symbol}</Text>
+                        </HStack>
+                    </VStack>
                 ) : (
-                    <HStack>
-                        <Text fontSize="lg">with delegated raw amount:</Text>
-                        <Code fontSize="lg">{tokenAccount.delegatedAmount.toString()}</Code>
-                    </HStack>
+                    <VStack align="start">
+                        <HStack>
+                            <Text fontSize="lg">with delegated amount:</Text>
+                            <Text fontSize="lg">{delegatedAmount.toString()}</Text>
+                        </HStack>
+                    </VStack>
                 )}
             </HStack>
             <HStack>
@@ -411,6 +486,15 @@ const Pads: NextPage = () => {
                 <Button isDisabled={refreshingSmartDelegate} onClick={refreshSmartDelegate}>
                     Refresh Smart Delegate
                     {refreshingSmartDelegate && <Spinner ml="8px" />}
+                </Button>
+            </HStack>
+            <HStack>
+                <Button
+                    isDisabled={disconnectingSmartDelegate || !isSmartDelegateConnected}
+                    onClick={disconnectSmartDelegate}
+                >
+                    {'Disconnect Smart Delegate (Globally pause all pre-authorizations for this token account)'}
+                    {disconnectingSmartDelegate && <Spinner ml="8px" />}
                 </Button>
             </HStack>
             <HStack>
@@ -465,6 +549,27 @@ const Pads: NextPage = () => {
                                                 <Text>Amount Debited:</Text>
                                                 <Text>
                                                     {formatTokenAmount(token, preAuth.account.variant.amountDebited)}
+                                                </Text>
+                                            </HStack>
+                                        </>
+                                    ) : mint ? (
+                                        <>
+                                            <HStack>
+                                                <Text>Authorized Amount:</Text>
+                                                <Text>
+                                                    {formatTokenAmountWithMint(
+                                                        mint,
+                                                        preAuth.account.variant.amountAuthorized
+                                                    )}
+                                                </Text>
+                                            </HStack>
+                                            <HStack>
+                                                <Text>Amount Debited:</Text>
+                                                <Text>
+                                                    {formatTokenAmountWithMint(
+                                                        mint,
+                                                        preAuth.account.variant.amountDebited
+                                                    )}
                                                 </Text>
                                             </HStack>
                                         </>
@@ -542,6 +647,36 @@ const Pads: NextPage = () => {
                                                 <Text>
                                                     {formatTokenAmount(
                                                         token,
+                                                        preAuth.account.variant.amountDebitedLastCycle
+                                                    )}
+                                                </Text>
+                                            </HStack>
+                                        </>
+                                    ) : mint ? (
+                                        <>
+                                            <HStack>
+                                                <Text>Recurring Authorized Amount:</Text>
+                                                <Text>
+                                                    {formatTokenAmountWithMint(
+                                                        mint,
+                                                        preAuth.account.variant.recurringAmountAuthorized
+                                                    )}
+                                                </Text>
+                                            </HStack>
+                                            <HStack>
+                                                <Text>Amount Debited Total:</Text>
+                                                <Text>
+                                                    {formatTokenAmountWithMint(
+                                                        mint,
+                                                        preAuth.account.variant.amountDebitedTotal
+                                                    )}
+                                                </Text>
+                                            </HStack>
+                                            <HStack>
+                                                <Text>Amount Debited Last Cycle:</Text>
+                                                <Text>
+                                                    {formatTokenAmountWithMint(
+                                                        mint,
                                                         preAuth.account.variant.amountDebitedLastCycle
                                                     )}
                                                 </Text>
