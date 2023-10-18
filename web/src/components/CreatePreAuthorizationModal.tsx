@@ -17,6 +17,8 @@ import {
     Input,
     Spinner,
     Switch,
+    useToast,
+    Link,
 } from '@chakra-ui/react';
 import { ChangeEvent, useCallback, useState } from 'react';
 import { TokenAccount } from '../contexts/TokenAccounts';
@@ -27,6 +29,7 @@ import { useSDK } from '../contexts/SDK';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { delay } from '../utils/delay';
 import { usePreAuthorizations } from '../contexts/PreAuthorizations';
+import { makeExplorerLink } from '../utils/explorer';
 
 export interface CreatePreAuthorizationModalProps {
     tokenAccount: TokenAccount;
@@ -84,6 +87,8 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
 
     const tokenOrMint = tokenAccount.tokenOrMint;
     const token = tokenOrMint.type === 'token' ? tokenOrMint.token : null;
+
+    const toast = useToast();
 
     const onCloseWrapper = useCallback(() => {
         setPreAuthType('one-time');
@@ -222,8 +227,26 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
             const blockhash = await sdk.connection.getLatestBlockhash();
             await sdk.connection.confirmTransaction({ signature: txSig, ...blockhash });
             await delay(500);
+            toast({
+                position: 'top-right',
+                duration: 5000,
+                title: 'Create One-Time Pre-Authorization Success',
+                description: (
+                    <Link isExternal href={makeExplorerLink(txSig)}>
+                        View Transaction
+                    </Link>
+                ),
+                status: 'success',
+            });
         } catch (err) {
             console.error('Create one-time pre-auth TX Failed:', err);
+            toast({
+                position: 'top-right',
+                duration: 5000,
+                title: 'Create One-Time Pre-Authorization Failed',
+                description: (err as Error).message,
+                status: 'error',
+            });
         }
 
         if (!preAuthorizations?.loading) {
@@ -271,8 +294,27 @@ const CreatePreAuthorizationModal: React.FC<CreatePreAuthorizationModalProps> = 
             const blockhash = await sdk.connection.getLatestBlockhash();
             await sdk.connection.confirmTransaction({ signature: txSig, ...blockhash });
             await delay(500);
+
+            toast({
+                position: 'top-right',
+                duration: 5000,
+                title: 'Create Recurring Pre-Authorization Success',
+                description: (
+                    <Link isExternal href={makeExplorerLink(txSig)}>
+                        View Transaction
+                    </Link>
+                ),
+                status: 'success',
+            });
         } catch (err) {
             console.error('Create recurring pre-auth TX Failed:', err);
+            toast({
+                position: 'top-right',
+                duration: 5000,
+                title: 'Create Recurring Pre-Authorization Failed',
+                description: (err as Error).message,
+                status: 'error',
+            });
         }
 
         if (!preAuthorizations?.loading) {

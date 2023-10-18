@@ -1,7 +1,19 @@
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { usePreAuthorizations } from '../../../contexts/PreAuthorizations';
-import { Code, VStack, Text, Button, HStack, Image, Center, Spinner, useColorModeValue } from '@chakra-ui/react';
+import {
+    Code,
+    VStack,
+    Text,
+    Button,
+    HStack,
+    Image,
+    Center,
+    Spinner,
+    useColorModeValue,
+    useToast,
+    Link,
+} from '@chakra-ui/react';
 import { CheckCircleIcon, CloseIcon } from '@chakra-ui/icons';
 import { useTokenAccounts } from '../../../contexts/TokenAccounts';
 import { useCallback, useMemo, useState } from 'react';
@@ -14,6 +26,7 @@ import assert from 'assert';
 import { Token } from '../../../contexts/TokenList';
 import { I64_MAX, RecurringPreAuthorizationAccount } from '@seabed-labs/pre-authorized-debit';
 import { PublicKey } from '@solana/web3.js';
+import { makeExplorerLink } from '../../../utils/explorer';
 
 function formatTokenAmount(token: Token, amount: bigint): string {
     return new Decimal(amount.toString()).div(new Decimal(10).pow(token.decimals)).toString() + ' ' + token.symbol;
@@ -52,6 +65,7 @@ const Pads: NextPage = () => {
     const tokenAccounts = useTokenAccounts();
     const tokenAccountPubkey = router.query.id!;
     assert(typeof tokenAccountPubkey === 'string');
+    const toast = useToast();
 
     const checkColor = useColorModeValue('green', 'aquamarine');
 
@@ -83,8 +97,27 @@ const Pads: NextPage = () => {
             await delay(500);
 
             tokenAccounts?.triggerRefresh();
+
+            toast({
+                position: 'top-right',
+                duration: 5000,
+                title: 'Refresh Smart Delegate Success',
+                description: (
+                    <Link isExternal href={makeExplorerLink(txSig)}>
+                        View Transaction
+                    </Link>
+                ),
+                status: 'success',
+            });
         } catch (err) {
             console.error('Refresh Smart Delegate TX Failed:', err);
+            toast({
+                position: 'top-right',
+                duration: 5000,
+                title: 'Refresh Smart Delegate Failed',
+                description: (err as Error).message,
+                status: 'error',
+            });
         }
 
         setRefreshingSmartDelegate(false);
@@ -112,8 +145,26 @@ const Pads: NextPage = () => {
                 await delay(500);
 
                 preAuthorizations?.triggerRefresh();
+                toast({
+                    position: 'top-right',
+                    duration: 5000,
+                    title: 'Close Pre-Authorization Success',
+                    description: (
+                        <Link isExternal href={makeExplorerLink(txSig)}>
+                            View Transaction
+                        </Link>
+                    ),
+                    status: 'success',
+                });
             } catch (err) {
                 console.error('Closing Pre-Auth TX Failed:', err);
+                toast({
+                    position: 'top-right',
+                    duration: 5000,
+                    title: 'Close Pre-Authorization Failed',
+                    description: (err as Error).message,
+                    status: 'error',
+                });
             }
 
             setClosingPreAuth(null);
@@ -142,8 +193,26 @@ const Pads: NextPage = () => {
                 await delay(500);
 
                 preAuthorizations?.triggerRefresh();
+                toast({
+                    position: 'top-right',
+                    duration: 5000,
+                    title: 'Pause Pre-Authorization Success',
+                    description: (
+                        <Link isExternal href={makeExplorerLink(txSig)}>
+                            View Transaction
+                        </Link>
+                    ),
+                    status: 'success',
+                });
             } catch (err) {
                 console.error('Pausing Pre-Auth TX Failed:', err);
+                toast({
+                    position: 'top-right',
+                    duration: 5000,
+                    title: 'Pause Pre-Authorization Failed',
+                    description: (err as Error).message,
+                    status: 'error',
+                });
             }
 
             setPausingPreAuth(null);
@@ -172,8 +241,26 @@ const Pads: NextPage = () => {
                 await delay(500);
 
                 preAuthorizations?.triggerRefresh();
+                toast({
+                    position: 'top-right',
+                    duration: 5000,
+                    title: 'Unpause Pre-Authorization Success',
+                    description: (
+                        <Link isExternal href={makeExplorerLink(txSig)}>
+                            View Transaction
+                        </Link>
+                    ),
+                    status: 'success',
+                });
             } catch (err) {
                 console.error('Pausing Pre-Auth TX Failed:', err);
+                toast({
+                    position: 'top-right',
+                    duration: 5000,
+                    title: 'Unpause Pre-Authorization Failed',
+                    description: (err as Error).message,
+                    status: 'error',
+                });
             }
 
             setUnpausingPreAuth(null);
